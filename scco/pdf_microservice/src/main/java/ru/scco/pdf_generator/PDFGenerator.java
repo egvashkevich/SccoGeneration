@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Objects;
 
-//@Component
 @Slf4j
 public class PDFGenerator {
     private final String templatePath;
