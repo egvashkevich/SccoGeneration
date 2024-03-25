@@ -1,19 +1,34 @@
 import configparser
+import csv
 import pika
 import sys
 import os
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read("config.ini")
+input_csv_prefix = config["Paths"]["input_csv_prefix"]
 rabbit_address = config["Rabbit"]["rabbit_address"]
 in_queue = config["Rabbit"]["in_queue"]
 out_queue = config["Rabbit"]["out_queue"]
 
 
+def add_to_database(row):
+    pass  # TODO: implement
+
+
 def on_message_received(ch, method, properties, body):
     print(f" [x] Received {body}")
 
-    # TODO: implement
+    path_to_csv = input_csv_prefix + body.decode()
+    with open(path_to_csv) as csvfile:
+        data = csvfile.readlines()
+    data.pop(0)  # drop header
+
+    csv_reader = csv.reader(data)
+    for row_raw, row_list in zip(data, csv_reader):  # can we make it async?
+        # TODO: check if already in database
+        add_to_database(row_list)
+        send_message(ch, row_raw)
 
     print(" [x] Done")
 
