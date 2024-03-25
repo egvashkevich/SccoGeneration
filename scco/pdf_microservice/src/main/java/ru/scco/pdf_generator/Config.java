@@ -67,4 +67,11 @@ public class Config {
         rabbitTemplate.setMessageConverter(messageConverter());
         return rabbitTemplate;
     }
+
+    @Bean
+    PDFGenerator pdfGenerator(@Value("${pdf_generator.template}") String templatePath,
+                              @Value("${pdf_generator.font}") String fontPath,
+                              @Value("${pdf_generator.dest}") String destinationPath) {
+        return new PDFGenerator(templatePath, fontPath, destinationPath);
+    }
 }
