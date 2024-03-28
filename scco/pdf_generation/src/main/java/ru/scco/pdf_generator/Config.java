@@ -12,6 +12,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+
 @Configuration
 public class Config {
     @Value("${rabbit.pdf_generation_exchange}")
@@ -69,9 +73,25 @@ public class Config {
     }
 
     @Bean
-    PDFGenerator pdfGenerator(@Value("${pdf_generator.template}") String templatePath,
-                              @Value("${pdf_generator.font}") String fontPath,
-                              @Value("${pdf_generator.dest}") String destinationPath) {
-        return new PDFGenerator(templatePath, fontPath, destinationPath);
+    PDFGenerator pdfGenerator(
+            @Value("${pdf_generator.template}") String templatePath,
+            @Value("${pdf_generator.font}") String fontPath,
+            @Value("${pdf_generator.dest}") String destinationPath,
+            @Value("${pdf_generator.fontsize}") int fontSize
+            ) {
+        return new PDFGenerator(templatePath, fontPath, destinationPath, fontSize);
+    }
+
+    @Bean
+    ErrorsResponseMessages errorsMessages(
+            @Value("${errors.file_error}") String fileError,
+            @Value("${errors.db_error}") String dbError
+    ) {
+        return new ErrorsResponseMessages(fileError, dbError);
+    }
+
+    @Bean
+    ExecutorService generatorPool() {
+        return Executors.newFixedThreadPool(4);
     }
 }
