@@ -3,19 +3,19 @@ version: "3.8"
 # Entry points are set inside dockerfiles of each service.
 
 services:
-  data_preprocessing_microservice:
+  data_preprocessing:
     profiles:
       - all
       - data_preprocessing
     build:
-      context: data_preprocessing_microservice
+      context: "${DATA_PREPROCESSING_FOLDER}"
       dockerfile: Dockerfile
-    image: "${COMPOSE_PROJECT_NAME}_data_preprocessing"
-    container_name: "${COMPOSE_PROJECT_NAME}_data_preprocessing"
+    image: "${COMPOSE_PROJECT_NAME}_${DATA_PREPROCESSING_FOLDER}"
+    container_name: "${COMPOSE_PROJECT_NAME}_${DATA_PREPROCESSING_FOLDER}"
     env_file:
       - .env
 #      - .secrets.env
-#      - data_preprocessing_microservice/.env
+#      - "${DATA_PREPROCESSING_FOLDER}/.env"
     volumes:
       - "${OUTSIDE_CSV_VOLUME}:${OUTSIDE_CSV_VOLUME_DOCKER_FOLDER}" # csv file
     restart: on-failure
@@ -24,63 +24,62 @@ services:
         aliases:
           - "${DATA_PREPROCESSING_NET_ALIAS}"
 
-
-  ml_microservice:
+  ml_generation:
     profiles:
       - all
-      - ml
+      - ml_generation
     build:
-      context: ml_microservice
+      context: "${ML_GENERATION_FOLDER}"
       dockerfile: Dockerfile
-    image: "${COMPOSE_PROJECT_NAME}_ml"
-    container_name: "${COMPOSE_PROJECT_NAME}_ml"
+    image: "${COMPOSE_PROJECT_NAME}_${ML_GENERATION_FOLDER}"
+    container_name: "${COMPOSE_PROJECT_NAME}_${ML_GENERATION_FOLDER}"
     env_file:
       - .env
     #      - .secrets.env
-    #      - ml_microservice/.env
+    #      - "${ML_GENERATION_FOLDER}/.env"
     restart: on-failure
     networks:
       int_network:
         aliases:
-          - "${ML_NET_ALIAS}"
+          - "${ML_GENERATION_NET_ALIAS}"
 
-  pdf_microservice:
+  pdf_generation:
     profiles:
       - all
-      - pdf
+      - pdf_generation
     build:
-      context: pdf_microservice
+      context: "${PDF_GENERATION_FOLDER}"
       dockerfile: Dockerfile
-    image: "${COMPOSE_PROJECT_NAME}_pdf"
-    container_name: "${COMPOSE_PROJECT_NAME}_pdf"
+    image: "${COMPOSE_PROJECT_NAME}_${PDF_GENERATION_FOLDER}"
+    container_name: "${COMPOSE_PROJECT_NAME}_${PDF_GENERATION_FOLDER}"
     env_file:
       - .env
     #      - .secrets.env
-    #      - pdf_microservice/.env
+    #      - "${PDF_GENERATION_FOLDER}/.env"
     restart: on-failure
     networks:
       int_network:
         aliases:
           - "${PDF_NET_ALIAS}"
 
-  crud_microservice:
+  db_crud_execution:
     profiles:
       - all
-      - crud
+      - db_crud_execution
     build:
-      context: crud_microservice
+      context: "${DB_CRUD_EXECUTION_FOLDER}"
       dockerfile: Dockerfile
-    image: "${COMPOSE_PROJECT_NAME}_crud"
-    container_name: "${COMPOSE_PROJECT_NAME}_crud"
+    image: "${COMPOSE_PROJECT_NAME}_${DB_CRUD_EXECUTION_FOLDER}"
+    container_name: "${COMPOSE_PROJECT_NAME}_${DB_CRUD_EXECUTION_FOLDER}"
     env_file:
       - .env
     #      - .secrets.env
-    #      - crud_microservice/.env
+    #      - "${DB_CRUD_EXECUTION_FOLDER}/.env"
     restart: on-failure
     networks:
       int_network:
         aliases:
-          - "${CRUD_NET_ALIAS}"
+          - "${DB_CRUD_EXECUTION_NET_ALIAS}"
 
   postgres:
     profiles:
@@ -139,3 +138,4 @@ volumes:
 
 
 ################################################################
+
