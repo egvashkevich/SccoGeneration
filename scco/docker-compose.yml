@@ -1,0 +1,137 @@
+version: "3.8"
+
+# Entry points are set inside dockerfiles of each service.
+
+services:
+  data_preprocessing_microservice:
+    profiles:
+      - all
+      - data_preprocessing
+    build:
+      context: data_preprocessing_microservice
+      dockerfile: Dockerfile
+    image: "${COMPOSE_PROJECT_NAME}_data_preprocessing"
+    container_name: "${COMPOSE_PROJECT_NAME}_data_preprocessing"
+    env_file:
+      - .env
+#      - .secrets.env
+#      - data_preprocessing_microservice/.env
+    volumes:
+      - "${OUTSIDE_CSV_VOLUME}:${OUTSIDE_CSV_VOLUME_DOCKER_FOLDER}" # csv file
+    restart: on-failure
+    networks:
+      int_network:
+        aliases:
+          - "${DATA_PREPROCESSING_NET_ALIAS}"
+
+
+  ml_microservice:
+    profiles:
+      - all
+      - ml
+    build:
+      context: ml_microservice
+      dockerfile: Dockerfile
+    image: "${COMPOSE_PROJECT_NAME}_ml"
+    container_name: "${COMPOSE_PROJECT_NAME}_ml"
+    env_file:
+      - .env
+    #      - .secrets.env
+    #      - ml_microservice/.env
+    restart: on-failure
+    networks:
+      int_network:
+        aliases:
+          - "${ML_NET_ALIAS}"
+
+  pdf_microservice:
+    profiles:
+      - all
+      - pdf
+    build:
+      context: pdf_microservice
+      dockerfile: Dockerfile
+    image: "${COMPOSE_PROJECT_NAME}_pdf"
+    container_name: "${COMPOSE_PROJECT_NAME}_pdf"
+    env_file:
+      - .env
+    #      - .secrets.env
+    #      - pdf_microservice/.env
+    restart: on-failure
+    networks:
+      int_network:
+        aliases:
+          - "${PDF_NET_ALIAS}"
+
+  crud_microservice:
+    profiles:
+      - all
+      - crud
+    build:
+      context: crud_microservice
+      dockerfile: Dockerfile
+    image: "${COMPOSE_PROJECT_NAME}_crud"
+    container_name: "${COMPOSE_PROJECT_NAME}_crud"
+    env_file:
+      - .env
+    #      - .secrets.env
+    #      - crud_microservice/.env
+    restart: on-failure
+    networks:
+      int_network:
+        aliases:
+          - "${CRUD_NET_ALIAS}"
+
+  postgres:
+    container_name: "${COMPOSE_PROJECT_NAME}_postgres_container"
+    image: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      PGDATA: /data/postgres
+    volumes:
+      - postgres:/data/postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - postgres
+    restart: unless-stopped
+
+  pgadmin:
+    container_name: "${COMPOSE_PROJECT_NAME}_pgadmin_container"
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    networks:
+      - postgres
+    restart: unless-stopped
+
+
+networks:
+  rmq_network:
+    name: "${RMQ_NETWORK}"
+    external: true
+  int_network:
+    name: "${INT_NETWORK}"
+  postgres:
+    driver: bridge
+
+#  To reuse volumes across multiple services
+volumes:
+  postgres:
+  pgadmin:
+
+#secrets:
+#  my_secret:
+#    file: secrets.env
+#  my_other_secret:
+#    external: true
+
+
+################################################################
