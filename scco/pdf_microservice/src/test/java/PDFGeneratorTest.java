@@ -12,7 +12,7 @@ public class PDFGeneratorTest {
         Path tempDir = Files.createTempDirectory("pdfgeneration");
         new PDFGenerator("/templates/cp1.pdf",
                          "/fonts/LiberationSansRegular.ttf",
-                         tempDir.toString() + "/")
+                         tempDir.toString() + "/", 18)
                 .generate(2, "Здравствуйте, Акакий "
                              + "Акакиевич!\nМы"
                              + " увидели ваше"
