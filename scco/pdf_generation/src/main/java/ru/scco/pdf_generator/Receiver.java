@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import ru.scco.pdf_generator.dto.PDFGeneratorRequestDTO;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
 
 @Slf4j
 @Service
@@ -22,11 +21,14 @@ public class Receiver {
     @RabbitListener(queues = {"${rabbit.pdf_generation_queue}"}, concurrency
             = "1")
     public void consume(PDFGeneratorRequestDTO request) {
-        generatorPool.execute(()->{
-            String fileLink = pdfGenerator.generate(request.senderId(),
-                                                    request.cp(), "");
+        generatorPool.execute(() -> {
+            String fileLink = pdfGenerator.generate(request.queryId(),
+                                                    request.senderId(),
+                                                    request.cp(),
+                                                    request.signature());
             if (fileLink == null) {
-                sender.sendError(request.senderId(), errorsMessages.fileError());
+                sender.sendError(request.senderId(),
+                                 errorsMessages.fileError());
             }
             if (manager.saveCP(request.senderId(), fileLink)) {
                 sender.sendCP(request.senderId(), fileLink);
