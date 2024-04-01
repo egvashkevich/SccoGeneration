@@ -13,7 +13,7 @@ public class PDFGeneratorTest {
         new PDFGenerator("/templates/cp1.pdf",
                          "/fonts/LiberationSansRegular.ttf",
                          tempDir.toString() + "/", 18)
-                .generate(2, "Здравствуйте, Акакий "
+                .generate(1, 2, "Здравствуйте, Акакий "
                              + "Акакиевич!\nМы"
                              + " увидели ваше"
                              + " сообщение в канале @overcoat. Хотим предложить "
@@ -25,7 +25,7 @@ public class PDFGeneratorTest {
                           "Корпоративный менеджер,\n"
                           + "Гоголь Григорий Петрович\n"
                           + "+79995771202");
-        Assertions.assertTrue(Files.exists(Path.of(tempDir.toString(),
-                                                   "2.pdf")));
+        Assertions.assertTrue(Files.exists(Path.of(tempDir.toString(), "2",
+                                                   "1.pdf")));
     }
 }
