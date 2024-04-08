@@ -1,8 +1,10 @@
 import configparser
 import csv
-import pika
-import sys
+import json
 import os
+import pika
+import requests
+import sys
 
 from tools.dict_occurrence import DictOccurrenceManager
 
@@ -14,29 +16,48 @@ in_queue = config["Rabbit"]["in_queue"]
 out_queue = config["Rabbit"]["out_queue"]
 
 
-def add_to_database(row):
+def add_to_database(dict_database):
     pass  # TODO: implement
 
 
 def on_message_received(ch, method, properties, body):
     print(f" [x] Received {body}")
 
-    path_to_csv = input_csv_prefix + body.decode()
-    with open(path_to_csv) as csvfile:
-        data = csvfile.readlines()
+    json_in = json.loads(body.decode())
+    customer_id = json_in['customer_id']
+    csv_url = json_in['parsed_csv']
+
+    r = requests.get(csv_url)
+    data = r.text.split('\n')
     data.pop(0)  # drop header
 
-    words_black_list = {'Вакансия'}  # TODO get by user id
+    words_black_list = {'Вакансия'}  # TODO get by customer_id
     occurrenceManager = DictOccurrenceManager(words_black_list)
 
-    csv_reader = csv.reader(data)
-    for row_raw, row_list in zip(data, csv_reader):  # can we make it async?
-        client_message = row_list[2]
-        if occurrenceManager.check_occurrence_with_errors(client_message, 2):
+    # TODO: group by (customer_id, client_id, channel_id)
+    for channel_id, client_id, message, message_date in csv.reader(data):
+
+        if occurrenceManager.check_occurrence_with_errors(message, 2):
             continue  # ignore this client
+
+        dict_out = {
+            'customer_id': customer_id,
+            'client_id': client_id,
+            'channel_id': channel_id,
+            'message': message,
+            'message_date': message_date
+        }
+        dict_database = {
+            'customer_id': customer_id,
+            'client_id': client_id,
+            'channel_id': channel_id,
+            'message_date': message_date
+        }
+
         # TODO: check if already in database
-        add_to_database(row_list)
-        send_message(ch, row_raw)
+
+        add_to_database(dict_database)
+        send_message(ch, json.dumps(dict_out))
 
     print(" [x] Done")
 
