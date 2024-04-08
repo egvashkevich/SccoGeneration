@@ -2,8 +2,8 @@ import csv
 import json
 import os
 import pika
-import requests
 import sys
+import urllib.request
 
 import config
 from tools.dict_occurrence import DictOccurrenceManager
@@ -20,8 +20,14 @@ def on_message_received(ch, method, properties, body):
     customer_id = json_in['customer_id']
     csv_url = json_in['parsed_csv']
 
-    r = requests.get(csv_url)
-    data = r.text.split('\n')
+    source = csv_url
+    if source.startswith('http'):
+        source = urllib.request.Request(source)
+    with urllib.request.urlopen(source) as f:
+        data = f.read().decode().split('\n')
+
+    print(data)
+
     data.pop(0)  # drop header
 
     words_black_list = config.COMMON_BLACK_LIST  # TODO get by customer_id
@@ -57,6 +63,7 @@ def on_message_received(ch, method, properties, body):
 
 
 def send_message(channel, body):
+    print(' [x] Sent a message')
     channel.basic_publish(exchange="", routing_key=config.OUT_QUEUE, body=body,
                           properties=pika.BasicProperties(
                               delivery_mode=pika.DeliveryMode.Persistent
