@@ -1,1 +1,4 @@
 pika
+Levenshtein
+regex
+requests
