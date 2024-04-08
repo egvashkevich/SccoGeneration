@@ -1,0 +1,3 @@
+- [ ] callback для микросервисов
+- [ ] relationship
+- [ ] понять, что такое connections в sqlalchemy
