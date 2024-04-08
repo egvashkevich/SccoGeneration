@@ -1,1 +1,3 @@
 .env
+*.ipynb
+configs/script.py
