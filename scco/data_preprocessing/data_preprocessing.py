@@ -4,6 +4,8 @@ import pika
 import sys
 import os
 
+from tools.dict_occurrence import DictOccurrenceManager
+
 config = configparser.ConfigParser()
 config.read("config.ini")
 input_csv_prefix = config["Paths"]["input_csv_prefix"]
@@ -24,8 +26,14 @@ def on_message_received(ch, method, properties, body):
         data = csvfile.readlines()
     data.pop(0)  # drop header
 
+    words_black_list = {'Вакансия'}  # TODO get by user id
+    occurrenceManager = DictOccurrenceManager(words_black_list)
+
     csv_reader = csv.reader(data)
     for row_raw, row_list in zip(data, csv_reader):  # can we make it async?
+        client_message = row_list[2]
+        if occurrenceManager.check_occurrence_with_errors(client_message, 2):
+            continue  # ignore this client
         # TODO: check if already in database
         add_to_database(row_list)
         send_message(ch, row_raw)
@@ -38,7 +46,8 @@ def send_message(channel, body):
 
 
 def main():
-    connection = pika.BlockingConnection(pika.ConnectionParameters(rabbit_address))
+    connection = pika.BlockingConnection(
+        pika.ConnectionParameters(rabbit_address))
     channel = connection.channel()
 
     channel.queue_declare(queue=in_queue)
