@@ -1,5 +1,3 @@
-import datetime
-
 contains_query_request_1 = {
     "query_name": "contains_query",
     "reply": {

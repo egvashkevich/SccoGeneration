@@ -1,6 +1,6 @@
 import sys
 
-from util import json_get_or_panic
+from json_util import dict_get_or_panic
 
 import dbapi
 
@@ -8,25 +8,25 @@ from models import Base
 
 import json
 
-from queries.contains_query import contains_query
-from queries.get_black_list import get_black_list
-from queries.insert_preprocessed_queries import insert_preprocessed_queries
+from services_queries.contains_query import contains_query
+from services_queries.get_black_list import get_black_list
+from services_queries.insert_preprocessed_queries import insert_preprocessed_queries
 
 # Dummy values.
-from crud.queries.templates.db_init_dummy_values import db_init_dummy_values
-from crud.queries.templates.contains_query_t import contains_query_request_1
-from crud.queries.templates.get_black_list_t import get_black_list_request_1
-from crud.queries.templates.insert_preprocessed_queries import (
+from crud.services_queries.templates.init_db import init_db
+from crud.services_queries.templates.contains_query_t import contains_query_request_1
+from crud.services_queries.templates.get_black_list_t import get_black_list_request_1
+from crud.services_queries.templates.insert_preprocessed_queries_t import (
     insert_preprocessed_queries_request_1
 )
 
 
 class Reply:
     def __init__(self, db_query: dict):
-        reply = json_get_or_panic(db_query, "reply", db_query)
-        self.exchange = json_get_or_panic(reply, "exchange", db_query)
-        self.queue = json_get_or_panic(reply, "queue", db_query)
-        self.routing_key = json_get_or_panic(reply, "routing_key", db_query)
+        reply = dict_get_or_panic(db_query, "reply", db_query)
+        self.exchange = dict_get_or_panic(reply, "exchange", db_query)
+        self.queue = dict_get_or_panic(reply, "queue", db_query)
+        self.routing_key = dict_get_or_panic(reply, "routing_key", db_query)
 
 
 def get_query_data(db_query):
@@ -45,7 +45,7 @@ def gateway_callback(ch, method, properties, body):
 
 
 def dispatch(db_query):
-    query_data = json_get_or_panic(db_query, "query_data", db_query)
+    query_data = dict_get_or_panic(db_query, "query_data", db_query)
     reply = Reply(db_query)
 
     print("Start dispatch")
@@ -81,7 +81,7 @@ def main():
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
 
-    db_init_dummy_values(engine)
+    init_db(engine)
 
     # dispatch(contains_query_request_1)
     # dispatch(get_black_list_request_1)

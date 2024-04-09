@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func as sqlfunc
 
 from crud.models import Query
-from crud.util import json_get_or_panic
+from crud.json_util import dict_has_or_panic
 import crud.dbapi as dbapi
 
 import json
@@ -38,7 +38,7 @@ def contains_query(query_data, reply, db_query):
 
     for row in query_data:
         for key in required_keys:
-            json_get_or_panic(row, key, db_query)
+            dict_has_or_panic(row, key, db_query)
 
     # Make db query.
     print("Start query")
@@ -50,5 +50,5 @@ def contains_query(query_data, reply, db_query):
 
     # Send query to rabbitmq.
     answer = json.dumps(answer, indent=2)
-    print(f"Answer:\n'{answer}'")
+    print(f"Answer:\n{answer}")
     # ...

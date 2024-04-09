@@ -24,9 +24,9 @@ class IdGenerator:
     def _create_message_group_id() -> MessageGroupId:
         engine = dbapi.DbEngine.get_engine()
         with Session(engine) as session:
-            # stmt = (select(sqlfunc.max(Query.message_group_id))
-            #         .select_from(Query))
-            stmt = select(sqlfunc.max(Query.message_group_id))
+            stmt = (select(sqlfunc.max(Query.message_group_id))
+                    .select_from(Query))
+            # stmt = select(sqlfunc.max(Query.message_group_id))
             res = session.scalars(stmt).one_or_none()
             if res is None:
                 res = 0
