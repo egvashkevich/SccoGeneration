@@ -31,50 +31,7 @@ from db_functional_service.data.ml_get_messages_data import (
     ml_get_messages_request_1
 )
 
-
-class Reply:
-    def __init__(self, db_query: dict):
-        reply = dict_get_or_panic(db_query, "reply", db_query)
-        self.exchange = dict_get_or_panic(reply, "exchange", db_query)
-        self.queue = dict_get_or_panic(reply, "queue", db_query)
-        self.routing_key = dict_get_or_panic(reply, "routing_key", db_query)
-
-
-def get_query_data(db_query):
-    if "query_data" in db_query:
-        return db_query["query_data"]
-    else:
-        raise RuntimeError(
-            f"No query_data provided. Query content: '{db_query}'"
-        )
-
-
-def gateway_callback(ch, method, properties, body):
-    json_query = body.decode("utf-8")
-    json_query = json.loads(json_query)
-    dispatch(json_query)
-
-
-def dispatch(db_query):
-    query_data = dict_get_or_panic(db_query, "query_data", db_query)
-    reply = Reply(db_query)
-
-    print("Start dispatch")
-
-    query_name = db_query["query_name"]
-    if query_name == "contains_queries":
-        contains_queries(query_data, reply, db_query)
-    elif query_name == "get_black_lists":
-        get_black_lists(query_data, reply, db_query)
-    elif query_name == "insert_preprocessed_queries":
-        insert_preprocessed_queries(query_data, reply, db_query)
-    elif query_name == "insert_offers":
-        insert_offers(query_data, reply, db_query)
-    elif query_name == "ml_get_messages":
-        ml_get_messages(query_data, reply, db_query)
-    else:
-        # TODO: print possible values
-        raise RuntimeError(f"Unknown query_name: '{query_name}'")
+from db_functional_service.main import dispatch
 
 
 # def text_query():

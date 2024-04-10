@@ -10,21 +10,27 @@ def _init_config() -> dict[str, str]:
     #     f"{service_dir}/.env.secret.postgres"
     # )
 
-    return {
+    res = {
         # **dotenv_values(path_to_local_venv),
         # **dotenv_values(path_to_local_secrets_venv),
         **os.environ,
     }
 
+    return res
 
-class EnvVars:
+
+class _EnvVars:
     _config = _init_config()
 
-    def __class_getitem__(cls, env_var: str):
+    def __class_getitem__(cls, env_var: str) -> str:
         return cls._config[env_var]
 
     @classmethod
-    def set_val(cls, env_var: str, val: str):
+    def get_val(cls, env_var: str) -> str:
+        return cls._config[env_var]
+
+    @classmethod
+    def set_val(cls, env_var: str, val: str) -> None:
         os.environ[env_var] = val
         cls._config[env_var] = val
 
@@ -33,7 +39,19 @@ class EnvVars:
         return cls._config.get("IS_ON_HOST", False)
 
     @classmethod
-    def print_all(cls):
+    def print_all(cls) -> None:
         print("Environment variables")
         for key, value in cls._config.items():
             print(f"{key}: {value}")
+
+
+def get(env_var: str):
+    return _EnvVars.get_val(env_var)
+
+
+def setdefault(env_var: str, val: str):
+    return _EnvVars.set_val(env_var, val)
+
+
+def is_on_host() -> bool:
+    return _EnvVars.is_on_host()

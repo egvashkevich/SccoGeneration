@@ -4,8 +4,6 @@ version: "3.8"
 
 services:
   data_preprocessing:
-    profiles:
-      - all
     build:
       context: "${DATA_PREPROCESSING_FOLDER}"
       dockerfile: Dockerfile
@@ -44,8 +42,6 @@ services:
       rmq_network:
 
   pdf_generation:
-    profiles:
-      - all
     build:
       context: "${PDF_GENERATION_FOLDER}"
       dockerfile: Dockerfile
@@ -62,81 +58,47 @@ services:
           - "${PDF_GENERATION_NET_ALIAS}"
       rmq_network:
 
-  db_crud_execution:
+  db_functional_service:
     profiles:
-      - all
       - crud
     depends_on:
-      postgres:
+      postgres_functional_service:
         condition: service_healthy
     build:
-      context: "${DB_CRUD_EXECUTION_FOLDER}"
+      context: "${DB_FUNCTIONAL_SERVICE_FOLDER}"
       dockerfile: Dockerfile
-    image: "${COMPOSE_PROJECT_NAME}_${DB_CRUD_EXECUTION_FOLDER}"
-    container_name: "${COMPOSE_PROJECT_NAME}_${DB_CRUD_EXECUTION_FOLDER}"
+    image: "${COMPOSE_PROJECT_NAME}_${DB_FUNCTIONAL_SERVICE_FOLDER}"
+    container_name: "${COMPOSE_PROJECT_NAME}_${DB_FUNCTIONAL_SERVICE_FOLDER}"
     env_file:
       - .env
-      - "${DB_CRUD_EXECUTION_FOLDER}/.env.secret.postgres"
-#    restart: "no"
-    restart: on-failure
+    restart: "no"
+#    restart: on-failure
     networks:
       int_network:
         aliases:
-          - "${DB_CRUD_EXECUTION_NET_ALIAS}"
+          - "${DB_FUNCTIONAL_SERVICE_NET_ALIAS}"
       rmq_network:
-      postgres:
+      postgres_functional_service_network:
 
-  postgres:
+  postgres_functional_service:
     profiles:
-      - all
       - crud
-      - postgres
-    container_name: "${COMPOSE_PROJECT_NAME}_postgres_container"
+    container_name: "${COMPOSE_PROJECT_NAME}_postgres_fs_container"
     image: postgres
     environment:
-#      POSTGRES_USER_FILE: /run/secrets/pg_user
-#      POSTGRES_PASSWORD_FILE: /run/secrets/pg_password
-#      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-#      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
-#      POSTGRES_USER: ${POSTGRES_USER:-root}
-#      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
-
-#      POSTGRES_USER: postgres
-#      POSTGRES_PASSWORD: postgres
-#      POSTGRES_DB: ${POSTGRES_DB}
       PGDATA: /data/postgres
     env_file:
-      - "${DB_CRUD_EXECUTION_FOLDER}/.env.secret.postgres"
+      - "${DB_FUNCTIONAL_SERVICE_FOLDER}/.env.secret.postgres"
     volumes:
-      - postgres:/data/postgres
-#    ports:
-#      - "5432:5432"
+      - postgres_functional_service_volume:/data/postgres
     networks:
-      - postgres
+      - postgres_functional_service_network
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
-
-#  pgadmin:
-#    profiles:
-#      - all
-#      - postgres
-#    container_name: "${COMPOSE_PROJECT_NAME}_pgadmin_container"
-#    image: dpage/pgadmin4
-#    environment:
-#      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
-#      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
-#      PGADMIN_CONFIG_SERVER_MODE: 'False'
-#    volumes:
-#      - pgadmin:/var/lib/pgadmin
-#    ports:
-#      - "${PGADMIN_PORT:-5050}:80"
-#    networks:
-#      - postgres
-#    restart: unless-stopped
 
 
 networks:
@@ -145,24 +107,20 @@ networks:
     external: true
   int_network:
     name: "${INT_NET}"
-  postgres:
-    name: "${POSTGRES_NETWORK_NAME}"
+  postgres_functional_service_network:
+    name: "${POSTGRES_FUNCTIONAL_SERVICE_NETWORK_NAME}"
     driver: bridge
 
 
 #  To reuse volumes across multiple services
 volumes:
-  postgres:
-    name: "${POSTGRES_VOLUME_NAME}"
-#  pgadmin:
-#    name: "${PGADMIN_VOLUME_NAME}"
+  postgres_functional_service_volume:
+    name: "${POSTGRES_FUNCTIONAL_SERVICE_VOLUME_NAME}"
 
 #secrets:
 #  pg_user:
-#    file: "./${DB_CRUD_EXECUTION_FOLDER}/secrets/pg_user"
+#    file: "./${DB_FUNCTIONAL_SERVICE_FOLDER}/secrets/pg_user"
 #  pg_password:
-#    file: "./${DB_CRUD_EXECUTION_FOLDER}/secrets/pg_password"
+#    file: "./${DB_FUNCTIONAL_SERVICE_FOLDER}/secrets/pg_password"
 #  my_other_secret:
 #    external: true
-
-################################################################

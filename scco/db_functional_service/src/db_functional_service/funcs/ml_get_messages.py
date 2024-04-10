@@ -14,6 +14,8 @@ import crud.message_group_id_generator as mgig
 
 import json
 
+import db_functional_service.rmq_handle as rmq
+
 
 def ml_get_messages(query_data, reply, db_query):
     required_keys = [
@@ -65,4 +67,4 @@ def ml_get_messages(query_data, reply, db_query):
         # Send query to rabbitmq.
         answer = json.dumps(answer, indent=2)
         print(f"Answer:\n{answer}")
-        # ...
+        rmq.RmqHandle.basic_publish(answer, reply)

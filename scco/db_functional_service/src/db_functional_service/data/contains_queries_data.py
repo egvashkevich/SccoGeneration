@@ -2,7 +2,6 @@ contains_query_request_1 = {
     "query_name": "contains_query",
     "reply": {
         "exchange": "test_exchange",
-        "queue": "test_queue",
         "routing_key": "test_routing_key",
     },
     "query_data": [
