@@ -8,6 +8,8 @@ from crud.objects.client import ClientCRUD
 
 import json
 
+import db_functional_service.rmq_handle as rmq
+
 
 def flatten_query_dict(query_dict: dict) -> list[dict]:
     res = []
@@ -73,7 +75,9 @@ def insert_preprocessed_queries(query_data, reply, db_query):
         # Insert queries.
         QueryCRUD.insert_all(insert_dicts)
 
+    answer = group_ids
+
     # Send query to rabbitmq.
-    answer = json.dumps(group_ids, indent=2)
+    answer = json.dumps(answer, indent=2)
     print(f"Answer:\n{answer}")
-    # ...
+    rmq.RmqHandle.basic_publish(answer, reply)

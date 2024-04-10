@@ -2,7 +2,6 @@ insert_offers_request_1 = {
     "query_name": "insert_offers",
     "reply": {
         "exchange": "test_exchange",
-        "queue": "test_queue",
         "routing_key": "test_routing_key",
     },
     "query_data": [

@@ -2,7 +2,6 @@ get_black_list_request_1 = {
     "query_name": "get_black_list",
     "reply": {
         "exchange": "test_exchange",
-        "queue": "test_queue",
         "routing_key": "test_routing_key",
     },
     "query_data": [

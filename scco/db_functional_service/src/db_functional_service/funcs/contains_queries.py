@@ -10,6 +10,9 @@ from crud.models import Query
 
 import json
 
+import util.parse_env as ps
+
+import db_functional_service.rmq_handle as rmq
 
 def contains_query_predicate(row, session):
     """
@@ -53,4 +56,4 @@ def contains_queries(query_data, reply, db_query):
     # Send query to rabbitmq.
     answer = json.dumps(answer, indent=2)
     print(f"Answer:\n{answer}")
-    # ...
+    rmq.RmqHandle.basic_publish(answer, reply)

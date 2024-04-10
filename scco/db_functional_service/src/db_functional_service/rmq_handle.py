@@ -8,6 +8,7 @@ from pika.adapters.blocking_connection import (
 from pika.channel import Channel
 
 import util.parse_env as pe
+from util.json_handle import dict_get_or_panic
 
 # Getting environment variables.
 RMQ_NET_ALIAS = pe.get("DB_FUNCTIONAL_SERVICE_NET_ALIAS")
@@ -15,6 +16,13 @@ DB_FUNCTIONAL_SERVICE_NET_ALIAS = pe.get("DB_FUNCTIONAL_SERVICE_NET_ALIAS")
 DB_FUNCTIONAL_SERVICE_EXCHANGE = pe.get("DB_FUNCTIONAL_SERVICE_EXCHANGE")
 DB_FUNCTIONAL_SERVICE_QUEUE = pe.get("DB_FUNCTIONAL_SERVICE_QUEUE")
 DB_FUNCTIONAL_SERVICE_ROUTING_KEY = pe.get("DB_FUNCTIONAL_SERVICE_ROUTING_KEY")
+
+
+class Reply:
+    def __init__(self, db_query: dict):
+        reply = dict_get_or_panic(db_query, "reply", db_query)
+        self.exchange = dict_get_or_panic(reply, "exchange", db_query)
+        self.routing_key = dict_get_or_panic(reply, "routing_key", db_query)
 
 
 class RmqHandle:
@@ -68,3 +76,12 @@ class RmqHandle:
     @classmethod
     def start_consume(cls):
         cls.chan.start_consuming()  # Infinite loop.
+
+    @classmethod
+    def basic_publish(cls, answer: str, reply: Reply):
+        body = answer.encode("utf-8")
+        cls.chan.basic_publish(
+            exchange=reply.exchange,
+            routing_key=reply.routing_key,
+            body=body,
+        )

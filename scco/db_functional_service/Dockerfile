@@ -14,7 +14,7 @@ WORKDIR ${SERVICE_DIR}
 # Only install (flag -n)
 RUN ["./run.sh", "-n"]
 
-CMD ["./run.sh", "-f", "${MAIN_FILE}"]
+CMD ["/bin/bash", "-c", "./run.sh -f ${MAIN_FILE}"]
 
 # Dependencies for psycopg2.
 #RUN apt-get install \

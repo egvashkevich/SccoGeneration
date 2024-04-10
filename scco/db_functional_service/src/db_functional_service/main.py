@@ -1,12 +1,13 @@
 import sys
+import json
 
 from util.json_handle import dict_get_or_panic
 
 import crud.dbapi as dbapi
-
 from crud.models import Base
 
-import json
+import db_functional_service.rmq_handle as rmq
+from db_functional_service.rmq_handle import Reply
 
 from db_functional_service.funcs.contains_queries import contains_queries
 from db_functional_service.funcs.get_black_lists import get_black_lists
@@ -15,8 +16,6 @@ from db_functional_service.funcs.insert_preprocessed_queries import (
 )
 from db_functional_service.funcs.insert_offers import insert_offers
 from db_functional_service.funcs.ml_get_messages import ml_get_messages
-
-from rmq_handle import RmqHandle
 
 
 def dispatch(db_query):
@@ -41,18 +40,10 @@ def dispatch(db_query):
         raise RuntimeError(f"Unknown query_name: '{query_name}'")
 
 
-class Reply:
-    def __init__(self, db_query: dict):
-        reply = dict_get_or_panic(db_query, "reply", db_query)
-        self.exchange = dict_get_or_panic(reply, "exchange", db_query)
-        self.queue = dict_get_or_panic(reply, "queue", db_query)
-        self.routing_key = dict_get_or_panic(reply, "routing_key", db_query)
-
-
 def gateway_callback(ch, method, properties, body):
-    json_query = body.decode("utf-8")
-    json_query = json.loads(json_query)
-    dispatch(json_query)
+    json_db_query = body.decode("utf-8")
+    db_query = json.loads(json_db_query)
+    dispatch(db_query)
 
 
 def init_database():
@@ -68,8 +59,8 @@ def init_database():
 def main():
     init_database()
 
-    RmqHandle.setup_rmq(gateway_callback)
-    RmqHandle.start_consume()  # Infinite loop.
+    rmq.RmqHandle.setup_rmq(gateway_callback)
+    rmq.RmqHandle.start_consume()  # Infinite loop.
 
 
 if __name__ == "__main__":

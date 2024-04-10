@@ -5,6 +5,7 @@
 # -f --- path to .py file to run (relative to package directory)
 # -n --- don't run application
 # -u --- uninstall package
+# -h --- is on host
 
 ################################################################################
 
@@ -27,6 +28,7 @@ PACKAGE_NAME="db_functional_service"
 REINSTALL=""
 NOT_RUN=""
 UNINSTALL=""
+export IS_ON_HOST=""
 
 ENV_FILES=$(echo "${ENV_FILES}" | awk '{ print $1 }')
 PIP_INSTALL_ARGS="."
@@ -48,6 +50,9 @@ while [ "$#" -gt 0 ]; do
       shift 1 ;;
     -u|--uninstall)
       UNINSTALL="1"
+      shift 1 ;;
+    -h|--on-host)
+      export IS_ON_HOST="true"
       shift 1 ;;
     *)
       echo "Unexpected argument: '$1'"

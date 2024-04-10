@@ -11,6 +11,8 @@ from crud.models import Customer
 
 import json
 
+import db_functional_service.rmq_handle as rmq
+
 
 def get_black_lists(query_data, reply, db_query):
 
@@ -63,4 +65,4 @@ def get_black_lists(query_data, reply, db_query):
     # Send query to rabbitmq.
     answer = json.dumps(answer, indent=2)
     print(f"Answer:\n{answer}")
-    # ...
+    rmq.RmqHandle.basic_publish(answer, reply)
