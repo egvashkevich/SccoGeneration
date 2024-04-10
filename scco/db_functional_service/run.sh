@@ -3,6 +3,8 @@
 # -e --- editable install (debug)
 # -r --- reinstall
 # -f --- path to .py file to run (relative to package directory)
+# -n --- don't run application
+# -u --- uninstall package
 
 ################################################################################
 
@@ -17,12 +19,14 @@ read -r -d '' ENV_FILES<<'EOF' || echo "ok" > /dev/null
 EOF
 
 PACKAGE_NAME="db_functional_service"
-REINSTALL="" # can be set by -r flag
-EDITABLE_INSTALL="" # can be set by -e flag
 
 ################################################################################
 
 # Script.
+
+REINSTALL=""
+NOT_RUN=""
+UNINSTALL=""
 
 ENV_FILES=$(echo "${ENV_FILES}" | awk '{ print $1 }')
 PIP_INSTALL_ARGS="."
@@ -38,16 +42,30 @@ while [ "$#" -gt 0 ]; do
       shift 1 ;;
     -f|--file)
       MAIN_FILE="$2"
-      shift 2;;
+      shift 2 ;;
+    -n|--not-run)
+      NOT_RUN="1"
+      shift 1 ;;
+    -u|--uninstall)
+      UNINSTALL="1"
+      shift 1 ;;
     *)
       echo "Unexpected argument: '$1'"
       exit 1
   esac
 done
 
+if [ -n "${UNINSTALL}" ]; then
+  echo "Uninstalling package."
+  pip3 uninstall -y "${PACKAGE_NAME}"
+  exit 0
+fi
+
 if [ -z "${MAIN_FILE}" ]; then
-  echo "-f option is omitted, but required to specify file"
-  exit 1
+  if [ -z "${NOT_RUN}" ]; then
+    echo "-f option is omitted, but required to specify file"
+    exit 1
+  fi
 fi
 
 if [ -n "${REINSTALL}" ]; then
@@ -57,7 +75,6 @@ if [ -n "${REINSTALL}" ]; then
   pip3 install ${PIP_INSTALL_ARGS}
 else
   PACKAGE_IS_INSTALLED="$(pip3 freeze | grep "${PACKAGE_NAME}")"
-  echo -e "PACKAGE_IS_INSTALLED: ${PACKAGE_IS_INSTALLED}"
   if [ -n "${PACKAGE_IS_INSTALLED}" ]; then
     echo "Package is already installed, skip installation."
   else
@@ -83,6 +100,7 @@ set +o allexport
 
 # Run.
 
-echo -e "Run package main.\n-----------------------------------------------"
-
-python -u "src/${PACKAGE_NAME}/${MAIN_FILE}"
+if [ -z "${NOT_RUN}" ]; then
+  echo -e "Run package main.\n-----------------------------------------------"
+  python3 -u "src/${PACKAGE_NAME}/${MAIN_FILE}"
+fi
