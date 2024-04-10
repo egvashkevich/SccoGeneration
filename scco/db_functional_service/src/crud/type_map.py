@@ -90,7 +90,7 @@ Attitude = Annotated[
     str,
     types.Text(),
 ]
-CorporateOfferFile = Annotated[
+OfferFile = Annotated[
     str,
     types.Text(),
 ]
@@ -145,7 +145,7 @@ type_map: Dict[Type[Any], TypeEngine[Any]] = {
     BlackList: get_db_type(BlackList),
     MessageGroupId: get_db_type(MessageGroupId),
     Attitude: get_db_type(Attitude),
-    CorporateOfferFile: get_db_type(CorporateOfferFile),
+    OfferFile: get_db_type(OfferFile),
     ServiceId: get_db_type(ServiceId),
     ServiceErrorId: get_db_type(ServiceErrorId),
     ServiceRejectionId: get_db_type(ServiceRejectionId),

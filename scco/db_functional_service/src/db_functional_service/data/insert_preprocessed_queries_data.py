@@ -1,5 +1,3 @@
-import datetime
-
 insert_preprocessed_queries_request_1 = {
     "query_name": "insert_preprocessed_queries",
     "reply": {
@@ -52,11 +50,8 @@ insert_preprocessed_queries_request_1 = {
 
 ################################################################################
 
-# insert_preprocessed_queries_answer_1 = [
-#   {
-#     "customer_id": "customer_1",
-#     "client_id": "client_1",
-#     "channel_id": "phystech.career",
-#     "message_date": "2024-01-01 00:00:00"
-#   }
-# ]
+insert_preprocessed_queries_answer_1 = [
+  3,
+  4,
+  5
+]

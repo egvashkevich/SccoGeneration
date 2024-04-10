@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# -e --- editable install
+# -e --- editable install (debug)
 # -r --- reinstall
 # -f --- path to .py file to run (relative to package directory)
 
@@ -9,14 +9,14 @@
 # User data (EDIT MANUALLY FOR EACH PROJECT).
 
 #set -x # debug
-set -eu
+#set -eu
 
 read -r -d '' ENV_FILES<<'EOF' || echo "ok" > /dev/null
     .env
     .env.secret.postgres
 EOF
 
-PACKAGE_NAME="crud"
+PACKAGE_NAME="db_functional_service"
 REINSTALL="" # can be set by -r flag
 EDITABLE_INSTALL="" # can be set by -e flag
 
@@ -57,11 +57,12 @@ if [ -n "${REINSTALL}" ]; then
   pip3 install ${PIP_INSTALL_ARGS}
 else
   PACKAGE_IS_INSTALLED="$(pip3 freeze | grep "${PACKAGE_NAME}")"
+  echo -e "PACKAGE_IS_INSTALLED: ${PACKAGE_IS_INSTALLED}"
   if [ -n "${PACKAGE_IS_INSTALLED}" ]; then
     echo "Package is already installed, skip installation."
   else
     echo "Installing package."
-     pip3 install ${PIP_INSTALL_ARGS}
+    pip3 install ${PIP_INSTALL_ARGS}
   fi
 fi
 

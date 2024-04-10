@@ -71,3 +71,4 @@ To run service (from service root).
 ./run.sh -r -e -f main_test.py # short version
 ```
 
+Написать про виртуальное окружение в установке.

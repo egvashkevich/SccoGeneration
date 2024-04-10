@@ -1,7 +1,7 @@
 # Table Configuration with Declarative:
 # https://docs.sqlalchemy.org/en/20/orm/declarative_tables.html#orm
 # -declarative-table
-
+import inspect
 # Data types.
 # https://docs.sqlalchemy.org/en/20/core/type_basics.html#generic-camelcase
 
@@ -13,47 +13,28 @@
 ################################################################################
 
 # Types.
-from typing import Optional
-
-from sqlalchemy.types import TypeEngine
-
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
 
 # Tables.
-from sqlalchemy import ForeignKey
 
 from sqlalchemy import MetaData
 
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import registry
-from sqlalchemy.orm import relationship
 
 from sqlalchemy import PrimaryKeyConstraint
 from sqlalchemy import ForeignKeyConstraint
-from sqlalchemy import UniqueConstraint
 
-import dbapi
-
-import datetime
-import decimal
-import uuid
-
-from type_map import Text
-from type_map import QueryId
-from type_map import CustomerId
-from type_map import ClientId
-from type_map import ChannelId
-from type_map import BlackList
-from type_map import MessageGroupId
-from type_map import Attitude
-from type_map import CorporateOfferFile
-from type_map import ServiceId
-from type_map import ServiceErrorId
-from type_map import ServiceRejectionId
-from type_map import LogId
-from type_map import MessageDatetime
-from type_map import type_map
+from crud.type_map import Text
+from crud.type_map import QueryId
+from crud.type_map import CustomerId
+from crud.type_map import ClientId
+from crud.type_map import ChannelId
+from crud.type_map import BlackList
+from crud.type_map import MessageGroupId
+from crud.type_map import Attitude
+from crud.type_map import OfferFile
+from crud.type_map import MessageDatetime
+from crud.type_map import type_map
 
 ################################################################################
 # Setup.
@@ -81,66 +62,24 @@ class Base(DeclarativeBase):
 # Models.
 ################################################################################
 
-from typing import List
-from typing import Optional
-from sqlalchemy import ForeignKey
-from sqlalchemy import String
-from sqlalchemy.orm import DeclarativeBase
+
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
-
-# class Base(DeclarativeBase):
-#     pass
-
-# class User(Base):
-#     __tablename__ = "user_account"
-#     id: Mapped[int] = mapped_column(primary_key=True)
-#     name: Mapped[str] = mapped_column(String(30))
-#     fullname: Mapped[Optional[str]]
-#     addresses: Mapped[List["Address"]] = relationship(
-#         back_populates="user", cascade="all, delete-orphan"
-#     )
-#     def __repr__(self) -> str:
-#         return f"User(id={self.id!r}, name={self.name!r}, fullname={self.fullname!r})"
-
-# class Address(Base):
-#     __tablename__ = "address"
-#     id: Mapped[int] = mapped_column(primary_key=True)
-#     email_address: Mapped[str]
-#     user_id: Mapped[int] = mapped_column(ForeignKey("user_account.id"))
-#     user: Mapped["User"] = relationship(back_populates="addresses")
-#     def __repr__(self) -> str:
-#         return f"Address(id={self.id!r}, email_address={self.email_address!r})"
-
-# class Customer(Base):
-#     __tablename__ = "customer"
-#     id: Mapped[int] = mapped_column(primary_key=True)
-#     email_address: Mapped[str]
-#
-#     def __repr__(self) -> str:
-#         return f"Address(id={self.id!r}, email_address={self.email_address!r})"
-
-# = mapped_column(server_default=func.CURRENT_TIMESTAMP())
-# - mapped_column(onupdate=datetime.datetime.now)
-
-
-# class MyTable(Base):
-#     __tablename__ = "my_table"
-#     __table_args__ = (
-#         PrimaryKeyConstraint("table_id"),
-#     )
-#
-#     table_id: Mapped[int] = mapped_column(autoincrement=True)
-#     message: Mapped[TextMapType]
 
 
 class Query(Base):
     __tablename__ = "query"
     __table_args__ = (
         PrimaryKeyConstraint("query_id"),
-        ForeignKeyConstraint(["client_id"], ["client.client_id"]),
-        ForeignKeyConstraint(["customer_id"], ["customer.customer_id"]),
+        ForeignKeyConstraint(
+            ["client_id"],
+            ["client.client_id"]
+        ),
+        ForeignKeyConstraint(
+            ["customer_id"],
+            ["customer.customer_id"]
+        ),
         # UniqueConstraint("foo"),
     )
 
@@ -154,14 +93,44 @@ class Query(Base):
 
     # Relationships.
     customer: Mapped["Customer"] = relationship(
-        back_populates="queries"
+        back_populates="queries",
     )
     client: Mapped["Client"] = relationship(
         back_populates="queries"
     )
-    corporate_offer: Mapped["CorporateOffer"] = relationship(
+    offer: Mapped["Offer"] = relationship(
         back_populates="query"
     )
+
+    def set_val(self, name: str, value: any):
+        if name == "query_id":
+            self.query_id = value
+        elif name == "customer_id":
+            self.customer_id = value
+        elif name == "client_id":
+            self.client_id = value
+        elif name == "channel_id":
+            self.channel_id = value
+        elif name == "message":
+            self.message = value
+        elif name == "message_group_id":
+            self.message_group_id = value
+        elif name == "message_date":
+            self.message_date = value
+        else:
+            raise AttributeError(f"Unknown attribute: name = {name}, "
+                                 f"value = {value}")
+
+    def __repr__(self) -> str:
+        return (inspect.cleandoc(f"""Query(
+                query_id={self.query_id!r}, 
+                customer_id={self.customer_id!r},
+                client_id={self.client_id!r},
+                channel_id={self.channel_id!r},
+                message={self.message!r},
+                message_group_id={self.message_group_id!r},
+                message_date={self.message_date!r},
+                )"""))
 
 
 class Customer(Base):
@@ -175,6 +144,12 @@ class Customer(Base):
         back_populates="customer"
     )
 
+    def __repr__(self) -> str:
+        return (inspect.cleandoc(f"""Customer(
+                customer_id={self.customer_id!r}, 
+                black_list={self.black_list!r},
+                )"""))
+
 
 class Client(Base):
     __tablename__ = "client"
@@ -187,21 +162,36 @@ class Client(Base):
         back_populates="client"
     )
 
+    def __repr__(self) -> str:
+        return (inspect.cleandoc(f"""Client(
+                query_id={self.client_id!r}, 
+                attitude={self.attitude!r},
+                )"""))
 
-class CorporateOffer(Base):
-    __tablename__ = "corporate_offer"
+
+class Offer(Base):
+    __tablename__ = "offer"
     __table_args__ = (
         PrimaryKeyConstraint("query_id"),
-        ForeignKeyConstraint(["query_id"], ["query.query_id"]),
+        ForeignKeyConstraint(
+            ["query_id"],
+            ["query.query_id"]
+        ),
     )
 
     query_id: Mapped[QueryId]
-    file: Mapped[CorporateOfferFile]
+    file: Mapped[OfferFile]
 
     # Relationships.
     query: Mapped["Query"] = relationship(
-        back_populates="corporate_offer"
+        back_populates="offer"
     )
+
+    def __repr__(self) -> str:
+        return (inspect.cleandoc(f"""Offer(
+                query_id={self.query_id!r}, 
+                file={self.file!r},
+                )"""))
 
 #############################################################################
 

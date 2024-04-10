@@ -1,10 +1,7 @@
-import datetime
-
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
 from sqlalchemy.engine import Engine
 
-from parse_env import EnvVars
+from util.parse_env import EnvVars
 
 
 # Engine URL: "postgresql+psycopg2://{user}:{password}@{host}:{port}/{database}"

@@ -6,7 +6,7 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "crud"
+name = "db_functional_service"
 version = "0.1.0"
 authors = [
     {name = "Egor Vashkevich", email = "goshikvash@gmail.com"}
@@ -14,10 +14,10 @@ authors = [
 maintainers = [
     {name = "Egor Vashkevich", email = "goshikvash@gmail.com"}
 ]
-description = "Template program for packaging python projects"
+description = "db_functional_service"
 readme = "README.md"
 requires-python = ">=3.10"
-license = {text = "LICENSE"}
+#license = {text = "LICENSE"}
 classifiers = [
     "Programming Language :: Python :: 3",
 ]
@@ -49,6 +49,6 @@ include-package-data = true
 ################################################################################
 
 [project.scripts]
-run_crud = "crud.main:main"
+run_db_functional_service = "db_functional_service.main:main"
 
 ################################################################################

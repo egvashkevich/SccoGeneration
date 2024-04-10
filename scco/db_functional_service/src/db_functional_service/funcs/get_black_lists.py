@@ -3,34 +3,32 @@ import inspect
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from crud.models import Customer
-from crud.util import json_get_or_panic
+from util.json_handle import dict_get_or_panic
 import crud.dbapi as dbapi
-import crud.message_group_id_generator as mgig
+
+# TODO: replace with ClientCRUD
+from crud.models import Customer
 
 import json
 
 
-def insert_preprocessed_queries(query_data, reply, db_query):
+def get_black_lists(query_data, reply, db_query):
 
     # Check keys.
     required_keys = [
         "customer_id",
-        "client_id",
-        "channel_id",
-        "messages",
-        "message_dates",
     ]
+
+    customer_ids = list()
 
     for row in query_data:
         for key in required_keys:
-            json_get_or_panic(row, key, db_query)
+            customer_ids.append(dict_get_or_panic(row, key, db_query))
 
     # Make db query.
     print("Start query")
     engine = dbapi.DbEngine.get_engine()
     with Session(engine) as session:
-
         stmt = (select(Customer.customer_id, Customer.black_list)
                 .where(Customer.customer_id.in_(customer_ids)))
         print("Make scalars")
@@ -64,5 +62,5 @@ def insert_preprocessed_queries(query_data, reply, db_query):
 
     # Send query to rabbitmq.
     answer = json.dumps(answer, indent=2)
-    print(f"Answer:\n'{answer}'")
+    print(f"Answer:\n{answer}")
     # ...
