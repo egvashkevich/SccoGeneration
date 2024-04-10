@@ -1,19 +1,12 @@
 import inspect
 
 from sqlalchemy import Engine
-from sqlalchemy.orm import Session
 
 import crud.message_group_id_generator as mgig
 
-from crud.models import Customer
-from crud.models import Client
-from crud.models import Query
-from crud.models import Offer
-
-from crud.dao.customer import CustomerDAO
-from crud.dao.client import ClientDAO
-from crud.dao.query import QueryDAO
-from crud.dao.offer import OfferDAO
+from crud.objects.customer import CustomerCRUD
+from crud.objects.client import ClientCRUD
+from crud.objects.query import QueryCRUD
 
 import datetime
 
@@ -32,7 +25,7 @@ def init_db(engine: Engine) -> None:
         "black_list": ["bitch", "freak"],
     }
     print("Start insert customers")
-    CustomerDAO.insert_all([customer_1, customer_2])
+    CustomerCRUD.insert_all([customer_1, customer_2])
     print("Finished insert customers")
 
     ############################################################################
@@ -46,7 +39,7 @@ def init_db(engine: Engine) -> None:
         "attitude": "famous",
     }
     print("Start insert clients")
-    ClientDAO.insert_all([client_1, client_2])
+    ClientCRUD.insert_all([client_1, client_2])
     print("Finished insert clients")
 
     ############################################################################
@@ -78,17 +71,17 @@ def init_db(engine: Engine) -> None:
         ),
     }
     print("Start insert queries")
-    query_id_list = QueryDAO.insert_all([query_1, query_2])
+    query_id_list = QueryCRUD.insert_all([query_1, query_2])
     print("Finished insert queries")
 
     ############################################################################
     # Offers.
     offer_1 = {
-        "client_id": query_id_list[0],
+        "query_id": query_id_list[0],
         "file": "/path/to/offer1",
     }
     offer_2 = {
-        "client_id": query_id_list[1],
+        "query_id": query_id_list[1],
         "file": "/path/to/offer2",
     }
 

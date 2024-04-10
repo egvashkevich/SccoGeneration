@@ -1,23 +1,34 @@
 import sys
 
-from json_util import dict_get_or_panic
+from util.json_handle import dict_get_or_panic
 
-import dbapi
+import crud.dbapi as dbapi
 
-from models import Base
+from crud.models import Base
 
 import json
 
-from services_queries.contains_query import contains_query
-from services_queries.get_black_list import get_black_list
-from services_queries.insert_preprocessed_queries import insert_preprocessed_queries
+from db_functional_service.funcs.contains_queries import contains_queries
+from db_functional_service.funcs.get_black_lists import get_black_lists
+from db_functional_service.funcs.insert_preprocessed_queries import (
+    insert_preprocessed_queries
+)
+from db_functional_service.funcs.insert_offers import insert_offers
+from db_functional_service.funcs.ml_get_messages import ml_get_messages
 
 # Dummy values.
-from crud.services_queries.templates.init_db import init_db
-from crud.services_queries.templates.contains_query_t import contains_query_request_1
-from crud.services_queries.templates.get_black_list_t import get_black_list_request_1
-from crud.services_queries.templates.insert_preprocessed_queries_t import (
+from db_functional_service.data.init_db import init_db
+from db_functional_service.data.insert_preprocessed_queries_data import (
     insert_preprocessed_queries_request_1
+)
+from db_functional_service.data.insert_offers_data import (
+    insert_offers_request_1
+)
+from db_functional_service.data.insert_offers_data import (
+    insert_offers_request_1
+)
+from db_functional_service.data.ml_get_messages_data import (
+    ml_get_messages_request_1
 )
 
 
@@ -35,7 +46,7 @@ def get_query_data(db_query):
     else:
         raise RuntimeError(
             f"No query_data provided. Query content: '{db_query}'"
-            )
+        )
 
 
 def gateway_callback(ch, method, properties, body):
@@ -51,12 +62,16 @@ def dispatch(db_query):
     print("Start dispatch")
 
     query_name = db_query["query_name"]
-    if query_name == "contains_query":
-        contains_query(query_data, reply, db_query)
-    elif query_name == "get_black_list":
-        get_black_list(query_data, reply, db_query)
+    if query_name == "contains_queries":
+        contains_queries(query_data, reply, db_query)
+    elif query_name == "get_black_lists":
+        get_black_lists(query_data, reply, db_query)
     elif query_name == "insert_preprocessed_queries":
         insert_preprocessed_queries(query_data, reply, db_query)
+    elif query_name == "insert_offers":
+        insert_offers(query_data, reply, db_query)
+    elif query_name == "ml_get_messages":
+        ml_get_messages(query_data, reply, db_query)
     else:
         # TODO: print possible values
         raise RuntimeError(f"Unknown query_name: '{query_name}'")
@@ -85,7 +100,9 @@ def main():
 
     # dispatch(contains_query_request_1)
     # dispatch(get_black_list_request_1)
-    dispatch(insert_preprocessed_queries_request_1)
+    # dispatch(insert_preprocessed_queries_request_1)
+    # dispatch(insert_offers_request_1)
+    dispatch(ml_get_messages_request_1)
 
 
 if __name__ == "__main__":

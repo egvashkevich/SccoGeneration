@@ -13,49 +13,28 @@ import inspect
 ################################################################################
 
 # Types.
-from typing import Optional
-
-from sqlalchemy.types import TypeEngine
-
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
 
 # Tables.
-from sqlalchemy import ForeignKey
 
 from sqlalchemy import MetaData
 
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import registry
-from sqlalchemy.orm import relationship
 
 from sqlalchemy import PrimaryKeyConstraint
 from sqlalchemy import ForeignKeyConstraint
-from sqlalchemy import UniqueConstraint
 
-import dbapi
-
-import datetime
-import decimal
-import uuid
-
-from type_map import Text
-from type_map import QueryId
-from type_map import CustomerId
-from type_map import ClientId
-from type_map import ChannelId
-from type_map import BlackList
-from type_map import MessageGroupId
-from type_map import Attitude
-from type_map import OfferFile
-from type_map import ServiceId
-from type_map import ServiceErrorId
-from type_map import ServiceRejectionId
-from type_map import LogId
-from type_map import MessageDatetime
-from type_map import type_map
-
-import json
+from crud.type_map import Text
+from crud.type_map import QueryId
+from crud.type_map import CustomerId
+from crud.type_map import ClientId
+from crud.type_map import ChannelId
+from crud.type_map import BlackList
+from crud.type_map import MessageGroupId
+from crud.type_map import Attitude
+from crud.type_map import OfferFile
+from crud.type_map import MessageDatetime
+from crud.type_map import type_map
 
 ################################################################################
 # Setup.
@@ -84,24 +63,23 @@ class Base(DeclarativeBase):
 ################################################################################
 
 
-from typing import List
-from typing import Optional
-from sqlalchemy import ForeignKey
-from sqlalchemy import String
-from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
-
-from crud.json_util import dict_get_or_panic
 
 
 class Query(Base):
     __tablename__ = "query"
     __table_args__ = (
         PrimaryKeyConstraint("query_id"),
-        ForeignKeyConstraint(["client_id"], ["client.client_id"]),
-        ForeignKeyConstraint(["customer_id"], ["customer.customer_id"]),
+        ForeignKeyConstraint(
+            ["client_id"],
+            ["client.client_id"]
+        ),
+        ForeignKeyConstraint(
+            ["customer_id"],
+            ["customer.customer_id"]
+        ),
         # UniqueConstraint("foo"),
     )
 
@@ -195,7 +173,10 @@ class Offer(Base):
     __tablename__ = "offer"
     __table_args__ = (
         PrimaryKeyConstraint("query_id"),
-        ForeignKeyConstraint(["query_id"], ["query.query_id"]),
+        ForeignKeyConstraint(
+            ["query_id"],
+            ["query.query_id"]
+        ),
     )
 
     query_id: Mapped[QueryId]

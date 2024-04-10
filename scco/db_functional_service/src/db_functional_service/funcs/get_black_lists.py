@@ -3,14 +3,16 @@ import inspect
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from crud.models import Customer
-from crud.json_util import dict_get_or_panic
+from util.json_handle import dict_get_or_panic
 import crud.dbapi as dbapi
+
+# TODO: replace with ClientCRUD
+from crud.models import Customer
 
 import json
 
 
-def get_black_list(query_data, reply, db_query):
+def get_black_lists(query_data, reply, db_query):
 
     # Check keys.
     required_keys = [

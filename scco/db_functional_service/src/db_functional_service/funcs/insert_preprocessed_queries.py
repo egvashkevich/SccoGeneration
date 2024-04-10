@@ -1,15 +1,10 @@
 import inspect
 
-from sqlalchemy import insert
-from sqlalchemy.orm import Session
-
-from crud.dao.query import QueryDAO
-from crud.models import Query
-from crud.json_util import dict_get_or_panic
-import crud.dbapi as dbapi
+from util.json_handle import dict_get_or_panic
 import crud.message_group_id_generator as mgig
 
-from crud.dao.client import ClientDAO
+from crud.objects.query import QueryCRUD
+from crud.objects.client import ClientCRUD
 
 import json
 
@@ -61,9 +56,6 @@ def insert_preprocessed_queries(query_data, reply, db_query):
 
         # Prepare data for insertion.
         group_id = mgig.IdGenerator.reserve_id()
-        print("--------------------------")
-        print(group_id)
-        print("--------------------------")
         group_ids.append(group_id)
 
         insert_dicts = flatten_query_dict(data_dict)
@@ -72,14 +64,14 @@ def insert_preprocessed_queries(query_data, reply, db_query):
 
         # Insert new clients.
         for query_dict in insert_dicts:
-            if not ClientDAO.contain(query_dict["client_id"]):
-                ClientDAO.insert_one({
+            if not ClientCRUD.contain(query_dict["client_id"]):
+                ClientCRUD.insert_one({
                     "client_id": query_dict["client_id"],
                     "attitude": "default"
                 })
 
         # Insert queries.
-        QueryDAO.insert_all(insert_dicts)
+        QueryCRUD.insert_all(insert_dicts)
 
     # Send query to rabbitmq.
     answer = json.dumps(group_ids, indent=2)

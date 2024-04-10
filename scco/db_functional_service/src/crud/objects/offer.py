@@ -5,10 +5,8 @@ from crud.models import Offer
 
 import crud.dbapi as dbapi
 
-from crud.type_map import QueryId
 
-
-class OfferDAO:
+class OfferCRUD:
     def __init__(self):
         pass
 

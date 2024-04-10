@@ -8,7 +8,7 @@ import crud.dbapi as dbapi
 from crud.type_map import QueryId
 
 
-class QueryDAO:
+class QueryCRUD:
     def __init__(self):
         pass
 
