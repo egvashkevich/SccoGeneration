@@ -23,7 +23,7 @@ services:
 #    networks:
 #      int_network:
 #        aliases:
-#          - "${DB_CRUD_EXECUTION_NET_ALIAS}"
+#          - "${DB_FUNCTIONAL_SERVICE_NET_ALIAS}"
 #      rmq_network:
 #      postgres:
 
