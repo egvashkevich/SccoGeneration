@@ -36,7 +36,8 @@ def main():
     channel.queue_declare(queue=config.OUT_QUEUE, durable=True)
 
     def callback(ch, method, properties, body):
-        print(f" [x] Received {body}")
+        body_readable = str(json.loads(body.decode()))
+        print(f" [x] Received {body_readable}")
 
     channel.basic_consume(queue=config.OUT_QUEUE, auto_ack=True, on_message_callback=callback)
 

@@ -26,8 +26,6 @@ def on_message_received(ch, method, properties, body):
     with urllib.request.urlopen(source) as f:
         data = f.read().decode().split('\n')
 
-    print(data)
-
     data.pop(0)  # drop header
 
     words_black_list = config.COMMON_BLACK_LIST  # TODO get by customer_id
