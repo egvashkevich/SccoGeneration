@@ -7,6 +7,9 @@ RUN mkdir ${SERVICE_DIR}
 COPY . ${SERVICE_DIR}
 WORKDIR ${SERVICE_DIR}
 
+RUN pip3 install -r requirements.txt
+
 # Installation
 # ENTRYPOINT or CMD to run service. Link to their difference:
 # https://docs.docker.com/reference/dockerfile/#understand-how-cmd-and-entrypoint-interact
+ENTRYPOINT python3 data_preprocessing.py

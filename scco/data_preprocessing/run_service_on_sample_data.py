@@ -18,7 +18,7 @@ def main():
 
     message = json.dumps({
         'customer_id': '0',
-        'parsed_csv': 'file://' + os.path.join(os.getcwd(), 'sample_input.csv')
+        'parsed_csv': 'file://' + os.path.join(os.getcwd(), 'resources/sample_input.csv')
     })
 
     channel.basic_publish(exchange="", routing_key=config.IN_QUEUE, body=message,
@@ -36,7 +36,8 @@ def main():
     channel.queue_declare(queue=config.OUT_QUEUE, durable=True)
 
     def callback(ch, method, properties, body):
-        print(f" [x] Received {body}")
+        body_readable = str(json.loads(body.decode()))
+        print(f" [x] Received {body_readable}")
 
     channel.basic_consume(queue=config.OUT_QUEUE, auto_ack=True, on_message_callback=callback)
 
