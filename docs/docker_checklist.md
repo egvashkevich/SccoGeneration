@@ -152,6 +152,12 @@ docker system prune
 docker system prune -a --filter "until = 24h"
 ```
 
+### Logs
+```bash
+docker container logs <container_name>
+```
+
+
 <!--#########################################################################-->
 
 ## Dockerfile
