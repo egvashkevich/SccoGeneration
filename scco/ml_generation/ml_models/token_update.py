@@ -3,6 +3,7 @@ import base64
 import requests
 import uuid
 from dotenv import load_dotenv
+
 def load_local_env():
     dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
     if os.path.exists(dotenv_path):
