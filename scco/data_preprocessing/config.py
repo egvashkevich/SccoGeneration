@@ -3,4 +3,11 @@ RABBIT_ADDRESS = 'localhost'
 IN_QUEUE = 'in_queue'
 OUT_QUEUE = 'from_preprocessing_to_ml'
 
-COMMON_BLACK_LIST = {'Вакансия'}
+CONTAINS_QUERY_EXCHANGE = 'contains_query'
+CONTAINS_QUERY_ROUTING_KEY = ''  # TODO
+
+BLACK_LIST_QUERY_EXCHANGE = 'black_list'
+BLACK_LIST_QUERY_ROUTING_KEY = ''
+
+INSERT_AFTER_PREPROCESSING_QUERY_EXCHANGE = 'insert_after_preprocessing'
+INSERT_AFTER_PREPROCESSING_QUERY_ROUTING_KEY = ''
