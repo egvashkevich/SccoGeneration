@@ -18,7 +18,7 @@ def main():
 
     message = json.dumps({
         'customer_id': '0',
-        'parsed_csv': 'file://' + os.path.join(os.getcwd(), 'sample_input.csv')
+        'parsed_csv': 'file://' + os.path.join(os.getcwd(), 'resources/sample_input.csv')
     })
 
     channel.basic_publish(exchange="", routing_key=config.IN_QUEUE, body=message,
