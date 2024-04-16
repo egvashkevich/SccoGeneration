@@ -53,7 +53,7 @@ def init_database():
 
     print("Creating tables", flush=True)
     Base.metadata.create_all(engine)
-    print("Creating tables", flush=True)
+    print("Tables created", flush=True)
 
 
 def main():

@@ -25,14 +25,18 @@ from sqlalchemy import PrimaryKeyConstraint
 from sqlalchemy import ForeignKeyConstraint
 
 from crud.type_map import Text
+from crud.type_map import FilePath
 from crud.type_map import QueryId
 from crud.type_map import CustomerId
 from crud.type_map import ClientId
+from crud.type_map import CsvId
 from crud.type_map import ChannelId
-from crud.type_map import BlackList
+from crud.type_map import CustomerBlackList
+from crud.type_map import CustomerTags
+from crud.type_map import CustomerWhiteList
+from crud.type_map import CustomerFeatures
 from crud.type_map import MessageGroupId
 from crud.type_map import Attitude
-from crud.type_map import OfferFile
 from crud.type_map import MessageDatetime
 from crud.type_map import type_map
 
@@ -73,12 +77,16 @@ class Query(Base):
     __table_args__ = (
         PrimaryKeyConstraint("query_id"),
         ForeignKeyConstraint(
+            ["customer_id"],
+            ["customer.customer_id"]
+        ),
+        ForeignKeyConstraint(
             ["client_id"],
             ["client.client_id"]
         ),
         ForeignKeyConstraint(
-            ["customer_id"],
-            ["customer.customer_id"]
+            ["csv_id"],
+            ["new_queries_csv.csv_id"]
         ),
         # UniqueConstraint("foo"),
     )
@@ -86,6 +94,7 @@ class Query(Base):
     query_id: Mapped[QueryId] = mapped_column(autoincrement=True)
     customer_id: Mapped[CustomerId]
     client_id: Mapped[ClientId]
+    csv_id: Mapped[CsvId]
     channel_id: Mapped[ChannelId]
     message: Mapped[Text]
     message_group_id: Mapped[MessageGroupId]
@@ -101,31 +110,16 @@ class Query(Base):
     offer: Mapped["Offer"] = relationship(
         back_populates="query"
     )
-
-    def set_val(self, name: str, value: any):
-        if name == "query_id":
-            self.query_id = value
-        elif name == "customer_id":
-            self.customer_id = value
-        elif name == "client_id":
-            self.client_id = value
-        elif name == "channel_id":
-            self.channel_id = value
-        elif name == "message":
-            self.message = value
-        elif name == "message_group_id":
-            self.message_group_id = value
-        elif name == "message_date":
-            self.message_date = value
-        else:
-            raise AttributeError(f"Unknown attribute: name = {name}, "
-                                 f"value = {value}")
+    new_queries_csv: Mapped["NewQueriesCsv"] = relationship(
+        back_populates="queries"
+    )
 
     def __repr__(self) -> str:
         return (inspect.cleandoc(f"""Query(
                 query_id={self.query_id!r}, 
                 customer_id={self.customer_id!r},
                 client_id={self.client_id!r},
+                csv_id={self.csv_id!r},
                 channel_id={self.channel_id!r},
                 message={self.message!r},
                 message_group_id={self.message_group_id!r},
@@ -133,22 +127,85 @@ class Query(Base):
                 )"""))
 
 
+class NewQueriesCsv(Base):
+    __tablename__ = "new_queries_csv"
+    __table_args__ = (
+        PrimaryKeyConstraint("csv_id"),
+    )
+
+    csv_id: Mapped[CsvId] = mapped_column(autoincrement=True)
+    csv_path: Mapped[FilePath]
+
+    # Relationships.
+    queries: Mapped["Query"] = relationship(
+        back_populates="new_queries_csv"
+    )
+
+    def __repr__(self) -> str:
+        return (inspect.cleandoc(f"""NewQueriesCsv(
+                csv_id={self.csv_id!r}, 
+                csv_path={self.csv_path!r},
+                )"""))
+
+
 class Customer(Base):
     __tablename__ = "customer"
 
     customer_id: Mapped[CustomerId] = mapped_column(primary_key=True)
-    black_list: Mapped[BlackList]
+    contact_info: Mapped[Text]
+    company_name: Mapped[Text]
+    black_list: Mapped[CustomerBlackList]
+    tags: Mapped[CustomerTags]
+    white_list: Mapped[CustomerWhiteList]
+    specific_features: Mapped[CustomerFeatures]
 
     # Relationships.
     queries: Mapped["Query"] = relationship(
         back_populates="customer"
     )
+    customer_services: Mapped["CustomerService"] = relationship(
+        back_populates="customer"
+    )
 
     def __repr__(self) -> str:
         return (inspect.cleandoc(f"""Customer(
-                customer_id={self.customer_id!r}, 
+                customer_id={self.customer_id!r},
+                contact_info={self.contact_info!r},
+                company_name={self.company_name!r},
                 black_list={self.black_list!r},
+                tags={self.tags!r},
+                white_list={self.white_list!r},
+                specific_features={self.specific_features!r},
                 )"""))
+
+
+class CustomerService(Base):
+    __tablename__ = "customer_service"
+    __table_args__ = (
+        PrimaryKeyConstraint("customer_id", "service_name"),
+        ForeignKeyConstraint(
+            ["customer_id"],
+            ["customer.customer_id"]
+        ),
+    )
+
+    customer_id: Mapped[CustomerId]
+    service_name: Mapped[Text]
+    service_desc: Mapped[Text]
+
+    # Relationships.
+    customer: Mapped["Customer"] = relationship(
+        back_populates="customer_services"
+    )
+
+    def __repr__(self) -> str:
+        return (inspect.cleandoc(
+            f"""CustomerService(
+                customer_id={self.customer_id!r}, 
+                service_name={self.service_name!r},
+                service_desc={self.service_desc!r},
+                )"""
+            ))
 
 
 class Client(Base):
@@ -164,7 +221,7 @@ class Client(Base):
 
     def __repr__(self) -> str:
         return (inspect.cleandoc(f"""Client(
-                query_id={self.client_id!r}, 
+                client_id={self.client_id!r}, 
                 attitude={self.attitude!r},
                 )"""))
 
@@ -180,7 +237,7 @@ class Offer(Base):
     )
 
     query_id: Mapped[QueryId]
-    file: Mapped[OfferFile]
+    file_path: Mapped[FilePath]
 
     # Relationships.
     query: Mapped["Query"] = relationship(
@@ -190,7 +247,7 @@ class Offer(Base):
     def __repr__(self) -> str:
         return (inspect.cleandoc(f"""Offer(
                 query_id={self.query_id!r}, 
-                file={self.file!r},
+                file_path={self.file_path!r},
                 )"""))
 
 #############################################################################
