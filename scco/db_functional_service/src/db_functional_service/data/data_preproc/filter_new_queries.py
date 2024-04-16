@@ -1,10 +1,11 @@
-contains_query_request_1 = {
-    "query_name": "contains_query",
+request_1 = {
+    "request_name": "filter_new_queries",
     "reply": {
-        "exchange": "test_exchange",
-        "routing_key": "test_routing_key",
+        "exchange": "scco_test_exchange",
+        "routing_key": "scco_test_rk",
     },
-    "query_data": [
+    "reply_ctx": "something",  # not required
+    "request_data": [
         {
             "customer_id": "customer_1",
             "client_id": "client_1",
@@ -22,11 +23,14 @@ contains_query_request_1 = {
 
 ################################################################################
 
-contains_query_answer_1 = [
-  {
-    "customer_id": "customer_1",
-    "client_id": "client_1",
-    "channel_id": "phystech.career",
-    "message_date": "2024-01-01 00:00:00"
-  }
-]
+answer_1 = {
+  "not_exist": [
+    {
+      "customer_id": "customer_1",
+      "client_id": "client_1",
+      "channel_id": "phystech.career",
+      "message_date": "2024-01-01T00:00:00"
+    }
+  ],
+  "reply_ctx": "something"
+}

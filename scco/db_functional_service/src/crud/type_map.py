@@ -62,6 +62,10 @@ Text = Annotated[
     str,
     types.Text(),
 ]
+FilePath = Annotated[
+    str,
+    types.Text(),
+]
 QueryId = Annotated[
     int,
     types.Integer(),
@@ -74,11 +78,27 @@ ClientId = Annotated[
     str,
     types.Text(),
 ]
+CsvId = Annotated[
+    int,
+    types.Integer(),
+]
 ChannelId = Annotated[
     str,
     types.Text(),
 ]
-BlackList = Annotated[
+CustomerBlackList = Annotated[
+    list[str],
+    types.ARRAY(types.Text()),
+]
+CustomerTags = Annotated[
+    list[str],
+    types.ARRAY(types.Text()),
+]
+CustomerWhiteList = Annotated[
+    list[str],
+    types.ARRAY(types.Text()),
+]
+CustomerFeatures = Annotated[
     list[str],
     types.ARRAY(types.Text()),
 ]
@@ -87,10 +107,6 @@ MessageGroupId = Annotated[
     types.Integer(),
 ]
 Attitude = Annotated[
-    str,
-    types.Text(),
-]
-OfferFile = Annotated[
     str,
     types.Text(),
 ]
@@ -138,14 +154,18 @@ type_map: Dict[Type[Any], TypeEngine[Any]] = {
 
     # Custom
     Text: get_db_type(Text),
+    FilePath: get_db_type(FilePath),
     QueryId: get_db_type(QueryId),
     CustomerId: get_db_type(CustomerId),
     ClientId: get_db_type(ClientId),
+    CsvId: get_db_type(CsvId),
     ChannelId: get_db_type(ChannelId),
-    BlackList: get_db_type(BlackList),
+    CustomerBlackList: get_db_type(CustomerBlackList),
+    CustomerTags: get_db_type(CustomerTags),
+    CustomerWhiteList: get_db_type(CustomerWhiteList),
+    CustomerFeatures: get_db_type(CustomerFeatures),
     MessageGroupId: get_db_type(MessageGroupId),
     Attitude: get_db_type(Attitude),
-    OfferFile: get_db_type(OfferFile),
     ServiceId: get_db_type(ServiceId),
     ServiceErrorId: get_db_type(ServiceErrorId),
     ServiceRejectionId: get_db_type(ServiceRejectionId),

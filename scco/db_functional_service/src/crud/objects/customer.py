@@ -6,8 +6,10 @@ from crud.models import Customer
 
 import crud.dbapi as dbapi
 
+from crud.base.SelectorBase import SelectorBase
 
-class CustomerCRUD:
+
+class CustomerCRUD(SelectorBase):
     def __init__(self):
         pass
 
@@ -18,6 +20,7 @@ class CustomerCRUD:
     @classmethod
     def insert_all(cls, customers: list[dict]) -> None:
         if len(customers) == 0:
+            print("CustomerCRUD::insert_all: no customers")
             return
 
         # TODO: add validation

@@ -15,10 +15,14 @@ class OfferCRUD:
         cls.insert_all([offer_dict])
 
     @classmethod
-    def insert_all(cls, offer_dicts: list[dict]) -> None:
+    def insert_all(cls, offers: list[dict]) -> None:
+        if len(offers) == 0:
+            print("OfferCRUD::insert_all: no offers")
+            return
+
         # TODO: add validation
         engine = dbapi.DbEngine.get_engine()
         with Session(engine) as session:
             stmt = insert(Offer)
             with session.begin():
-                session.execute(stmt, offer_dicts)
+                session.execute(stmt, offers)

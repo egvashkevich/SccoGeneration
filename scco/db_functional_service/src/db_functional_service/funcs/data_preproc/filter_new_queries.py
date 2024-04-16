@@ -14,11 +14,14 @@ import util.parse_env as ps
 
 import db_functional_service.rmq_handle as rmq
 
-def contains_query_predicate(row, session):
+from util.reply_ctx import add_reply_ctx
+
+
+def filter_new_queries_predicate(row, session):
     """
     :return: true, if database contains row.
     """
-    print("Enter contains_query_predicate")
+    print("Enter filter_new_queries_predicate")
     stmt = (select(sqlfunc.count())
             .select_from(Query)
             .where(Query.customer_id == row["customer_id"])
@@ -26,13 +29,15 @@ def contains_query_predicate(row, session):
             .where(Query.channel_id == row["channel_id"])
             .where(Query.message_date == row["message_date"])
             .limit(1))
-    print("Make contains_query_predicate")
+    print("Make filter_new_queries_predicate")
     res = (session.scalars(stmt).one() == 0)
-    print("Done contains_query_predicate")
+    print("Done filter_new_queries_predicate")
     return res  # without raws
 
 
-def contains_queries(query_data, reply, db_query):
+def filter_new_queries(req_data, reply, srv_req_data):
+    print("Enter filter_new_queries")
+
     # Check keys.
     required_keys = [
         "customer_id",
@@ -41,19 +46,27 @@ def contains_queries(query_data, reply, db_query):
         "message_date",
     ]
 
-    for row in query_data:
+    for row in req_data:
         for key in required_keys:
-            dict_has_or_panic(row, key, db_query)
+            dict_has_or_panic(row, key, srv_req_data)
 
     # Make db query.
     print("Start query")
     engine = dbapi.DbEngine.get_engine()
     with Session(engine) as session:
-        answer = [row for row in query_data
-                  if contains_query_predicate(row, session)]
+        res = [row for row in req_data
+               if filter_new_queries_predicate(row, session)]
     print("Finish query")
+    answer = {
+        "not_exist": res,
+    }
+
+    # Add reply_ctx.
+    add_reply_ctx(srv_req_data, answer)
 
     # Send query to rabbitmq.
     answer = json.dumps(answer, indent=2)
     print(f"Answer:\n{answer}")
-    rmq.RmqHandle.basic_publish(answer, reply)
+
+    if not ps.is_on_host():
+        rmq.RmqHandle.basic_publish(answer, reply)

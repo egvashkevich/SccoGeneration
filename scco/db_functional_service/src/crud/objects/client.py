@@ -9,8 +9,10 @@ import crud.dbapi as dbapi
 
 from crud.type_map import ClientId
 
+from crud.base.SelectorBase import SelectorBase
 
-class ClientCRUD:
+
+class ClientCRUD(SelectorBase):
     def __init__(self):
         pass
 
@@ -21,6 +23,7 @@ class ClientCRUD:
     @classmethod
     def insert_all(cls, clients: list[dict]) -> None:
         if len(clients) == 0:
+            print("ClientCRUD::insert_all: no clients")
             return
 
         # TODO: add validation

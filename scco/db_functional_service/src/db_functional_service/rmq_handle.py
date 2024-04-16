@@ -11,18 +11,26 @@ import util.parse_env as pe
 from util.json_handle import dict_get_or_panic
 
 # Getting environment variables.
-RMQ_NET_ALIAS = pe.get("DB_FUNCTIONAL_SERVICE_NET_ALIAS")
-DB_FUNCTIONAL_SERVICE_NET_ALIAS = pe.get("DB_FUNCTIONAL_SERVICE_NET_ALIAS")
-DB_FUNCTIONAL_SERVICE_EXCHANGE = pe.get("DB_FUNCTIONAL_SERVICE_EXCHANGE")
-DB_FUNCTIONAL_SERVICE_QUEUE = pe.get("DB_FUNCTIONAL_SERVICE_QUEUE")
-DB_FUNCTIONAL_SERVICE_ROUTING_KEY = pe.get("DB_FUNCTIONAL_SERVICE_ROUTING_KEY")
+
+if not pe.is_on_host():
+    RMQ_NET_ALIAS = pe.get("DB_FUNCTIONAL_SERVICE_NET_ALIAS")
+    DB_FUNCTIONAL_SERVICE_NET_ALIAS = pe.get("DB_FUNCTIONAL_SERVICE_NET_ALIAS")
+    DB_FUNCTIONAL_SERVICE_EXCHANGE = pe.get("DB_FUNCTIONAL_SERVICE_EXCHANGE")
+    DB_FUNCTIONAL_SERVICE_QUEUE = pe.get("DB_FUNCTIONAL_SERVICE_QUEUE")
+    DB_FUNCTIONAL_SERVICE_ROUTING_KEY = pe.get("DB_FUNCTIONAL_SERVICE_ROUTING_KEY")
 
 
 class Reply:
-    def __init__(self, db_query: dict):
-        reply = dict_get_or_panic(db_query, "reply", db_query)
-        self.exchange = dict_get_or_panic(reply, "exchange", db_query)
-        self.routing_key = dict_get_or_panic(reply, "routing_key", db_query)
+    def __init__(self, srv_req_data: dict):
+        if "reply" not in srv_req_data:
+            self.reply_not_required = True
+            return
+        else:
+            self.reply_not_required = False
+
+        reply = srv_req_data["reply"]
+        self.exchange = dict_get_or_panic(reply, "exchange", srv_req_data)
+        self.routing_key = dict_get_or_panic(reply, "routing_key", srv_req_data)
 
 
 class RmqHandle:
@@ -79,6 +87,9 @@ class RmqHandle:
 
     @classmethod
     def basic_publish(cls, answer: str, reply: Reply):
+        if reply.reply_not_required:
+            return
+
         body = answer.encode("utf-8")
         cls.chan.basic_publish(
             exchange=reply.exchange,

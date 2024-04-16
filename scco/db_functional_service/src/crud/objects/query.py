@@ -1,4 +1,5 @@
 from sqlalchemy import insert
+
 from sqlalchemy.orm import Session
 
 from crud.models import Query
@@ -7,8 +8,10 @@ import crud.dbapi as dbapi
 
 from crud.type_map import QueryId
 
+from crud.base.SelectorBase import SelectorBase
 
-class QueryCRUD:
+
+class QueryCRUD(SelectorBase):
     def __init__(self):
         pass
 
@@ -20,6 +23,7 @@ class QueryCRUD:
     @classmethod
     def insert_all(cls, queries: list[dict]) -> list[QueryId]:
         if len(queries) == 0:
+            print("QueryCRUD::insert_all: no queries")
             return []
 
         # TODO: add validation
