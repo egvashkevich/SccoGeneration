@@ -20,32 +20,6 @@ from db_functional_service.rmq_handle import Reply
 
 ################################################################################
 
-# Funcs
-
-from db_functional_service.funcs.data_preproc.filter_new_queries import (
-    filter_new_queries,
-)
-from db_functional_service.funcs.data_preproc.insert_new_queries_csv import (
-    insert_new_queries_csv,
-)
-from db_functional_service.funcs.data_preproc.get_customers_black_lists import (
-    get_customers_black_lists,
-)
-from db_functional_service.funcs.data_preproc.insert_preprocessed_queries import (
-    insert_preprocessed_queries,
-)
-from db_functional_service.funcs.pdf_co_gen.insert_offers import (
-    insert_offers,
-)
-from db_functional_service.funcs.ml_co_gen.get_info_for_co_generation import (
-    get_info_for_co_generation,
-)
-from db_functional_service.funcs.customer_creator.insert_customer import (
-    insert_customer,
-)
-
-################################################################################
-
 # Requests.
 
 from db_functional_service.data.data_preproc.filter_new_queries import (
@@ -71,36 +45,12 @@ from db_functional_service.data.customer_creator.insert_customer import (
 )
 
 ################################################################################
-from db_functional_service.data.init_db import init_db
+from db_functional_service.data.init_db import dummy_init_db
+
+from main import dispatch
 
 
-def dispatch(srv_req_data):
-    req_data = dict_get_or_panic(srv_req_data, "request_data", srv_req_data)
-    reply = Reply(srv_req_data)
-
-    print("Start dispatch")
-
-    query_name = srv_req_data["request_name"]
-    if query_name == "filter_new_queries":
-        filter_new_queries(req_data, reply, srv_req_data)
-    elif query_name == "insert_new_queries_csv":
-        insert_new_queries_csv(req_data, reply, srv_req_data)
-    elif query_name == "get_customers_black_lists":
-        get_customers_black_lists(req_data, reply, srv_req_data)
-    elif query_name == "insert_preprocessed_queries":
-        insert_preprocessed_queries(req_data, reply, srv_req_data)
-    elif query_name == "insert_offers":
-        insert_offers(req_data, reply, srv_req_data)
-    elif query_name == "get_info_for_co_generation":
-        get_info_for_co_generation(req_data, reply, srv_req_data)
-    elif query_name == "insert_customer":
-        insert_customer(req_data, reply, srv_req_data)
-    else:
-        # TODO: print possible values
-        raise RuntimeError(f"Unknown query_name: '{query_name}'")
-
-
-def init_database():
+def custom_init_database():
     print("Creating db engine", flush=True)
     engine = dbapi.DbEngine.get_engine()
     print("Db engine created", flush=True)
@@ -113,11 +63,11 @@ def init_database():
     Base.metadata.create_all(engine)
     print("Tables created", flush=True)
 
-    init_db()
+    dummy_init_db()
 
 
 def main():
-    init_database()
+    custom_init_database()
 
     # dispatch(fnq_request_1)
     # dispatch(inq_csv_request_1)
