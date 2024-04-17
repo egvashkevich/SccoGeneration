@@ -12,7 +12,7 @@ from crud.objects.offer import OfferCRUD
 import datetime
 
 
-def init_db() -> None:
+def dummy_init_db() -> None:
     print("start insert_dummy_values")
 
     ############################################################################
