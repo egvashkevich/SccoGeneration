@@ -8,7 +8,8 @@
 - Для подключения микросервисов к сторонним необходимо поменять переменные окружения в файле `.env` в секции `Set up on server`.
 - Для подключения сервисов к существующему `RabbitMQ` нужно указать в файле `.env` в секции `Set up on server` параметры `RMQ_NET` и `RMQ_NET_ALIAS`.
 - Для эмулирования работы микросервисов можно подтянуть к себе в корень репозитория папку `outside` из ветки `feature/SCCO-46-outside_rabbitmq`. В папке `outside` есть `README.md`, в котором расположена информация по настройке и запуску. На данный момент `docker-compose.yml` уже настроен для работы с папкой `outside`.
-- Для запуска конкретных микросервисов в docker-compose созданы профили (доки смотри в [docker-compose profiles](https://docs.docker.com/compose/profiles/))
+- Для запуска конкретных микросервисов в docker-compose созданы профили (доки смотри в [docker-compose profiles](https://docs.docker.com/compose/profiles/)).
+- Чеклист по докеру можно посмотреть в `docs/docker_checklist.md`.
 
 ## Доступные микросервисы
 
