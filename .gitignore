@@ -8,6 +8,11 @@
 # Python
 __pycache__/
 
+# Setuptools caching
+build
+dist
+*.egg-info
+
 # Jupyter Notebook
 .ipynb_checkpoints
 profile_default/
@@ -28,3 +33,4 @@ venv/
 # Others
 outside/
 .env.secret*
+*.secret.env
