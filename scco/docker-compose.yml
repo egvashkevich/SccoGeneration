@@ -18,9 +18,9 @@ services:
     restart: "no"
 #    restart: on-failure
     networks:
-      int_network:
-        aliases:
-          - "${DATA_PREPROCESSING_NET_ALIAS}"
+#      int_network:
+#        aliases:
+#          - "${DATA_PREPROCESSING_NET_ALIAS}"
       rmq_network:
 
   ml_generation:
@@ -36,9 +36,9 @@ services:
     restart: "no"
 #    restart: on-failure
     networks:
-      int_network:
-        aliases:
-          - "${ML_GENERATION_NET_ALIAS}"
+#      int_network:
+#        aliases:
+#          - "${ML_GENERATION_NET_ALIAS}"
       rmq_network:
 
   pdf_generation:
@@ -54,9 +54,9 @@ services:
     restart: "no"
 #    restart: on-failure
     networks:
-      int_network:
-        aliases:
-          - "${PDF_GENERATION_NET_ALIAS}"
+#      int_network:
+#        aliases:
+#          - "${PDF_GENERATION_NET_ALIAS}"
       rmq_network:
 
   customer_creator:
@@ -72,9 +72,9 @@ services:
     restart: "no"
 #    restart: on-failure
     networks:
-      int_network:
-        aliases:
-          - "${PDF_GENERATION_NET_ALIAS}"
+#      int_network:
+#        aliases:
+#          - "${PDF_GENERATION_NET_ALIAS}"
       rmq_network:
 
   db_functional_service:
@@ -94,11 +94,11 @@ services:
     restart: "no"
 #    restart: on-failure
     networks:
-      int_network:
-        aliases:
-          - "${DB_FUNCTIONAL_SERVICE_NET_ALIAS}"
+#      int_network:
+#        aliases:
+#          - "${DB_FUNCTIONAL_SERVICE_NET_ALIAS}"
       rmq_network:
-      postgres_functional_service_network:
+      postgres_fs_network:
 
   postgres_functional_service:
     profiles:
@@ -111,9 +111,13 @@ services:
     env_file:
       - "${DB_FUNCTIONAL_SERVICE_FOLDER}/.env.secret.postgres"
     volumes:
-      - postgres_functional_service_volume:/data/postgres
+      - postgres_fs_volume:/data/postgres
+    ports:
+      - "5432:5432"
     networks:
-      - postgres_functional_service_network
+      postgres_fs_network:
+        aliases:
+          - "${POSTGRES_FS_ALIAS}"
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
@@ -126,22 +130,13 @@ networks:
   rmq_network:
     name: "${RMQ_NET}"
     external: true
-  int_network:
-    name: "${INT_NET}"
-  postgres_functional_service_network:
-    name: "${POSTGRES_FUNCTIONAL_SERVICE_NETWORK_NAME}"
-    driver: bridge
+#  int_network:
+#    name: "${INT_NET}"
+  postgres_fs_network:
+    name: "${POSTGRES_FS_NETWORK_NAME}"
 
 
 #  To reuse volumes across multiple services
 volumes:
-  postgres_functional_service_volume:
-    name: "${POSTGRES_FUNCTIONAL_SERVICE_VOLUME_NAME}"
-
-#secrets:
-#  pg_user:
-#    file: "./${DB_FUNCTIONAL_SERVICE_FOLDER}/secrets/pg_user"
-#  pg_password:
-#    file: "./${DB_FUNCTIONAL_SERVICE_FOLDER}/secrets/pg_password"
-#  my_other_secret:
-#    external: true
+  postgres_fs_volume:
+    name: "${POSTGRES_FS_VOLUME_NAME}"
