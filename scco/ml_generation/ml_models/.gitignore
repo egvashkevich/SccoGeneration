@@ -1,3 +1,4 @@
 .env
 *.ipynb
 configs/script.py
+__pycache__
