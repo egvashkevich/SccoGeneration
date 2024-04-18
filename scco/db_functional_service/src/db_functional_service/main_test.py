@@ -59,11 +59,11 @@ def custom_init_database():
     Base.metadata.drop_all(engine)
     print("Old tables removed", flush=True)
 
-    print("Creating tables", flush=True)
-    Base.metadata.create_all(engine)
-    print("Tables created", flush=True)
-
-    dummy_init_db()
+    # print("Creating tables", flush=True)
+    # Base.metadata.create_all(engine)
+    # print("Tables created", flush=True)
+    #
+    # dummy_init_db()
 
 
 def main():
@@ -75,7 +75,7 @@ def main():
     # dispatch(ipc_request_1)
     # dispatch(io_request_1)
     # dispatch(gifcog_request_1)
-    dispatch(ic_request_1)
+    # dispatch(ic_request_1)
     # dispatch(io_request_1)
 
     # rmq.RmqHandle.setup_rmq(gateway_callback)

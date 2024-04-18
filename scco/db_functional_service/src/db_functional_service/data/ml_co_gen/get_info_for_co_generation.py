@@ -6,7 +6,7 @@ request_1 = {
     },
     "reply_ctx": "something",  # not required
     "request_data": {
-        "message_group_id": "1",
+        "message_group_id": 1,
     }
 }
 

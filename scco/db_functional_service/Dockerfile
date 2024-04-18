@@ -14,7 +14,14 @@ WORKDIR ${SERVICE_DIR}
 # Only install (flag -n)
 RUN ["./run.sh", "-n"]
 
-CMD ["/bin/bash", "-c", "./run.sh -f ${MAIN_FILE}"]
+#CMD ["/bin/bash", "-c", "./run.sh -f ${MAIN_FILE}"]
+ENTRYPOINT ["/bin/bash", "-c"]
+CMD ["./run.sh -f main.py"]
+#CMD ["./run.sh -f main.py"]
+#CMD ./run.sh -f ${MAIN_FILE}
+
+#CMD ["python3", "-u", "fake_main.py"]
+
 
 # Dependencies for psycopg2.
 #RUN apt-get install \
