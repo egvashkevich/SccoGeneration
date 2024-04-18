@@ -31,6 +31,6 @@ venv/
 *.log
 
 # Others
-outside/
-.env.secret*
+#outside/
+.env.secrset*
 *.secret.env
