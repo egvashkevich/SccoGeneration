@@ -92,12 +92,15 @@ docker ps -a | grep '<none>' | awk '{ print $1; }' | xargs docker rm
    ```
 
 2) Теперь, если мы хотим запустить конкретный микросервис `<service_name>`, то нужно из папки `scco` выполнить:
-    ```bash
-    # run
-    docker-compose up --build -d <service_name>
-    # stop
-    docker-compose down --rmi all --remove-orphans <service_name> # удаляет собранный образ
-    ```
+   ```bash
+   # run
+   docker-compose up --build -d <service_name>
+   # stop
+   docker-compose stop <service_name>
+   docker-compose rm <service_name> # удаляет контейнер сервиса
+   docker-compose rmi <service_name> # удаляет образ сервиса
+   docker-compose down --rmi all --remove-orphans --volumes # удаляет все контейнеры и образы (даже скачанные)
+   ```
 
 Посмотреть текущее состояние сервисов:
 ```bash
@@ -111,3 +114,7 @@ docker-compose ps -a
 ```bash
 ./clear_docker.sh
 ```
+
+# Note
+
+`POSTGRES_HOST` must be the same as the service name or network alias in `docker compose`!!!!!
