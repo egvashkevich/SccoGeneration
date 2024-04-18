@@ -72,3 +72,17 @@ To run service (from service root).
 ```
 
 Написать про виртуальное окружение в установке.
+
+# Debug
+
+```bash
+# Build image.
+docker build -t scco_debug_db_functional_service .
+# Default run.
+docker run --name scco_debug_db_functional_service scco_debug_db_functional_service
+# Interactive (manual execution).
+docker run -it --name scco_debug_db_functional_service --entrypoint="/bin/bash" scco_debug_db_functional_service
+
+docker rm scco_debug_db_functional_service
+docker rmi scco_debug_db_functional_service
+```

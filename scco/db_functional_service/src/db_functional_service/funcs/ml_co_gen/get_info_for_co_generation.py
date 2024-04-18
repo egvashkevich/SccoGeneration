@@ -41,6 +41,8 @@ db_query: {json.dumps(db_query, indent=2)}"""
 
 
 def get_from_query_table(data_dict, req_data, srv_req_data) -> dict:
+    print("Start get_from_query_table")
+
     result_set = QueryCRUD.select_all(
         [
             Query.customer_id,
@@ -56,8 +58,9 @@ def get_from_query_table(data_dict, req_data, srv_req_data) -> dict:
             desc(Query.message_date),
         ],
     )
+    print("QueryCRUD.select_all completed")
 
-    if result_set is None:
+    if result_set is None or len(result_set) == 0:
         arise_error(
             "message_group_id",
             data_dict,

@@ -40,6 +40,8 @@ from db_functional_service.funcs.customer_creator.insert_customer import (
 from crud.objects.customer import CustomerCRUD
 from crud.objects.customer_service import CustomerServiceCRUD
 
+from db_functional_service.data.init_db import dummy_init_db
+
 
 def gateway_callback(ch, method, properties, body):
     json_db_query = body.decode("utf-8")
@@ -74,58 +76,68 @@ def dispatch(srv_req_data):
 
 
 def fake_init_db_data():
-    ############################################################################
-    # Customer.
-    customer_1 = {
-        "customer_id": "customer_1",
-        "contact_info": "telegram_link",
-        "company_name": "Company of customer 1",
-        "black_list": ["fuck", "shit", "nigger"],
-        "tags": ["python", "b2b"],
-        "white_list": ["python_synonym", "b2b_synonym"],
-        "specific_features": ["feature_1", "feature_2"],
-    }
-    customer_2 = {
-        "customer_id": "customer_2",
-        "contact_info": "whatsapp_link",
-        "company_name": "Company of customer 2",
-        "black_list": ["bitch", "freak"],
-        "tags": ["golang", "devops"],
-        "white_list": ["golang_synonym", "devops_synonym"],
-        "specific_features": ["feature_1", "feature_2"],
-    }
-    print("Start insert customers")
-    CustomerCRUD.insert_all([customer_1, customer_2])
-    print("Finished insert customers")
+    dummy_init_db()
 
-    ############################################################################
-    # CustomerService.
-    customer_services = [
-        {
-            "customer_id": "customer_1",
-            "service_name": "customer 1, service 1",
-            "service_desc": "description 1",
-        },
-        {
-            "customer_id": "customer_1",
-            "service_name": "customer 1, service 2",
-            "service_desc": "description 2",
-        },
-        {
-            "customer_id": "customer_2",
-            "service_name": "customer 2, service 1",
-            "service_desc": "description 1",
-        }
-    ]
-    print("Start insert customer_services")
-    CustomerServiceCRUD.insert_all(customer_services)
-    print("Finished insert customer_services")
+    # print("Start fake_init_db_data", flush=True)
+    #
+    # ############################################################################
+    # # Customer.
+    # customer_1 = {
+    #     "customer_id": "customer_1",
+    #     "contact_info": "telegram_link",
+    #     "company_name": "Company of customer 1",
+    #     "black_list": ["fuck", "shit", "nigger"],
+    #     "tags": ["python", "b2b"],
+    #     "white_list": ["python_synonym", "b2b_synonym"],
+    #     "specific_features": ["feature_1", "feature_2"],
+    # }
+    # customer_2 = {
+    #     "customer_id": "customer_2",
+    #     "contact_info": "whatsapp_link",
+    #     "company_name": "Company of customer 2",
+    #     "black_list": ["bitch", "freak"],
+    #     "tags": ["golang", "devops"],
+    #     "white_list": ["golang_synonym", "devops_synonym"],
+    #     "specific_features": ["feature_1", "feature_2"],
+    # }
+    # print("Start insert customers", flush=True)
+    # CustomerCRUD.insert_all([customer_1, customer_2])
+    # print("Finished insert customers", flush=True)
+    #
+    # ############################################################################
+    # # CustomerService.
+    # customer_services = [
+    #     {
+    #         "customer_id": "customer_1",
+    #         "service_name": "customer 1, service 1",
+    #         "service_desc": "description 1",
+    #     },
+    #     {
+    #         "customer_id": "customer_1",
+    #         "service_name": "customer 1, service 2",
+    #         "service_desc": "description 2",
+    #     },
+    #     {
+    #         "customer_id": "customer_2",
+    #         "service_name": "customer 2, service 1",
+    #         "service_desc": "description 1",
+    #     }
+    # ]
+    # print("Start insert customer_services", flush=True)
+    # CustomerServiceCRUD.insert_all(customer_services)
+    # print("Finished insert customer_services", flush=True)
+    #
+    # print("Finish fake_init_db_data", flush=True)
 
 
 def init_database():
     print("Creating db engine", flush=True)
     engine = dbapi.DbEngine.get_engine()
     print("Db engine created", flush=True)
+
+    print("Removing old tables", flush=True)
+    Base.metadata.drop_all(engine)
+    print("Old tables removed", flush=True)
 
     print("Creating tables", flush=True)
     Base.metadata.create_all(engine)
@@ -137,7 +149,9 @@ def init_database():
 def main():
     init_database()
 
+    print("Setup rmq", flush=True)
     rmq.RmqHandle.setup_rmq(gateway_callback)
+    print("Start consuming", flush=True)
     rmq.RmqHandle.start_consume()  # Infinite loop.
 
 

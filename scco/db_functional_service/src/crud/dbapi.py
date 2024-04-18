@@ -19,10 +19,11 @@ class DbEngine:
         postgres_user = pe._EnvVars["POSTGRES_USER"]
         postgres_password = pe._EnvVars["POSTGRES_PASSWORD"]
         if pe._EnvVars.is_on_host():
-            pe._EnvVars.set_val("POSTGRES_HOST", "localhost")
             postgres_host = "localhost"
         else:
-            postgres_host = pe._EnvVars["POSTGRES_HOST"]
+            postgres_host = pe._EnvVars["POSTGRES_FS_ALIAS"]
+        print(f"postgres_host = {postgres_host}")
+
         postgres_port = pe._EnvVars["POSTGRES_PORT"]
         postgres_db = pe._EnvVars["POSTGRES_DB"]
 
