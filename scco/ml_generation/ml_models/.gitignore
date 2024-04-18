@@ -1,3 +1,5 @@
 .env
 *.ipynb
 src/gigachat/configs/script.py
+configs/script.py
+__pycache__

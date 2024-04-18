@@ -1,12 +1,9 @@
-FROM python:3.10
+FROM gradle:8.7-jdk17 as build
+COPY --chown=gradle:gradle . /home/gradle/src
+WORKDIR /home/gradle/src
+RUN gradle build --no-daemon
 
-#ARG PROJECT_ROOT=project_root
-ENV SERVICE_DIR=/pdf_generation
-
-RUN mkdir ${SERVICE_DIR}
-COPY . ${SERVICE_DIR}
-WORKDIR ${SERVICE_DIR}
-
-# Installation
-# ENTRYPOINT or CMD to run service. Link to their difference:
-# https://docs.docker.com/reference/dockerfile/#understand-how-cmd-and-entrypoint-interact
+FROM openjdk:19
+WORKDIR /app
+COPY --from=build /home/gradle/src/build/libs/*.jar /app/app.jar
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
