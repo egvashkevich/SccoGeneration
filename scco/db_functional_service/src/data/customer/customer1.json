@@ -1,0 +1,33 @@
+{
+  "customer_id": "customer1_id",
+  "contact_info": ["telegram", "whatsup"],
+  "company_name": "MIPT",
+  "black_list": [
+    "fuck",
+    "shit",
+    "nigger"
+  ],
+    "tags": [
+    "big company",
+    "b2b development"
+  ],
+  "white_list": ["synonym_to_tag_1", "synonym_to_tag_2"],
+  "specific_features": [
+    "something for ml 1",
+    "something for ml 2"
+  ],
+  "services": [
+    {
+      "service_name": "(1) First service",
+      "service_desc": "First service description. Very long description."
+    },
+    {
+      "service_name": "(1) Second service",
+      "service_desc": "Second service description. Very long description."
+    },
+    {
+      "service_name": "(1) Third service",
+      "service_desc": "Third service description. Very long description."
+    }
+  ]
+}

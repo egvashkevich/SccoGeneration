@@ -1,0 +1,39 @@
+[build-system]
+requires = [
+    "setuptools",
+    "setuptools-scm"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ml_generation"
+version = "0.1.0"
+authors = [
+    {name = "Egor Vashkevich", email = "goshikvash@gmail.com"}
+]
+maintainers = [
+    {name = "Egor Vashkevich", email = "goshikvash@gmail.com"}
+]
+description = "ml_generation"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+dynamic = [
+    "dependencies",
+]
+
+################################################################################
+
+[tool.setuptools.packages.find]
+where = ["src"]
+namespaces = false
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[tool.setuptools]
+include-package-data = true
+
+################################################################################

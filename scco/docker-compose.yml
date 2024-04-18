@@ -1,0 +1,142 @@
+version: "3.8"
+
+# Entry points are set inside dockerfiles of each service.
+
+services:
+  data_preprocessing:
+    profiles:
+      - prod
+    build:
+      context: "${DATA_PREPROCESSING_FOLDER}"
+      dockerfile: Dockerfile
+    image: "${COMPOSE_PROJECT_NAME}_${DATA_PREPROCESSING_FOLDER}"
+    container_name: "${COMPOSE_PROJECT_NAME}_${DATA_PREPROCESSING_FOLDER}"
+    env_file:
+      - .env
+    volumes:
+      - "${OUTSIDE_CSV_VOLUME}:${OUTSIDE_CSV_VOLUME_DOCKER_FOLDER}" # csv file
+    restart: "no"
+#    restart: on-failure
+    networks:
+#      int_network:
+#        aliases:
+#          - "${DATA_PREPROCESSING_NET_ALIAS}"
+      rmq_network:
+
+  ml_generation:
+    profiles:
+      - prod
+    build:
+      context: "${ML_GENERATION_FOLDER}"
+      dockerfile: Dockerfile
+    image: "${COMPOSE_PROJECT_NAME}_${ML_GENERATION_FOLDER}"
+    container_name: "${COMPOSE_PROJECT_NAME}_${ML_GENERATION_FOLDER}"
+    env_file:
+      - .env
+    restart: "no"
+#    restart: on-failure
+    networks:
+#      int_network:
+#        aliases:
+#          - "${ML_GENERATION_NET_ALIAS}"
+      rmq_network:
+
+  pdf_generation:
+    profiles:
+      - prod
+    build:
+      context: "${PDF_GENERATION_FOLDER}"
+      dockerfile: Dockerfile
+    image: "${COMPOSE_PROJECT_NAME}_${PDF_GENERATION_FOLDER}"
+    container_name: "${COMPOSE_PROJECT_NAME}_${PDF_GENERATION_FOLDER}"
+    env_file:
+      - .env
+    restart: "no"
+#    restart: on-failure
+    networks:
+#      int_network:
+#        aliases:
+#          - "${PDF_GENERATION_NET_ALIAS}"
+      rmq_network:
+
+  customer_creator:
+    profiles:
+      - prod
+    build:
+      context: "${CUSTOMER_CREATOR_FOLDER}"
+      dockerfile: Dockerfile
+    image: "${COMPOSE_PROJECT_NAME}_${CUSTOMER_CREATOR_FOLDER}"
+    container_name: "${COMPOSE_PROJECT_NAME}_${CUSTOMER_CREATOR_FOLDER}"
+    env_file:
+      - .env
+    restart: "no"
+#    restart: on-failure
+    networks:
+#      int_network:
+#        aliases:
+#          - "${PDF_GENERATION_NET_ALIAS}"
+      rmq_network:
+
+  db_functional_service:
+    profiles:
+      - crud
+      - prod
+    depends_on:
+      postgres_functional_service:
+        condition: service_healthy
+    build:
+      context: "${DB_FUNCTIONAL_SERVICE_FOLDER}"
+      dockerfile: Dockerfile
+    image: "${COMPOSE_PROJECT_NAME}_${DB_FUNCTIONAL_SERVICE_FOLDER}"
+    container_name: "${COMPOSE_PROJECT_NAME}_${DB_FUNCTIONAL_SERVICE_FOLDER}"
+    env_file:
+      - .env
+    restart: "no"
+#    restart: on-failure
+    networks:
+#      int_network:
+#        aliases:
+#          - "${DB_FUNCTIONAL_SERVICE_NET_ALIAS}"
+      rmq_network:
+      postgres_fs_network:
+
+  postgres_functional_service:
+    profiles:
+      - crud
+      - prod
+    container_name: "${COMPOSE_PROJECT_NAME}_postgres_fs_container"
+    image: postgres
+    environment:
+      PGDATA: /data/postgres
+    env_file:
+      - "${DB_FUNCTIONAL_SERVICE_FOLDER}/.env.secret.postgres"
+    volumes:
+      - postgres_fs_volume:/data/postgres
+    ports:
+      - "5432:5432"
+    networks:
+      postgres_fs_network:
+        aliases:
+          - "${POSTGRES_FS_ALIAS}"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+networks:
+  rmq_network:
+    name: "${RMQ_NET}"
+    external: true
+#  int_network:
+#    name: "${INT_NET}"
+  postgres_fs_network:
+    name: "${POSTGRES_FS_NETWORK_NAME}"
+
+
+#  To reuse volumes across multiple services
+volumes:
+  postgres_fs_volume:
+    name: "${POSTGRES_FS_VOLUME_NAME}"

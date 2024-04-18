@@ -1,0 +1,4 @@
+pika
+Levenshtein
+regex
+pymorphy2
