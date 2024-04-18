@@ -2,12 +2,19 @@ import os
 import base64
 import requests
 import uuid
+
+from importlib.resources import files
 from dotenv import load_dotenv
 
+
 def load_local_env():
-    dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
-    if os.path.exists(dotenv_path):
-        load_dotenv(dotenv_path)
+    dotenv_path = str(files("ml_models").joinpath(
+        "co_gen/api_token.secret.env"
+    ))
+    load_dotenv(dotenv_path)
+    # dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
+    # if os.path.exists(dotenv_path):
+    #     load_dotenv(dotenv_path)
 
 
 class ChatAccessManager:

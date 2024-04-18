@@ -1,6 +1,7 @@
 import typing
 import configparser
 
+from importlib.resources import files
 
 class SystemPromptData:
     company_name: str
@@ -17,7 +18,15 @@ pos_to_insert_in_system = {
 }
 
 
-def make_system_prompt(system_prompt_info: SystemPromptData, path_to_conf='configs/prompts.ini'):
+
+DEFAULT_PATH_TO_CONF = str(
+    files("ml_models").joinpath(
+        "co_gen/configs/prompts.ini"
+    )
+)
+
+
+def make_system_prompt(system_prompt_info: SystemPromptData, path_to_conf=DEFAULT_PATH_TO_CONF):
     config = configparser.ConfigParser()
     config.read(path_to_conf)
 
