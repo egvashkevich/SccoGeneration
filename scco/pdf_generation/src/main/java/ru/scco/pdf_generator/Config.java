@@ -2,8 +2,8 @@ package ru.scco.pdf_generator;
 
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -14,17 +14,20 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
 @Configuration
 public class Config {
     @Value("${rabbit.pdf_generation_exchange}")
-    private String exchangeName;
+    public String pdfGenerationExchange;
+
+    @Value("${rabbit.db_functional_routing_key}")
+    public String dbFunctionalRoutingKey;
 
 
     @Bean
-    DirectExchange exchange() {
-        return new DirectExchange(exchangeName, true, false);
+    TopicExchange pdfExchange(
+            @Value("${rabbit.pdf_generation_exchange}") String name) {
+        return new TopicExchange(name, true, false);
     }
 
     @Bean
@@ -33,32 +36,31 @@ public class Config {
     }
 
     @Bean
-    Queue parseBotQueue(@Value("${rabbit.parser_bot_queue}") String name) {
+    Binding pdfBinding(Queue inputQueue, TopicExchange pdfExchange,
+                             @Value("${rabbit.pdf_generation_routing_key}")
+                             String key) {
+        return BindingBuilder.bind(inputQueue).to(pdfExchange).with(key);
+    }
+
+    @Bean
+    TopicExchange dbExchange(
+            @Value("${rabbit.db}") String name) {
+        return new TopicExchange(name, true, false);
+    }
+
+    @Bean
+    Queue dbQueue(@Value("${rabbit.pdf_generation_queue}") String name) {
         return new Queue(name, true);
     }
 
     @Bean
-    Queue subscriberQueue(@Value("${rabbit.subscriber_queue}") String name) {
-        return new Queue(name, true);
+    Binding dbBinding(Queue dbQueue, TopicExchange dbExchange,
+                             @Value("${rabbit.pdf_generation_routing_key}")
+                             String key) {
+        return BindingBuilder.bind(dbQueue).to(dbExchange).with(key);
     }
 
-    @Bean
-    Binding bindingCP(Queue subscriberQueue, DirectExchange exchange,
-                      @Value("${rabbit.file_link_key}") String key) {
-        return BindingBuilder.bind(subscriberQueue).to(exchange).with(key);
-    }
 
-    @Bean
-    Binding bindingError(Queue parseBotQueue, DirectExchange exchange,
-                         @Value("${rabbit.error_key}") String key) {
-        return BindingBuilder.bind(parseBotQueue).to(exchange).with(key);
-    }
-
-    @Bean
-    Binding bindingOk(Queue parseBotQueue, DirectExchange exchange,
-                      @Value("${rabbit.ok_key}") String key) {
-        return BindingBuilder.bind(parseBotQueue).to(exchange).with(key);
-    }
 
     @Bean
     public MessageConverter messageConverter() {
@@ -78,8 +80,9 @@ public class Config {
             @Value("${pdf_generator.font}") String fontPath,
             @Value("${pdf_generator.dest}") String destinationPath,
             @Value("${pdf_generator.fontsize}") int fontSize
-            ) {
-        return new PDFGenerator(templatePath, fontPath, destinationPath, fontSize);
+    ) {
+        return new PDFGenerator(templatePath, fontPath, destinationPath,
+                                fontSize);
     }
 
     @Bean
@@ -93,5 +96,11 @@ public class Config {
     @Bean
     ExecutorService generatorPool() {
         return Executors.newFixedThreadPool(4);
+    }
+
+    @Bean
+    Sender sender(RabbitTemplate template, Binding dbBinding) {
+        return new Sender(template, dbBinding.getExchange(),
+                          dbBinding.getRoutingKey());
     }
 }
