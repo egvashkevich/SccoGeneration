@@ -81,7 +81,7 @@ class FilterAlreadySeen(Operation):
 
 
 class FilterByBlackList(Operation):
-    def __init__(self, black_list, on_nothing_left, errors_num=-1):
+    def __init__(self, black_list, on_nothing_left, errors_num=0):
         self.black_list = black_list
         self.on_nothing_left = on_nothing_left
         self.errors_num = errors_num
