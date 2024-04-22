@@ -129,18 +129,18 @@ class CustomerBlackList(BlackList):
 
 
 class InsertToDatabase(Operation):
-    def __init__(self, customer_id):
+    def __init__(self, customer_id, new_queries_csv):
         self.customer_id = customer_id
+        self.new_queries_csv = new_queries_csv
 
     def __call__(self, data):
-        new_data = data.rename(columns={'message': 'messages', 'message_date': 'message_dates'})
-        query_data = []
+        items = []
         for index, row in data.iterrows():
             item = dict()
             for col in data.columns:
                 item[col] = row[col]
             item['customer_id'] = self.customer_id
-            query_data.append(item)
+            items.append(item)
         query = json.dumps({
             "query_name": "insert_after_preprocessing_query",
             "reply": {
@@ -148,7 +148,10 @@ class InsertToDatabase(Operation):
                 "queue": "<generated queue name>",  # TODO
                 "routing_key": config.INSERT_AFTER_PREPROCESSING_QUERY_ROUTING_KEY,
             },
-            "query_data": query_data
+            "query_data": {
+                "csv_path": self.new_queries_csv,
+                "array_data": items
+            }
         })
         print(json.loads(query))  # TODO
         result = pd.DataFrame(data.index)
