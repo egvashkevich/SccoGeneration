@@ -21,6 +21,16 @@ class BlackList(ABC):
         pass
 
 
+class ColumnTransform(Operation):
+    def __init__(self, column, function):
+        self.column = column
+        self.function = function
+
+    def __call__(self, data):
+        data[self.column] = data[self.column].map(self.function)
+        return data
+
+
 class StableSortBy(Operation):
     def __init__(self, column):
         self.column = column
@@ -30,12 +40,16 @@ class StableSortBy(Operation):
 
 
 class GroupBy(Operation):
-    def __init__(self, columns, agg=None):
+    def __init__(self, columns, agg=None, rename=None):
         self.columns = columns
         self.agg = agg
+        self.rename = rename
 
     def __call__(self, data):
-        return data.groupby(self.columns).agg(self.agg).reset_index()
+        result = data.groupby(self.columns).agg(self.agg).reset_index()
+        if self.rename:
+            result.rename(columns=self.rename)
+        return result
 
 
 class FilterAlreadySeen(Operation):
@@ -121,9 +135,9 @@ class InsertToDatabase(Operation):
     def __call__(self, data):
         new_data = data.rename(columns={'message': 'messages', 'message_date': 'message_dates'})
         query_data = []
-        for index, row in new_data.iterrows():
+        for index, row in data.iterrows():
             item = dict()
-            for col in new_data.columns:
+            for col in data.columns:
                 item[col] = row[col]
             item['customer_id'] = self.customer_id
             query_data.append(item)

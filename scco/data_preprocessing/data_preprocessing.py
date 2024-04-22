@@ -3,11 +3,12 @@ import json
 import os
 import pika
 import sys
+from emoji import replace_emoji
 
 import config
 from pipeline_operations import (
-    StableSortBy, GroupBy, FilterAlreadySeen, FilterByBlackList,
-    InsertToDatabase, CommonBlackList, CustomerBlackList
+    ColumnTransform, StableSortBy, GroupBy, FilterAlreadySeen,
+    FilterByBlackList, InsertToDatabase, CommonBlackList, CustomerBlackList
 )
 
 
@@ -21,13 +22,17 @@ def on_message_received(ch, method, properties, body):
     customer_id = json_in['customer_id']
 
     pipeline = [
+        ColumnTransform('message', lambda s: replace_emoji(s, '')),
+        ColumnTransform('message', str.lower),
         StableSortBy('message_date'),
         GroupBy(['channel_id', 'client_id', 'message_date'], agg={'message': (lambda x: list(x)[-1])}),
         FilterAlreadySeen(by=['channel_id', 'client_id', 'message_date'],
                           customer_id=customer_id, on_nothing_left='all messages were already seen'),
         FilterByBlackList(CommonBlackList(), on_nothing_left='all messages had words from common black list'),
-        FilterByBlackList(CustomerBlackList(customer_id), on_nothing_left='all messages had words from customer\'s black list'),
-        GroupBy(['client_id', 'channel_id'], agg={'message': list, 'message_date': list}),
+        FilterByBlackList(CustomerBlackList(customer_id),
+                          on_nothing_left='all messages had words from customer\'s black list'),
+        GroupBy(['client_id', 'channel_id'], agg={'message': list, 'message_date': list},
+                rename={'message': 'messages', 'message_date': 'message_dates'}),
         InsertToDatabase(customer_id=customer_id)
     ]
 
