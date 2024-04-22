@@ -36,6 +36,24 @@ class DictOccurrenceManager:
                     return True
         return False
 
+    def check_occurence_adaptive(self, message):
+        splitted_message = split_by_regex(message, self.punctuation_regex)
+        for word in splitted_message:
+            if len(word) == 0:  # split can return empty word between spaces
+                continue
+            elif len(word) < 4:
+                if word in self.dictionary:
+                    return True
+            elif len(word) < 7:
+                for dict_word in self.dictionary:
+                    if distance(dict_word, word) <= 1:
+                        return True
+            else:
+                for dict_word in self.dictionary:
+                    if distance(dict_word, word) <= 2:
+                        return True
+        return False
+
     # Возможные улучшения:
     # 1) Текст обрабатывать по частям, чтобы очень большие тексты не разбивать
     #    полностью, мб поможет, если встречается ближе к началу сообщения

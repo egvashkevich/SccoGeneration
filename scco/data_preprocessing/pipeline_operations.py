@@ -81,7 +81,7 @@ class FilterAlreadySeen(Operation):
 
 
 class FilterByBlackList(Operation):
-    def __init__(self, black_list, on_nothing_left, errors_num=0):
+    def __init__(self, black_list, on_nothing_left, errors_num=-1):
         self.black_list = black_list
         self.on_nothing_left = on_nothing_left
         self.errors_num = errors_num
@@ -90,7 +90,9 @@ class FilterByBlackList(Operation):
         black_list = self.black_list.load()
         occurrence_manager = DictOccurrenceManager(black_list)
 
-        if self.errors_num == 0:
+        if self.errors_num < 0:
+            predicate = lambda s: not occurrence_manager.check_occurence_adaptive(s)
+        elif self.errors_num == 0:
             predicate = lambda s: not occurrence_manager.check_exact_occurrence(s)
         else:
             predicate = lambda s: not occurrence_manager.check_occurrence_with_errors(s, self.errors_num)
