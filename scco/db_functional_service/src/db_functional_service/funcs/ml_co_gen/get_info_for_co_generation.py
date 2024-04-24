@@ -85,7 +85,7 @@ def get_from_query_table(data_dict, req_data, srv_req_data) -> dict:
     answer = {
         "customer_id": customer_id,
         "client_id": client_id,
-        "channel_ids": client_id,
+        "channel_ids": channel_ids,
         "messages": messages,
         # "message_dates": messages_dates,
     }
@@ -94,6 +94,8 @@ def get_from_query_table(data_dict, req_data, srv_req_data) -> dict:
 
 
 def get_from_client_table(data_dict, req_data, srv_req_data) -> dict:
+    print("Start get_from_client_table")
+
     result_set = ClientCRUD.select_one(
         [
             Client.attitude,
@@ -102,6 +104,7 @@ def get_from_client_table(data_dict, req_data, srv_req_data) -> dict:
             Client.client_id == data_dict["client_id"],
         ],
     )
+    print("ClientCRUD.select_one completed")
 
     if result_set is None:
         arise_error(
@@ -115,25 +118,29 @@ def get_from_client_table(data_dict, req_data, srv_req_data) -> dict:
     print(f"result_set = {result_set}")
     print(f"-----------------------------")
 
-    attitude = result_set[0]
-
     answer = {
-        "attitude": attitude,
+        "attitude": result_set[0],
     }
 
     return answer
 
 
 def get_from_customer_table(data_dict, req_data, srv_req_data) -> dict:
+    print("Start get_from_customer_table")
+
     result_set = CustomerCRUD.select_one(
         [
             Customer.company_name,
+            Customer.black_list,
+            Customer.tags,
+            Customer.white_list,
             Customer.specific_features,
         ],
         wheres_cond=[
             Customer.customer_id == data_dict["customer_id"],
         ],
     )
+    print("CustomerCRUD.select_one completed")
 
     if result_set is None:
         arise_error(
@@ -147,12 +154,12 @@ def get_from_customer_table(data_dict, req_data, srv_req_data) -> dict:
     print(f"result_set = {result_set}")
     print(f"-----------------------------")
 
-    company_name = result_set[0]
-    features = result_set[1]
-
     answer = {
-        "company_name": company_name,
-        "features": features,
+        "company_name": result_set[0],
+        "black_list": result_set[1],
+        "tags": result_set[2],
+        "white_list": result_set[3],
+        "specific_features": result_set[4],
     }
 
     return answer
@@ -162,6 +169,8 @@ def get_from_customer_service_table(
         data_dict,
         query_data,
         db_query) -> dict:
+    print("Start get_from_customer_service_table")
+
     result_set = CustomerServiceCRUD.select_all(
         [
             CustomerService.service_name,
@@ -171,6 +180,7 @@ def get_from_customer_service_table(
             CustomerService.customer_id == data_dict["customer_id"],
         ],
     )
+    print("CustomerServiceCRUD.select_all completed")
 
     if result_set is None:
         arise_error(
