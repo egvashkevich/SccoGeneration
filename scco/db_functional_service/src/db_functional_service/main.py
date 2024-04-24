@@ -19,8 +19,8 @@ from db_functional_service.funcs.data_preproc.filter_new_queries import (
 from db_functional_service.funcs.data_preproc.insert_new_queries_csv import (
     insert_new_queries_csv,
 )
-from db_functional_service.funcs.data_preproc.get_customers_black_lists import (
-    get_customers_black_lists,
+from db_functional_service.funcs.data_preproc.get_customers_lists import (
+    get_customers_lists,
 )
 from db_functional_service.funcs.data_preproc.insert_preprocessed_queries import (
     insert_preprocessed_queries,
@@ -60,8 +60,8 @@ def dispatch(srv_req_data):
         filter_new_queries(req_data, reply, srv_req_data)
     elif query_name == "insert_new_queries_csv":
         insert_new_queries_csv(req_data, reply, srv_req_data)
-    elif query_name == "get_customers_black_lists":
-        get_customers_black_lists(req_data, reply, srv_req_data)
+    elif query_name == "get_customers_lists":
+        get_customers_lists(req_data, reply, srv_req_data)
     elif query_name == "insert_preprocessed_queries":
         insert_preprocessed_queries(req_data, reply, srv_req_data)
     elif query_name == "insert_offers":
