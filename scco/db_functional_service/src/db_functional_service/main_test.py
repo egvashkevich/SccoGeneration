@@ -28,8 +28,8 @@ from db_functional_service.data.data_preproc.filter_new_queries import (
 from db_functional_service.data.data_preproc.insert_new_queries_csv import (
     request_1 as inq_csv_request_1,
 )
-from db_functional_service.data.data_preproc.get_customers_black_lists import (
-    request_1 as gcbl_request_1,
+from db_functional_service.data.data_preproc.get_customers_lists import (
+    request_1 as gcl_request_1,
 )
 from db_functional_service.data.data_preproc.insert_preprocessed_queries import (
     request_1 as ipc_request_1,
@@ -59,11 +59,11 @@ def custom_init_database():
     Base.metadata.drop_all(engine)
     print("Old tables removed", flush=True)
 
-    # print("Creating tables", flush=True)
-    # Base.metadata.create_all(engine)
-    # print("Tables created", flush=True)
-    #
-    # dummy_init_db()
+    print("Creating tables", flush=True)
+    Base.metadata.create_all(engine)
+    print("Tables created", flush=True)
+
+    dummy_init_db()
 
 
 def main():
@@ -71,7 +71,7 @@ def main():
 
     # dispatch(fnq_request_1)
     # dispatch(inq_csv_request_1)
-    # dispatch(gcbl_request_1)
+    dispatch(gcl_request_1)
     # dispatch(ipc_request_1)
     # dispatch(io_request_1)
     # dispatch(gifcog_request_1)
