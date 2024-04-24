@@ -10,14 +10,6 @@ from crud.models import Base
 import db_functional_service.rmq_handle as rmq
 from db_functional_service.rmq_handle import Reply
 
-# from db_functional_service.funcs.contains_queries import contains_queries
-# from db_functional_service.funcs.get_black_lists import get_black_lists
-# from db_functional_service.funcs.insert_preprocessed_queries import (
-#     insert_preprocessed_queries
-# )
-# from db_functional_service.funcs.insert_offers import insert_offers
-# from db_functional_service.funcs.ml_get_messages import ml_get_messages
-
 ################################################################################
 
 # Requests.
@@ -71,10 +63,10 @@ def main():
 
     # dispatch(fnq_request_1)
     # dispatch(inq_csv_request_1)
-    dispatch(gcl_request_1)
+    # dispatch(gcl_request_1)
     # dispatch(ipc_request_1)
     # dispatch(io_request_1)
-    # dispatch(gifcog_request_1)
+    dispatch(gifcog_request_1)
     # dispatch(ic_request_1)
     # dispatch(io_request_1)
 

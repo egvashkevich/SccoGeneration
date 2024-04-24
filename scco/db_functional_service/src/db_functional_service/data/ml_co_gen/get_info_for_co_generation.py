@@ -15,13 +15,28 @@ request_1 = {
 answer_1 = {
   "customer_id": "customer_1",
   "client_id": "client_1",
-  "channel_ids": "client_1",
+  "channel_ids": [
+    "phystech.career"
+  ],
   "messages": [
     "Good morning.\nMy name is client_1.\nI need Python developers."
   ],
   "attitude": "arrogant",
   "company_name": "Company of customer 1",
-  "features": [
+  "black_list": [
+    "fuck",
+    "shit",
+    "nigger"
+  ],
+  "tags": [
+    "python",
+    "b2b"
+  ],
+  "white_list": [
+    "python_synonym",
+    "b2b_synonym"
+  ],
+  "specific_features": [
     "feature_1",
     "feature_2"
   ],
@@ -37,3 +52,4 @@ answer_1 = {
   ],
   "reply_ctx": "something"
 }
+
