@@ -41,7 +41,6 @@
    ```text
    POSTGRES_USER=scco_postgres
    POSTGRES_PASSWORD=scco_password
-   POSTGRES_HOST=scco_postgres_host
    POSTGRES_PORT=5432
    POSTGRES_DB=scco_db
    ```
