@@ -1,17 +1,21 @@
+import json
+
 from util.json_handle import dict_get_or_panic
-import util.parse_env as ps
 from util.reply_ctx import add_reply_ctx
 
-import crud.dbapi as dbapi
 from crud.models import Customer
 from crud.objects.customer import CustomerCRUD
 
-import json
+from db_functional_service.reply import Reply
+from db_functional_service.broker.broker import Broker
 
-import db_functional_service.rmq_handle as rmq
 
-
-def get_customers_lists(req_data, reply, srv_req_data):
+def get_customers_lists(
+        req_data,
+        srv_req_data,
+        reply: Reply,
+        broker: Broker
+) -> None:
     print("Enter get_customers_lists")
 
     # Check keys.
@@ -27,7 +31,6 @@ def get_customers_lists(req_data, reply, srv_req_data):
 
     # Make db query.
     print("Start query")
-    engine = dbapi.DbEngine.get_engine()
     result_set = CustomerCRUD.select_all(
         [
             Customer.customer_id,
@@ -50,7 +53,7 @@ def get_customers_lists(req_data, reply, srv_req_data):
             }
         )
 
-    print("Sending answer")
+    print("Preparing answer")
     answer = {
         "array_data": answer_list,
     }
@@ -62,5 +65,8 @@ def get_customers_lists(req_data, reply, srv_req_data):
     answer = json.dumps(answer, indent=2)
     print(f"Answer:\n{answer}")
 
-    if not ps.is_on_host():
-        rmq.RmqHandle.basic_publish(answer, reply)
+    print("sending reply")
+    broker.basic_publish_unknown(
+        reply.get_publisher(),
+        answer.encode("utf-8"),
+    )

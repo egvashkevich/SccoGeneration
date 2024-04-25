@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 
-import util.parse_env as pe
+import util.app_config as app_cfg
 
 
 # Engine URL: "postgresql+psycopg2://{user}:{password}@{host}:{port}/{database}"
@@ -16,16 +16,16 @@ class DbEngine:
 
     @staticmethod
     def _create_db_engine() -> Engine:
-        postgres_user = pe._EnvVars["POSTGRES_USER"]
-        postgres_password = pe._EnvVars["POSTGRES_PASSWORD"]
-        if pe._EnvVars.is_on_host():
+        postgres_user = app_cfg.POSTGRES_USER
+        postgres_password = app_cfg.POSTGRES_PASSWORD
+        postgres_port = app_cfg.POSTGRES_PORT
+        postgres_db = app_cfg.POSTGRES_DB
+
+        if app_cfg.is_on_host():
             postgres_host = "localhost"
         else:
-            postgres_host = pe._EnvVars["POSTGRES_FS_ALIAS"]
+            postgres_host = app_cfg.POSTGRES_FS_ALIAS
         print(f"postgres_host = {postgres_host}")
-
-        postgres_port = pe._EnvVars["POSTGRES_PORT"]
-        postgres_db = pe._EnvVars["POSTGRES_DB"]
 
         url = (f"postgresql+psycopg2://{postgres_user}:{postgres_password}@"
                f"{postgres_host}:{postgres_port}/{postgres_db}")

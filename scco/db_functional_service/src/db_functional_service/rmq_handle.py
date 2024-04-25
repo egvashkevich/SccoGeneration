@@ -5,14 +5,14 @@ from pika.adapters.blocking_connection import (
     BlockingConnection,
     BlockingChannel,
 )
-from pika.channel import Channel
 
 import util.parse_env as pe
-from util.json_handle import dict_get_or_panic
+
+import util.app_config as app_cfg
 
 # Getting environment variables.
 
-if not pe.is_on_host():
+if not app_cfg.is_on_host():
     # RMQ_NET_ALIAS = "scco_rmq_rabbitmq"
     RMQ_NET_ALIAS = pe.get("RMQ_NET_ALIAS")
     DB_FUNCTIONAL_SERVICE_NET_ALIAS = pe.get("DB_FUNCTIONAL_SERVICE_NET_ALIAS")
@@ -20,19 +20,7 @@ if not pe.is_on_host():
     DB_FUNCTIONAL_SERVICE_QUEUE = pe.get("DB_FUNCTIONAL_SERVICE_QUEUE")
     DB_FUNCTIONAL_SERVICE_ROUTING_KEY = pe.get("DB_FUNCTIONAL_SERVICE_ROUTING_KEY")
 
-
-class Reply:
-    def __init__(self, srv_req_data: dict):
-        if "reply" not in srv_req_data:
-            self.reply_not_required = True
-            return
-        else:
-            self.reply_not_required = False
-
-        reply = srv_req_data["reply"]
-        self.exchange = dict_get_or_panic(reply, "exchange", srv_req_data)
-        self.routing_key = dict_get_or_panic(reply, "routing_key", srv_req_data)
-
+from db_functional_service.reply import Reply
 
 class RmqHandle:
     conn: BlockingConnection = None
@@ -97,12 +85,12 @@ class RmqHandle:
 
     @classmethod
     def basic_publish(cls, answer: str, reply: Reply):
-        if reply.reply_not_required:
+        if reply._not_required:
             return
 
         body = answer.encode("utf-8")
         cls.chan.basic_publish(
-            exchange=reply.exchange,
-            routing_key=reply.routing_key,
+            exchange=reply._exchange,
+            routing_key=reply._routing_key,
             body=body,
         )

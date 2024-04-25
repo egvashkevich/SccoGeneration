@@ -1,22 +1,18 @@
+import json
 import inspect
 
 from util.json_handle import dict_get_or_panic
-import crud.message_group_id_generator as mgig
+from util.reply_ctx import add_reply_ctx
 
+import crud.message_group_id_generator as mgig
 from crud.models import NewQueriesCsv
 from crud.type_map import CsvId
-
 from crud.objects.query import QueryCRUD
 from crud.objects.client import ClientCRUD
 from crud.objects.new_queries_csv import NewQueriesCsvCRUD
 
-import json
-
-import db_functional_service.rmq_handle as rmq
-
-import util.parse_env as ps
-
-from util.reply_ctx import add_reply_ctx
+from db_functional_service.reply import Reply
+from db_functional_service.broker.broker import Broker
 
 
 def get_csv_id(req_data, srv_req_data) -> CsvId:
@@ -96,7 +92,6 @@ def insert_message_group(data_dict, group_ids):
     group_ids.append(group_id)
 
     insert_dicts = flatten_data_dict(data_dict)
-    # print("HERE")
     for query_dict in insert_dicts:
         query_dict["csv_id"] = data_dict["csv_id"]
         query_dict["message_group_id"] = group_id
@@ -119,8 +114,12 @@ def insert_message_group(data_dict, group_ids):
     print("insert_message_group finished")
 
 
-def insert_preprocessed_queries(req_data, reply, srv_req_data):
-    csv_path = dict_get_or_panic(req_data, "csv_path", srv_req_data)
+def insert_preprocessed_queries(
+        req_data,
+        srv_req_data,
+        reply: Reply,
+        broker: Broker
+) -> None:
     arr = dict_get_or_panic(req_data, "array_data", srv_req_data)
 
     # Check keys of array_data.
@@ -147,6 +146,7 @@ def insert_preprocessed_queries(req_data, reply, srv_req_data):
         data_dict["csv_id"] = csv_id
         insert_message_group(data_dict, group_ids)
 
+    print("Preparing answer")
     answer = {
         "array_data": group_ids,
     }
@@ -158,5 +158,8 @@ def insert_preprocessed_queries(req_data, reply, srv_req_data):
     answer = json.dumps(answer, indent=2)
     print(f"Answer:\n{answer}")
 
-    if not ps.is_on_host():
-        rmq.RmqHandle.basic_publish(answer, reply)
+    print("sending reply")
+    broker.basic_publish_unknown(
+        reply.get_publisher(),
+        answer.encode("utf-8"),
+    )
