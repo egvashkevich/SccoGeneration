@@ -1,19 +1,18 @@
 from util.json_handle import dict_get_or_panic
 
-import json
-
-import db_functional_service.rmq_handle as rmq
-
-
 from crud.objects.customer_service import CustomerServiceCRUD
 from crud.objects.customer import CustomerCRUD
 
-import util.parse_env as ps
+from db_functional_service.reply import Reply
+from db_functional_service.broker.broker import Broker
 
-from util.reply_ctx import add_reply_ctx
 
-
-def insert_customer(req_data, reply, srv_req_data):
+def insert_customer(
+        req_data,
+        srv_req_data,
+        reply: Reply,
+        broker: Broker
+) -> None:
     print("Enter insert_customer")
 
     # Check keys.
