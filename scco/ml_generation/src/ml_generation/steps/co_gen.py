@@ -1,18 +1,16 @@
 import json
 
-import ml_generation.broker_config as bc
+import util.app_config as app_cfg
 
-from ml_generation.rmq_broker import RmqBroker
-from ml_generation.rmq_broker import Publisher
-from ml_generation.rmq_broker import Consumer
-
-from ml_generation.steps.wrap_step import wrap_step_callback
+from ml_generation.broker.broker import Broker
+from ml_generation.broker.broker import Publisher
+from ml_generation.broker.broker import Consumer
 
 from ml_models.co_gen.api import GenerateGateWrapper as CoMlModel
 
 
 class CoGen:
-    def __init__(self, broker: RmqBroker):
+    def __init__(self, broker: Broker):
         self.broker = broker
 
         # Publishers.
@@ -20,18 +18,18 @@ class CoGen:
 
         broker.add_consumer(
             Consumer(
-                exchange=bc.CO_GEN_EXCHANGE,
-                queue=bc.CO_GEN_QUEUE,
-                routing_key=bc.CO_GEN_ROUTING_KEY,
+                exchange=app_cfg.CO_GEN_EXCHANGE,
+                queue=app_cfg.CO_GEN_QUEUE,
+                routing_key=app_cfg.CO_GEN_ROUTING_KEY,
                 callback=self.callback,
             )
         )
         broker.add_publisher(
             Publisher(
                 name="gen_step.pdf_gen",
-                exchange=bc.PDF_GENERATION_EXCHANGE,
-                queue=bc.PDF_GENERATION_QUEUE,
-                routing_key=bc.PDF_GENERATION_ROUTING_KEY,
+                exchange=app_cfg.PDF_GENERATION_EXCHANGE,
+                queue=app_cfg.PDF_GENERATION_QUEUE,
+                routing_key=app_cfg.PDF_GENERATION_ROUTING_KEY,
             )
         )
 
@@ -74,5 +72,7 @@ class CoGen:
         body = request.encode("utf-8")
         print(f"Sending body:\n----------{body}\n-----------")
         self.broker.basic_publish(self.pdf_gen, body)
+
+        ch.basic_ack(delivery_tag=method.delivery_tag)
 
         print("CoGen callback finished")

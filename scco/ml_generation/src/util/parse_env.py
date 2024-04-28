@@ -26,10 +26,12 @@ class _EnvVars:
         return cls._config[env_var]
 
     @classmethod
-    def get_val(cls, env_var: str, default: str | None) -> str | None:
-        if env_var in cls._config:
-            return cls._config[env_var]
-        return default
+    def contains(cls, env_var: str) -> bool:
+        return env_var in cls._config
+
+    @classmethod
+    def get_val(cls, env_var: str) -> str:
+        return cls._config[env_var]
 
     @classmethod
     def set_val(cls, env_var: str, val: str) -> None:
@@ -37,23 +39,41 @@ class _EnvVars:
         cls._config[env_var] = val
 
     @classmethod
-    def is_on_host(cls) -> bool:
-        return cls._config.get("IS_ON_HOST", False)
+    def get_or_default(cls, env_var: str, default: str) -> str:
+        if env_var in cls._config:
+            return cls._config[env_var]
+        return default
+
+    @classmethod
+    def get_or_set(cls, env_var: str, new_val: str) -> str:
+        if env_var in cls._config:
+            return cls._config[env_var]
+        cls.set_val(env_var, new_val)
+        return new_val
 
     @classmethod
     def print_all(cls) -> None:
-        print("Environment variables")
+        print("Environment variables\n-----------------")
         for key, value in cls._config.items():
             print(f"{key}: {value}")
+        print("Environment variables finished\n-----------------")
 
 
-def get(env_var: str, default: str | None = None) -> str | None:
-    return _EnvVars.get_val(env_var, default)
+def get(env_var: str) -> str:
+    return _EnvVars.get_val(env_var)
 
 
-def setdefault(env_var: str, val: str):
+def contains(env_var: str) -> bool:
+    return _EnvVars.contains(env_var)
+
+
+def get_or_default(env_var: str, default: str) -> str:
+    return _EnvVars.get_or_default(env_var, default)
+
+
+def get_or_set(env_var: str, new_val: str) -> str:
+    return _EnvVars.get_or_set(env_var, new_val)
+
+
+def setdefault(env_var: str, val: str) -> None:
     return _EnvVars.set_val(env_var, val)
-
-
-def is_on_host() -> bool:
-    return _EnvVars.is_on_host()
