@@ -1,6 +1,7 @@
 import sys
 
-from ml_generation.rmq_broker import RmqBroker
+from ml_generation.broker.broker import Broker
+from ml_generation.broker.rmq_broker import RmqBroker
 
 from ml_generation.steps.co_gen import CoGen
 from ml_generation.steps.preproc import Preproc
@@ -8,7 +9,7 @@ from ml_generation.steps.preproc import Preproc
 
 def main():
     print("Creating RmqBroker...")
-    broker = RmqBroker()
+    broker: Broker = RmqBroker()
     print("RmqBroker created")
 
     print("Creating Preproc...")

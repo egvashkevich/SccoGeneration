@@ -1,16 +1,14 @@
 import json
 
-import ml_generation.broker_config as bc
+import util.app_config as app_cfg
 
-from ml_generation.rmq_broker import RmqBroker
-from ml_generation.rmq_broker import Publisher
-from ml_generation.rmq_broker import Consumer
-
-from ml_generation.steps.wrap_step import wrap_step_callback
+from ml_generation.broker.broker import Broker
+from ml_generation.broker.broker import Publisher
+from ml_generation.broker.broker import Consumer
 
 
 class Preproc:
-    def __init__(self, broker: RmqBroker):
+    def __init__(self, broker: Broker):
         self.broker = broker
 
         # Publishers.
@@ -18,18 +16,18 @@ class Preproc:
 
         broker.add_consumer(
             Consumer(
-                exchange=bc.ML_GENERATION_EXCHANGE,
-                queue=bc.ML_GENERATION_QUEUE,
-                routing_key=bc.ML_GENERATION_ROUTING_KEY,
+                exchange=app_cfg.ML_GENERATION_EXCHANGE,
+                queue=app_cfg.ML_GENERATION_QUEUE,
+                routing_key=app_cfg.ML_GENERATION_ROUTING_KEY,
                 callback=self.callback,
             )
         )
         broker.add_publisher(
             Publisher(
                 name=self.db_service,
-                exchange=bc.DB_FUNCTIONAL_SERVICE_EXCHANGE,
-                queue=bc.DB_FUNCTIONAL_SERVICE_QUEUE,
-                routing_key=bc.DB_FUNCTIONAL_SERVICE_ROUTING_KEY,
+                exchange=app_cfg.DB_FUNCTIONAL_SERVICE_EXCHANGE,
+                queue=app_cfg.DB_FUNCTIONAL_SERVICE_QUEUE,
+                routing_key=app_cfg.DB_FUNCTIONAL_SERVICE_ROUTING_KEY,
             )
         )
 
@@ -51,8 +49,8 @@ class Preproc:
         request = {
             "request_name": "get_info_for_co_generation",
             "reply": {
-                "exchange": bc.CO_GEN_EXCHANGE,
-                "routing_key": bc.CO_GEN_ROUTING_KEY,
+                "exchange": app_cfg.CO_GEN_EXCHANGE,
+                "routing_key": app_cfg.CO_GEN_ROUTING_KEY,
             },
             "reply_ctx": message_group_id,  # not required
             "request_data": {
@@ -62,5 +60,7 @@ class Preproc:
         request = json.dumps(request)
         body = request.encode("utf-8")
         self.broker.basic_publish(self.db_service, body)
+
+        ch.basic_ack(delivery_tag=method.delivery_tag)
 
         print("Preproc callback finished")
