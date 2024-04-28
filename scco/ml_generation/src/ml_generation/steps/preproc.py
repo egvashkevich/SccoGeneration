@@ -1,3 +1,4 @@
+import inspect
 import json
 
 import util.app_config as app_cfg
@@ -8,11 +9,11 @@ from ml_generation.broker.broker import Consumer
 
 
 class Preproc:
+    # Publishers.
+    db_service = "preproc.db_service"
+
     def __init__(self, broker: Broker):
         self.broker = broker
-
-        # Publishers.
-        self.db_service = "preproc_step.db_service"
 
         broker.add_consumer(
             Consumer(
@@ -37,10 +38,12 @@ class Preproc:
         # Get data from body.
         body = body.decode("utf-8")
         print(
-            f"""body from preprocessed_data:
-            -----------
-            {body}
-            ----------"""
+            inspect.cleandoc(
+                f"""body from preprocessed_data:
+-----------
+{body}
+----------"""
+            )
         )
         passed_data = json.loads(body)
 
@@ -59,6 +62,7 @@ class Preproc:
         }
         request = json.dumps(request)
         body = request.encode("utf-8")
+        print(f"Sending body:\n----------\n{body}\n-----------")
         self.broker.basic_publish(self.db_service, body)
 
         ch.basic_ack(delivery_tag=method.delivery_tag)
