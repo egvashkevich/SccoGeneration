@@ -4,32 +4,47 @@ import ml_models.co_gen.api as ml_models_api
 
 model = ml_models_api.GenerateGateWrapper()
 
-info = {
+request = {
   "customer_id": "customer_1",
   "client_id": "client_1",
-  "channel_ids": "client_1",
+  "channel_ids": [
+    "phystech.career"
+  ],
   "messages": [
-    "Good morning.\nMy name is client_1.\nI need Python developers."
+    "Добрый день, мне нужег опытный python-разработчик. Мне нужно разработать бота на питоне"
   ],
   "attitude": "arrogant",
-  "company_name": "Company of customer 1",
-  "features": [
-    "feature_1",
-    "feature_2"
+  "company_name": "Owl-web",
+  "black_list": [
+    "fuck",
+    "shit",
+    "nigger"
+  ],
+  "tags": [
+    "python",
+    "b2b"
+  ],
+  "white_list": [
+    "python_synonym",
+    "b2b_synonym"
+  ],
+  "specific_features": [
+    "10-летний опыт, много довольных клиентов"
   ],
   "customer_services": [
     {
-      "service_name": "customer 1, service 1",
-      "service_desc": "description 1"
+      "service_name": "Python-бот",
+      "service_desc": "Делаем tg-ботов под любые нужды"
     },
     {
-      "service_name": "customer 1, service 2",
-      "service_desc": "description 2"
+      "service_name": "flask/django",
+      "service_desc": "Разработка бэка на питоне"
     }
   ],
+  "reply_ctx": "something"
 }
 
-answer = model.generate_offer_text(info)
+answer = model.generate_offer_text(request)
 
 print(answer["main_text"])
 

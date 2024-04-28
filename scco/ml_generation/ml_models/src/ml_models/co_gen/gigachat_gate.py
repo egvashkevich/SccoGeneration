@@ -56,6 +56,6 @@ class GigaChatAPIManager:
         return response
 
     def generate_request(self, messages):
-        self.access_manager.update_token()
+        update_response = self.access_manager.update_token()
         response = self._try_generate_request(messages)
         return response

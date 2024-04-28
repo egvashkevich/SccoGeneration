@@ -1,14 +1,8 @@
 import typing
+from typing import List
 import configparser
 
 from importlib.resources import files
-
-class SystemPromptData:
-    company_name: str
-    channel_name: str
-    services: list
-    specific: list
-
 
 pos_to_insert_in_system = {
     'company_name': '[COMPANY]',
@@ -18,27 +12,39 @@ pos_to_insert_in_system = {
 }
 
 
+class UserMessageWrapper:
+    @staticmethod
+    def handle_message(message: str):
+        return {
+            "role": "user",
+            "content": message
+        }
 
-DEFAULT_PATH_TO_CONF = str(
-    files("ml_models").joinpath(
-        "co_gen/configs/prompts.ini"
-    )
-)
+    @staticmethod
+    def handle_messages(messages: List[str]):
+        return [UserMessageWrapper.handle_message(message) for message in messages]
 
 
-def make_system_prompt(system_prompt_info: SystemPromptData, path_to_conf=DEFAULT_PATH_TO_CONF):
+def parse_custormer_services(request: dict):
+    res_list = []
+    for service in request['customer_services']:
+        name, desc = service['service_name'], service['service_desc']
+        res_list.append(name + f'({desc})')
+    return ', '.join(res_list)
+
+
+def make_system_prompt(request, path_to_conf):
     config = configparser.ConfigParser()
     config.read(path_to_conf)
 
     basic = config['PROMPTS']['basic_system']
 
     basic = basic.replace(
-        pos_to_insert_in_system['company_name'], system_prompt_info.company_name)
+        pos_to_insert_in_system['company_name'], request['company_name'])
     basic = basic.replace(
-        pos_to_insert_in_system['channel_name'], system_prompt_info.channel_name)
-    basic = basic.replace(pos_to_insert_in_system['services'], ', '.join(
-        system_prompt_info.services))
-    basic = basic.replace(pos_to_insert_in_system['specific'], ', '.join(
-        system_prompt_info.specific))
+        pos_to_insert_in_system['channel_name'], request['channel_ids'][0])
+    basic = basic.replace(
+        pos_to_insert_in_system['services'], parse_custormer_services(request))
+    basic = basic.replace(pos_to_insert_in_system['specific'], ', '.join(request['specific_features']))
 
     return basic
