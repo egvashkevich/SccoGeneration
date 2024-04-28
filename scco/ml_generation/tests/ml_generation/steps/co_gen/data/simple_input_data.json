@@ -36,5 +36,5 @@
       "service_desc": "description 2"
     }
   ],
-  "reply_ctx": "something"
+  "reply_ctx": 1
 }

@@ -11,3 +11,4 @@ RUN pip3 install "./ml_models"
 RUN pip3 install "."
 
 CMD ["python3", "-u", "src/ml_generation/main.py"]
+#CMD ["pytest"]  # for testing
