@@ -79,7 +79,8 @@ if __name__ == "__main__":
         print('Interrupted', file=sys.stderr)
     except Exception as e:
         print(f'Internal service unexpected error: {e}', file=sys.stderr)
-        sys.exit(2)
+        raise e
+        # sys.exit(2)
 
 
 ################################################################################
