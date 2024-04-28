@@ -1,4 +1,5 @@
 from sqlalchemy import insert
+from sqlalchemy import update
 
 from sqlalchemy.orm import Session
 
@@ -27,5 +28,26 @@ class CustomerCRUD(SelectorBase):
         engine = dbapi.DbEngine.get_engine()
         with Session(engine) as session:
             stmt = insert(Customer).values(customers)
+            with session.begin():
+                session.execute(stmt)
+
+    @classmethod
+    def update(
+            cls,
+            new_vals: dict,
+            wheres_cond: list | None = None,
+    ) -> None:
+        if len(new_vals) == 0:
+            print("CustomerCRUD::update_one: no values")
+            return
+
+        # TODO: add validation
+        engine = dbapi.DbEngine.get_engine()
+        with Session(engine) as session:
+            stmt = update(Customer)
+            for where_cond in wheres_cond:
+                stmt = stmt.where(where_cond)
+
+            stmt = stmt.values(new_vals)
             with session.begin():
                 session.execute(stmt)

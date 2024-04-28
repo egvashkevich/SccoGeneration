@@ -77,5 +77,3 @@ def get_or_set(env_var: str, new_val: str) -> str:
 
 def setdefault(env_var: str, val: str) -> None:
     return _EnvVars.set_val(env_var, val)
-
-_EnvVars.print_all()
