@@ -35,8 +35,6 @@ services:
     container_name: "${COMPOSE_PROJECT_NAME}_generated_offers"
     env_file:
       - .env
-#      - .secrets.env
-#      - generated_offers/.env
     restart: on-failure
     networks:
       RMQ_NET:

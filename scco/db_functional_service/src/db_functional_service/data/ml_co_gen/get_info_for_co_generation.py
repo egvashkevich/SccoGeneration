@@ -4,7 +4,7 @@ request_1 = {
         "exchange": "scco_test_exchange",
         "routing_key": "scco_test_routing_key",
     },
-    "reply_ctx": "something",  # not required
+    "reply_ctx": 1,  # not required
     "request_data": {
         "message_group_id": 1,
     }
@@ -15,13 +15,28 @@ request_1 = {
 answer_1 = {
   "customer_id": "customer_1",
   "client_id": "client_1",
-  "channel_ids": "client_1",
+  "channel_ids": [
+    "phystech.career"
+  ],
   "messages": [
     "Good morning.\nMy name is client_1.\nI need Python developers."
   ],
   "attitude": "arrogant",
   "company_name": "Company of customer 1",
-  "features": [
+  "black_list": [
+    "fuck",
+    "shit",
+    "nigger"
+  ],
+  "tags": [
+    "python",
+    "b2b"
+  ],
+  "white_list": [
+    "python_synonym",
+    "b2b_synonym"
+  ],
+  "specific_features": [
     "feature_1",
     "feature_2"
   ],
@@ -35,5 +50,6 @@ answer_1 = {
       "service_desc": "description 2"
     }
   ],
-  "reply_ctx": "something"
+  "reply_ctx": 1
 }
+

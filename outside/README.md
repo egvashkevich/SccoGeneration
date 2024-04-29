@@ -24,7 +24,7 @@ docker-compose --env-file ../.env down --remove-orphans --volumes
 # start
 docker-compose up --build -d
 # stop
-docker-compose down --remove-orphans --volumes
+docker-compose down --rmi all --remove-orphans
 ```
 
 Запуск отдельных сервисов. Из папки `outside` нужно выполнить:

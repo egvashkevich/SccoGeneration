@@ -1,41 +1,38 @@
-from sqlalchemy import select
-from sqlalchemy.orm import Session
-from sqlalchemy import func as sqlfunc
-
-from util.json_handle import dict_has_or_panic
-import crud.dbapi as dbapi
-
-# TODO: replace with QueryCRUD
-from crud.models import Query
-
 import json
 
-import util.parse_env as ps
-
-import db_functional_service.rmq_handle as rmq
-
+from util.json_handle import dict_has_or_panic
 from util.reply_ctx import add_reply_ctx
 
+from crud.models import Query
+from crud.objects.query import QueryCRUD
 
-def filter_new_queries_predicate(row, session):
-    """
-    :return: true, if database contains row.
-    """
+from db_functional_service.reply import Reply
+from db_functional_service.broker.broker import Broker
+
+
+def filter_new_queries_predicate(row):
     print("Enter filter_new_queries_predicate")
-    stmt = (select(sqlfunc.count())
-            .select_from(Query)
-            .where(Query.customer_id == row["customer_id"])
-            .where(Query.client_id == row["client_id"])
-            .where(Query.channel_id == row["channel_id"])
-            .where(Query.message_date == row["message_date"])
-            .limit(1))
-    print("Make filter_new_queries_predicate")
-    res = (session.scalars(stmt).one() == 0)
-    print("Done filter_new_queries_predicate")
+    result_set = QueryCRUD.select_one(
+        columns=[
+            Query.client_id
+        ],
+        wheres_cond=[
+            Query.customer_id == row["customer_id"],
+            Query.client_id == row["client_id"],
+            Query.channel_id == row["channel_id"],
+            Query.message_date == row["message_date"]
+        ]
+    )
+    res = (result_set is None)
     return res  # without raws
 
 
-def filter_new_queries(req_data, reply, srv_req_data):
+def filter_new_queries(
+        req_data,
+        srv_req_data,
+        reply: Reply,
+        broker: Broker
+) -> None:
     print("Enter filter_new_queries")
 
     # Check keys.
@@ -52,11 +49,10 @@ def filter_new_queries(req_data, reply, srv_req_data):
 
     # Make db query.
     print("Start query")
-    engine = dbapi.DbEngine.get_engine()
-    with Session(engine) as session:
-        res = [row for row in req_data
-               if filter_new_queries_predicate(row, session)]
-    print("Finish query")
+    res = [row for row in req_data
+           if filter_new_queries_predicate(row)]
+
+    print("Preparing answer")
     answer = {
         "not_exist": res,
     }
@@ -68,5 +64,8 @@ def filter_new_queries(req_data, reply, srv_req_data):
     answer = json.dumps(answer, indent=2)
     print(f"Answer:\n{answer}")
 
-    if not ps.is_on_host():
-        rmq.RmqHandle.basic_publish(answer, reply)
+    print("sending reply")
+    broker.basic_publish_unknown(
+        reply.get_publisher(),
+        answer.encode("utf-8"),
+    )

@@ -1,17 +1,20 @@
-from crud.objects.new_queries_csv import NewQueriesCsvCRUD
-
-from util.json_handle import dict_get_or_panic
-
 import json
 
-import db_functional_service.rmq_handle as rmq
-
-import util.parse_env as ps
-
+from util.json_handle import dict_get_or_panic
 from util.reply_ctx import add_reply_ctx
 
+from crud.objects.new_queries_csv import NewQueriesCsvCRUD
 
-def insert_new_queries_csv(req_data, reply, srv_req_data):
+from db_functional_service.reply import Reply
+from db_functional_service.broker.broker import Broker
+
+
+def insert_new_queries_csv(
+        req_data,
+        srv_req_data,
+        reply: Reply,
+        broker: Broker
+) -> None:
     print("Enter get_customers_black_lists")
 
     # Check keys.
@@ -30,8 +33,8 @@ def insert_new_queries_csv(req_data, reply, srv_req_data):
             "csv_path": data_dict["csv_path"],
         }
     )
-    print("Finish query")
 
+    print("Preparing answer")
     answer = {
         "csv_path": data_dict["csv_path"],
     }
@@ -43,5 +46,9 @@ def insert_new_queries_csv(req_data, reply, srv_req_data):
     answer = json.dumps(answer, indent=2)
     print(f"Answer:\n{answer}")
 
-    if not ps.is_on_host():
-        rmq.RmqHandle.basic_publish(answer, reply)
+    print("sending reply")
+    broker.basic_publish_unknown(
+        reply.get_publisher(),
+        answer.encode("utf-8"),
+    )
+

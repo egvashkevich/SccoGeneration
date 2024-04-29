@@ -2,3 +2,4 @@ pika
 Levenshtein
 regex
 pymorphy2
+emoji

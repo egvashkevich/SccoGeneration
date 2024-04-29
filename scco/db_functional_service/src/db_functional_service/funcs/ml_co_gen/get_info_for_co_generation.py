@@ -1,31 +1,23 @@
+import json
 import inspect
 
-from sqlalchemy import select
-from sqlalchemy import func as sqlfunc
 from sqlalchemy import desc
 
-from sqlalchemy.orm import Session
-import crud.dbapi as dbapi
+from util.json_handle import dict_get_or_panic
+from util.reply_ctx import add_reply_ctx
 
 from crud.models import Query
 from crud.models import Client
 from crud.models import Customer
 from crud.models import CustomerService
 
-from util.json_handle import dict_get_or_panic
-
-import json
-
-import db_functional_service.rmq_handle as rmq
-
-import util.parse_env as ps
-
 from crud.objects.query import QueryCRUD
 from crud.objects.client import ClientCRUD
 from crud.objects.customer import CustomerCRUD
 from crud.objects.customer_service import CustomerServiceCRUD
 
-from util.reply_ctx import add_reply_ctx
+from db_functional_service.reply import Reply
+from db_functional_service.broker.broker import Broker
 
 
 def arise_error(field_name, data_dict, query_data, db_query):
@@ -85,7 +77,7 @@ def get_from_query_table(data_dict, req_data, srv_req_data) -> dict:
     answer = {
         "customer_id": customer_id,
         "client_id": client_id,
-        "channel_ids": client_id,
+        "channel_ids": channel_ids,
         "messages": messages,
         # "message_dates": messages_dates,
     }
@@ -94,6 +86,8 @@ def get_from_query_table(data_dict, req_data, srv_req_data) -> dict:
 
 
 def get_from_client_table(data_dict, req_data, srv_req_data) -> dict:
+    print("Start get_from_client_table")
+
     result_set = ClientCRUD.select_one(
         [
             Client.attitude,
@@ -102,6 +96,7 @@ def get_from_client_table(data_dict, req_data, srv_req_data) -> dict:
             Client.client_id == data_dict["client_id"],
         ],
     )
+    print("ClientCRUD.select_one completed")
 
     if result_set is None:
         arise_error(
@@ -115,25 +110,29 @@ def get_from_client_table(data_dict, req_data, srv_req_data) -> dict:
     print(f"result_set = {result_set}")
     print(f"-----------------------------")
 
-    attitude = result_set[0]
-
     answer = {
-        "attitude": attitude,
+        "attitude": result_set[0],
     }
 
     return answer
 
 
 def get_from_customer_table(data_dict, req_data, srv_req_data) -> dict:
+    print("Start get_from_customer_table")
+
     result_set = CustomerCRUD.select_one(
         [
             Customer.company_name,
+            Customer.black_list,
+            Customer.tags,
+            Customer.white_list,
             Customer.specific_features,
         ],
         wheres_cond=[
             Customer.customer_id == data_dict["customer_id"],
         ],
     )
+    print("CustomerCRUD.select_one completed")
 
     if result_set is None:
         arise_error(
@@ -147,12 +146,12 @@ def get_from_customer_table(data_dict, req_data, srv_req_data) -> dict:
     print(f"result_set = {result_set}")
     print(f"-----------------------------")
 
-    company_name = result_set[0]
-    features = result_set[1]
-
     answer = {
-        "company_name": company_name,
-        "features": features,
+        "company_name": result_set[0],
+        "black_list": result_set[1],
+        "tags": result_set[2],
+        "white_list": result_set[3],
+        "specific_features": result_set[4],
     }
 
     return answer
@@ -162,6 +161,8 @@ def get_from_customer_service_table(
         data_dict,
         query_data,
         db_query) -> dict:
+    print("Start get_from_customer_service_table")
+
     result_set = CustomerServiceCRUD.select_all(
         [
             CustomerService.service_name,
@@ -171,6 +172,7 @@ def get_from_customer_service_table(
             CustomerService.customer_id == data_dict["customer_id"],
         ],
     )
+    print("CustomerServiceCRUD.select_all completed")
 
     if result_set is None:
         arise_error(
@@ -200,7 +202,12 @@ def get_from_customer_service_table(
     return answer
 
 
-def get_info_for_co_generation(req_data, reply, srv_req_data):
+def get_info_for_co_generation(
+        req_data,
+        srv_req_data,
+        reply: Reply,
+        broker: Broker
+) -> None:
     required_keys = [
         "message_group_id",
     ]
@@ -246,6 +253,8 @@ def get_info_for_co_generation(req_data, reply, srv_req_data):
     )
     answer.update(answer_customer_service)
 
+    print("Preparing answer")
+
     # Add reply_ctx.
     add_reply_ctx(srv_req_data, answer)
 
@@ -253,5 +262,8 @@ def get_info_for_co_generation(req_data, reply, srv_req_data):
     answer = json.dumps(answer, indent=2)
     print(f"Answer:\n{answer}")
 
-    if not ps.is_on_host():
-        rmq.RmqHandle.basic_publish(answer, reply)
+    print("sending reply")
+    broker.basic_publish_unknown(
+        reply.get_publisher(),
+        answer.encode("utf-8"),
+    )
