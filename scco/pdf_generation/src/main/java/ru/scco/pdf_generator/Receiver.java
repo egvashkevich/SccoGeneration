@@ -25,25 +25,24 @@ public class Receiver {
         generatorPool.execute(() -> {
             String cp;
             try {
-                cp = processingChain.process(request.cp());
+                cp = processingChain.process(request.mainText());
             } catch (InvalidCPException invalidCPException) {
-                sender.sendError(request.senderId(), invalidCPException.getMessage());
+                // TODO:
+                sender.sendError(request.messageId(), invalidCPException.getMessage());
                 return;
             }
-            String fileLink = pdfGenerator.generate(request.queryId(),
-                                                    request.senderId(),
-                                                    cp,
-                                                    request.signature());
+            String fileLink = pdfGenerator.generate(request.messageId(),
+                                                    request.mainText());
             if (fileLink == null) {
-                sender.sendError(request.senderId(),
+                sender.sendError(request.messageId(),
                                  errorsMessages.fileError());
                 return;
             }
-            if (manager.saveCP(request.senderId(), fileLink)) {
-                sender.sendCP(request.senderId(), fileLink);
-                sender.sendOk(request.senderId());
+            if (manager.saveCP(request.messageId(), fileLink)) {
+                sender.sendCP(request.messageId(), fileLink);
+//                sender.sendOk(request.messageId());
             } else {
-                sender.sendError(request.senderId(), errorsMessages.dbError());
+                sender.sendError(request.messageId(), errorsMessages.dbError());
             }
         });
 

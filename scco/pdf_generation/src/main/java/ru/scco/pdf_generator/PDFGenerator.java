@@ -13,7 +13,6 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDTextField;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 
@@ -51,8 +50,7 @@ public class PDFGenerator {
 
     }
 
-    public String generate(long queryId, long senderId, String cp,
-                           String signature) {
+    public String generate(long messageId, String cp) {
         try (PDDocument doc = Loader.loadPDF(IOUtils.toByteArray(
                 Objects.requireNonNull(
                         PDFGenerator.class.getResourceAsStream(
@@ -67,12 +65,9 @@ public class PDFGenerator {
             String fontName = resources.add(formFont).getName();
             handleTemplate((PDTextField) acroForm.getField("main_text"),
                            acroForm, page, fontName, cp);
-            handleTemplate((PDTextField) acroForm.getField("signature"),
-                           acroForm, page, fontName, signature);
-            Path directory = Path.of(destinationPath, String.valueOf(senderId));
-            Files.createDirectories(directory);
+            Path filePath = Path.of(destinationPath,
+                                    String.valueOf(messageId) + ".pdf");
             acroForm.flatten();
-            Path filePath = Path.of(directory.toString(), queryId + ".pdf");
             doc.save(filePath.toAbsolutePath().toString());
             return filePath.toString();
         } catch (IOException e) {

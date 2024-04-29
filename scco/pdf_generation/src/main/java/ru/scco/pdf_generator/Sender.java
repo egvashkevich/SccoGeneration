@@ -1,37 +1,34 @@
 package ru.scco.pdf_generator;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.stereotype.Component;
+import ru.scco.pdf_generator.dto.DBReplyDTO;
+import ru.scco.pdf_generator.dto.DBRequestDTO;
 import ru.scco.pdf_generator.dto.PDFCpResponseDTO;
-import ru.scco.pdf_generator.dto.PDFStatusResponseDTO;
 
-@Component
+//@Component
 @RequiredArgsConstructor
 public class Sender {
     private final RabbitTemplate template;
-    private final DirectExchange exchange;
-    private final Binding bindingCP;
-    private final Binding bindingOk;
-    private final Binding bindingError;
+    private final String dbFunctionalExchange;
+    private final String dbFunctionalRoutingKey;
+    private final String outerExchange;
+    private final String outerRoutingKey;
 
     public void sendCP(long userId, String fileLink) {
-        template.convertAndSend(exchange.getName(), bindingCP.getRoutingKey(),
-                                new PDFCpResponseDTO(userId, fileLink));
-    }
-
-    public void sendOk(long userId) {
-        template.convertAndSend(exchange.getName(), bindingOk.getRoutingKey(),
-                                new PDFStatusResponseDTO(userId, true, null));
+        template.convertAndSend(dbFunctionalExchange, dbFunctionalRoutingKey,
+                                new DBRequestDTO(
+                                        new PDFCpResponseDTO(userId, fileLink
+                                        ), new DBReplyDTO(outerExchange,
+                                                          outerRoutingKey)));
     }
 
     public void sendError(long userId,
                           String errorMessage) {
-        template.convertAndSend(exchange.getName(),
-                                bindingError.getRoutingKey(),
-                                new PDFStatusResponseDTO(userId, false,
-                                                         errorMessage));
+        // Пока никуда
+//        template.convertAndSend(dbFunctionalExchange,
+//                                dbFunctionalRoutingKey,
+//                                new PDFStatusResponseDTO(userId, false,
+//                                                         errorMessage));
     }
 }
