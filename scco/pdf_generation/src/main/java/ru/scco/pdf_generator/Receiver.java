@@ -40,7 +40,7 @@ public class Receiver {
             }
             if (manager.saveCP(request.messageId(), fileLink)) {
                 sender.sendCP(request.messageId(), fileLink);
-                sender.sendOk(request.messageId());
+//                sender.sendOk(request.messageId());
             } else {
                 sender.sendError(request.messageId(), errorsMessages.dbError());
             }

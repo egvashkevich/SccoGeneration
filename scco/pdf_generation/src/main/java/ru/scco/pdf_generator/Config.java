@@ -42,6 +42,27 @@ public class Config {
         return BindingBuilder.bind(inputQueue).to(pdfExchange).with(key);
     }
 
+
+    @Bean
+    TopicExchange outerExchange(
+            @Value("${rabbit.outer_exchange}") String name) {
+        return new TopicExchange(name, true, false);
+    }
+
+    @Bean
+    Queue outerQueue(@Value("${rabbit.outer_queue}") String name) {
+        return new Queue(name, true);
+    }
+
+    @Bean
+    Binding outerBinding(Queue outerQueue, TopicExchange outerExchange,
+                       @Value("${rabbit.outer_routing_key}")
+                       String key) {
+        return BindingBuilder.bind(outerQueue).to(outerExchange).with(key);
+    }
+
+
+
     @Bean
     TopicExchange dbExchange(
             @Value("${rabbit.db}") String name) {
@@ -99,8 +120,13 @@ public class Config {
     }
 
     @Bean
-    Sender sender(RabbitTemplate template, Binding dbBinding) {
-        return new Sender(template, dbBinding.getExchange(),
-                          dbBinding.getRoutingKey());
+    Sender sender(RabbitTemplate template, Binding dbBinding,
+                  Binding outerBinding) {
+        return new Sender(template,
+                          dbBinding.getExchange(),
+                          dbBinding.getRoutingKey(),
+                          outerBinding.getExchange(),
+                          outerBinding.getRoutingKey()
+        );
     }
 }

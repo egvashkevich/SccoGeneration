@@ -1,12 +1,10 @@
 package ru.scco.pdf_generator;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.stereotype.Component;
+import ru.scco.pdf_generator.dto.DBReplyDTO;
+import ru.scco.pdf_generator.dto.DBRequestDTO;
 import ru.scco.pdf_generator.dto.PDFCpResponseDTO;
-import ru.scco.pdf_generator.dto.PDFStatusResponseDTO;
 
 //@Component
 @RequiredArgsConstructor
@@ -14,16 +12,15 @@ public class Sender {
     private final RabbitTemplate template;
     private final String dbFunctionalExchange;
     private final String dbFunctionalRoutingKey;
+    private final String outerExchange;
+    private final String outerRoutingKey;
 
     public void sendCP(long userId, String fileLink) {
         template.convertAndSend(dbFunctionalExchange, dbFunctionalRoutingKey,
-                                new PDFCpResponseDTO(userId, fileLink));
-    }
-
-    public void sendOk(long userId) {
-        // Пока никуда
-//        template.convertAndSend(dbFunctionalExchange, dbFunctionalRoutingKey,
-//                                new PDFStatusResponseDTO(userId, true, null));
+                                new DBRequestDTO(
+                                        new PDFCpResponseDTO(userId, fileLink
+                                        ), new DBReplyDTO(outerExchange,
+                                                          outerRoutingKey)));
     }
 
     public void sendError(long userId,

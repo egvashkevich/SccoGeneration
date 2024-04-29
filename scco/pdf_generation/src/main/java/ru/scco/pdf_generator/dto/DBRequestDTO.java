@@ -3,16 +3,22 @@ package ru.scco.pdf_generator.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
-public class PDFCpResponseDTO implements
+public class DBRequestDTO implements
                               Serializable {
-    @JsonProperty("message_group_id")
-    long userId;
-    @JsonProperty("file_path")
-    String CPlink;
+    @JsonProperty("request_name")
+    final String requestName = "insert_offers";
 
-    public PDFCpResponseDTO(long userId, String CPlink) {
-        this.userId = userId;
-        this.CPlink = CPlink;
+    @JsonProperty("request_data")
+    List<PDFCpResponseDTO> responseDTOs = new ArrayList<>();
+
+    @JsonProperty("reply")
+    DBReplyDTO dbReplyDTO;
+
+    public DBRequestDTO(PDFCpResponseDTO responseDTO, DBReplyDTO replyDTO) {
+        this.responseDTOs.add(responseDTO);
+        this.dbReplyDTO = replyDTO;
     }
 }

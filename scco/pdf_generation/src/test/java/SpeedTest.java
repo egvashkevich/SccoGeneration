@@ -24,7 +24,6 @@ public class SpeedTest {
             testRabbitTemplate.convertAndSend(
                     inputQueue.getName(),
                     new PDFGeneratorRequestDTO(
-                            i,
                             i, "Здравствуйте, Акакий "
                                + "Акакиевич!\nМы"
                                + " увидели ваше"
@@ -42,8 +41,7 @@ public class SpeedTest {
                                + "пошивом шинелей 181 год. "
                                + "Если вас заинтересовало предложение — напишите "
                                + "ответ на сообщение или позвоните нашему "
-                               + "менеджеру."
-                               + "\n",
+                               + "менеджеру.\n"+
                             "88005353535"));
         }
         System.out.println((System.nanoTime() - start) / 1000000);
