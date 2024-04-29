@@ -11,7 +11,7 @@ import config
 
 def main():
     # Send message
-    connection = pika.BlockingConnection(pika.ConnectionParameters("localhost"))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(config.RABBIT_ADDRESS))
     channel = connection.channel()
 
     channel.queue_declare(queue=config.IN_QUEUE, durable=True)
@@ -30,7 +30,7 @@ def main():
     connection.close()
 
     # Receive message
-    connection = pika.BlockingConnection(pika.ConnectionParameters("localhost"))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(config.RABBIT_ADDRESS))
     channel = connection.channel()
 
     channel.queue_declare(queue=config.OUT_QUEUE, durable=True)

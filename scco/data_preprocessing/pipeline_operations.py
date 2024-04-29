@@ -3,6 +3,9 @@ import json
 import os
 import pika
 import sys
+import uuid
+from io import StringIO
+from rabbit_rpc import FilterRpcClient
 from abc import ABC, abstractmethod
 
 import config
@@ -53,10 +56,11 @@ class GroupBy(Operation):
 
 
 class FilterAlreadySeen(Operation):
-    def __init__(self, by, customer_id, on_nothing_left):
+    def __init__(self, by, customer_id, on_nothing_left, rpc_client: FilterRpcClient):
         self.by = by
         self.customer_id = customer_id
         self.on_nothing_left = on_nothing_left
+        self.rpc_client = rpc_client
 
     def __call__(self, data):
         query_data = []
@@ -66,17 +70,8 @@ class FilterAlreadySeen(Operation):
                 item[col] = row[col]
             item['customer_id'] = self.customer_id
             query_data.append(item)
-        query = json.dumps({
-            "query_name": "contains_query",
-            "reply": {
-                "exchange": config.CONTAINS_QUERY_EXCHANGE,
-                "queue": "<generated queue name>",  # TODO
-                "routing_key": config.CONTAINS_QUERY_ROUTING_KEY,
-            },
-            "query_data": query_data
-        })
-        print(query)  # TODO: send query
-        result = data[self.by]
+        response = self.rpc_client.call(query_data)  # json-like object -> json-like object
+        result = pd.read_json(StringIO(json.dumps(response)), orient='records')
         return data.merge(result, how='right', on=self.by)
 
 
