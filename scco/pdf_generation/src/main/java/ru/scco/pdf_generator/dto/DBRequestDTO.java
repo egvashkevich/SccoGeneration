@@ -12,13 +12,13 @@ public class DBRequestDTO implements
     final String requestName = "insert_offers";
 
     @JsonProperty("request_data")
-    List<PDFCpResponseDTO> responseDTOs = new ArrayList<>();
+    List<DBInsertRequestData> responseDTOs = new ArrayList<>();
 
     @JsonProperty("reply")
     DBReplyDTO dbReplyDTO;
 
-    public DBRequestDTO(PDFCpResponseDTO responseDTO, DBReplyDTO replyDTO) {
-        this.responseDTOs.add(responseDTO);
+    public DBRequestDTO(DBInsertRequestData requestData, DBReplyDTO replyDTO) {
+        this.responseDTOs.add(requestData);
         this.dbReplyDTO = replyDTO;
     }
 }

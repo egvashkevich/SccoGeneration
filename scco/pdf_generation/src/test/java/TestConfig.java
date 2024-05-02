@@ -13,8 +13,6 @@ import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
-import ru.scco.pdf_generator.DBManager;
 import ru.scco.pdf_generator.ErrorsResponseMessages;
 import ru.scco.pdf_generator.PDFGenerator;
 import ru.scco.pdf_generator.Sender;
@@ -80,11 +78,6 @@ public class TestConfig {
         return new PDFGenerator( "/templates/cp1.pdf",
                 "/fonts/LiberationSansRegular.ttf",
                                  "src/test/pdf_data/", 18);
-    }
-
-    @Bean
-    DBManager dbManager() {
-        return new DBManager();
     }
 
     @Bean
