@@ -40,6 +40,7 @@ class RmqBroker(Broker):
         self.chan.exchange_declare(
             exchange=consumer.exchange,
             exchange_type='topic',
+            durable=True,
         )
         q = self.chan.queue_declare(
             queue=consumer.queue,
