@@ -24,6 +24,7 @@ class RmqBroker(Broker):
         self.chan.exchange_declare(
             exchange=publisher.exchange,
             exchange_type='topic',
+            durable=True,
         )
         self.chan.queue_declare(
             queue=publisher.queue,
