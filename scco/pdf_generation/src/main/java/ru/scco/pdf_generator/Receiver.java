@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
+import ru.scco.pdf_generator.dto.DBInsertAllResponseDTO;
+import ru.scco.pdf_generator.dto.DBInsertOneResponseDTO;
 import ru.scco.pdf_generator.dto.PDFGeneratorRequestDTO;
 import ru.scco.pdf_generator.processors.ProcessingChain;
 
@@ -14,7 +16,6 @@ import java.util.concurrent.ExecutorService;
 @RequiredArgsConstructor
 public class Receiver {
     private final PDFGenerator pdfGenerator;
-    private final DBManager manager;
     private final Sender sender;
     private final ErrorsResponseMessages errorsMessages;
     private final ExecutorService generatorPool;
@@ -32,20 +33,24 @@ public class Receiver {
                 return;
             }
             String fileLink = pdfGenerator.generate(request.messageId(),
-                                                    request.mainText());
+                                                    cp);
             if (fileLink == null) {
                 sender.sendError(request.messageId(),
                                  errorsMessages.fileError());
                 return;
             }
-            if (manager.saveCP(request.messageId(), fileLink)) {
-                sender.sendCP(request.messageId(), fileLink);
-//                sender.sendOk(request.messageId());
-            } else {
-                sender.sendError(request.messageId(), errorsMessages.dbError());
-            }
+            sender.sendCPToDB(request.messageId(), fileLink);
         });
 
+    }
+
+
+    @RabbitListener(queues = {"${rabbit.db_response_queue}"})
+    public void consumeDBResponse(DBInsertAllResponseDTO responses) {
+        for (DBInsertOneResponseDTO response :  responses.getResponses()) {
+            sender.sendCPToOutput(response.getCustomerID(),
+                                  response.getClientID(), response.getFilePath());
+        }
     }
 
 }

@@ -37,9 +37,25 @@ public class Config {
 
     @Bean
     Binding pdfBinding(Queue inputQueue, TopicExchange pdfExchange,
-                             @Value("${rabbit.pdf_generation_routing_key}")
-                             String key) {
+                       @Value("${rabbit.pdf_generation_routing_key}")
+                       String key) {
         return BindingBuilder.bind(inputQueue).to(pdfExchange).with(key);
+    }
+
+    @Bean
+    Queue crudResponseQueue(
+            @Value("${rabbit.db_response_queue}") String name) {
+        return new Queue(name, true);
+    }
+
+
+    @Bean
+    Binding crudResponseBinding(Queue crudResponseQueue,
+                                TopicExchange pdfExchange,
+                                @Value("${rabbit.db_response_routing_key}")
+                                String key) {
+        return BindingBuilder.bind(crudResponseQueue).to(pdfExchange)
+                             .with(key);
     }
 
 
@@ -56,16 +72,15 @@ public class Config {
 
     @Bean
     Binding outerBinding(Queue outerQueue, TopicExchange outerExchange,
-                       @Value("${rabbit.outer_routing_key}")
-                       String key) {
+                         @Value("${rabbit.outer_routing_key}")
+                         String key) {
         return BindingBuilder.bind(outerQueue).to(outerExchange).with(key);
     }
 
 
-
     @Bean
     TopicExchange dbExchange(
-            @Value("${rabbit.db}") String name) {
+            @Value("${rabbit.db_functional_exchange}") String name) {
         return new TopicExchange(name, true, false);
     }
 
@@ -76,11 +91,10 @@ public class Config {
 
     @Bean
     Binding dbBinding(Queue dbQueue, TopicExchange dbExchange,
-                             @Value("${rabbit.pdf_generation_routing_key}")
-                             String key) {
+                      @Value("${rabbit.db_functional_queue}")
+                      String key) {
         return BindingBuilder.bind(dbQueue).to(dbExchange).with(key);
     }
-
 
 
     @Bean
@@ -119,14 +133,14 @@ public class Config {
         return Executors.newFixedThreadPool(4);
     }
 
-    @Bean
-    Sender sender(RabbitTemplate template, Binding dbBinding,
-                  Binding outerBinding) {
-        return new Sender(template,
-                          dbBinding.getExchange(),
-                          dbBinding.getRoutingKey(),
-                          outerBinding.getExchange(),
-                          outerBinding.getRoutingKey()
-        );
-    }
+//    @Bean
+//    Sender sender(RabbitTemplate template, Binding dbBinding,
+//                  Binding outerBinding) {
+//        return new Sender(template,
+//                          dbBinding.getExchange(),
+//                          dbBinding.getRoutingKey(),
+//                          outerBinding.getExchange(),
+//                          outerBinding.getRoutingKey()
+//        );
+//    }
 }
