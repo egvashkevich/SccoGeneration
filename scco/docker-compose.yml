@@ -14,7 +14,7 @@ services:
     env_file:
       - .env
     volumes:
-      - "${OUTSIDE_CSV_VOLUME}:${OUTSIDE_CSV_VOLUME_DOCKER_FOLDER}" # csv file
+      - "${NEW_CSV_VOLUME}:${NEW_CSV_VOLUME_DOCKER_FOLDER}"
     restart: "no"
 #    restart: on-failure
     networks:

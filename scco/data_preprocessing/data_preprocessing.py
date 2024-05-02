@@ -17,6 +17,7 @@ from pipeline_operations import (
 
 class Preprocessor:
     def __init__(self):
+        print(" [*] Initializing Preprocessor", flush=True)
         self.connection = pika.BlockingConnection(
             pika.ConnectionParameters(host=config.RABBIT_ADDRESS))
         self.channel = self.connection.channel()
@@ -30,17 +31,24 @@ class Preprocessor:
                                    on_message_callback=self.on_message_received)
 
     def start(self):
-        print(" [*] Waiting for messages. To exit press CTRL+C")
+        print(" [*] Waiting for messages. To exit press CTRL+C", flush=True)
         self.channel.start_consuming()
 
     def on_message_received(self, ch, method, properties, body):
-        print(f" [x] Received {body}")
+        print(f" [x] Received {body}", flush=True)
 
-        json_in = json.loads(body.decode())
+        try:
+            json_in = json.loads(body.decode())
 
-        data = pd.read_csv(json_in['parsed_csv'])
-        data.columns = ['channel_id', 'client_id', 'message', 'message_date']
-        customer_id = json_in['customer_id']
+            data = pd.read_csv(json_in['parsed_csv'])
+            data.columns = ['channel_id', 'client_id', 'message', 'message_date']
+            customer_id = json_in['customer_id']
+        except Exception as e:
+            print(" [x] Caught the following exception when parsing input:")
+            print(e)
+            print(" [x] Sending ack, continue listening", flush=True)
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+            return
 
         pipeline1 = [
             ColumnTransform('message', lambda s: replace_emoji(s, '')),
@@ -94,7 +102,7 @@ class Preprocessor:
         for index, row in data.iterrows():
             json_str = json.dumps({col: str(row[col]) for col in data.columns})
             self.send_message(ch, json_str)
-        print(" [x] Done")
+        print(" [x] Done", flush=True)
 
         ch.basic_ack(delivery_tag=method.delivery_tag)
 

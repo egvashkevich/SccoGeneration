@@ -1,5 +1,6 @@
-pika
-Levenshtein
-regex
-pymorphy2
 emoji
+Levenshtein
+pandas
+pika
+pymorphy2
+regex
