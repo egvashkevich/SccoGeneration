@@ -15,7 +15,6 @@
 #set -eu
 
 read -r -d '' ENV_FILES<<'EOF' || echo "ok" > /dev/null
-    .env
     .env.secret.postgres
 EOF
 
@@ -28,7 +27,6 @@ PACKAGE_NAME="db_functional_service"
 REINSTALL=""
 NOT_RUN=""
 UNINSTALL=""
-export IS_ON_HOST=""
 
 ENV_FILES=$(echo "${ENV_FILES}" | awk '{ print $1 }')
 PIP_INSTALL_ARGS="."
@@ -52,7 +50,7 @@ while [ "$#" -gt 0 ]; do
       UNINSTALL="1"
       shift 1 ;;
     -h|--on-host)
-      export IS_ON_HOST="true"
+      export IS_ON_HOST="1"
       shift 1 ;;
     *)
       echo "Unexpected argument: '$1'"

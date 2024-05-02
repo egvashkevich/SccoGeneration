@@ -4,7 +4,7 @@ request_1 = {
         "exchange": "scco_test_exchange",
         "routing_key": "scco_test_routing_key",
     },
-    "reply_ctx": "something",  # not required
+    "reply_ctx": 1,  # not required
     "request_data": {
         "message_group_id": 1,
     }
@@ -50,6 +50,6 @@ answer_1 = {
       "service_desc": "description 2"
     }
   ],
-  "reply_ctx": "something"
+  "reply_ctx": 1
 }
 

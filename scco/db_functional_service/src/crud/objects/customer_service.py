@@ -1,12 +1,12 @@
 from sqlalchemy import insert
+from sqlalchemy import delete
 
 from sqlalchemy.orm import Session
 
 from crud.models import CustomerService
+from crud.base.SelectorBase import SelectorBase
 
 import crud.dbapi as dbapi
-
-from crud.base.SelectorBase import SelectorBase
 
 
 class CustomerServiceCRUD(SelectorBase):
@@ -30,7 +30,21 @@ class CustomerServiceCRUD(SelectorBase):
             with session.begin():
                 session.execute(stmt)
 
-    # # TODO
-    # @classmethod
-    # def update_all(cls, customer_services: list[dict]):
-    #     pass
+    @classmethod
+    def delete(
+            cls,
+            wheres_cond: list,
+    ) -> None:
+        # TODO: add validation
+        if wheres_cond is []:
+            print("CustomerServiceCRUD::delete: no wheres_cond provided")
+            return
+
+        engine = dbapi.DbEngine.get_engine()
+        with Session(engine) as session:
+            stmt = delete(CustomerService)
+            for where_cond in wheres_cond:
+                stmt = stmt.where(where_cond)
+
+            with session.begin():
+                session.execute(stmt)

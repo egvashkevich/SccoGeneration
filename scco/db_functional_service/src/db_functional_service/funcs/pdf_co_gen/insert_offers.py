@@ -1,29 +1,17 @@
+import json
 import inspect
 
-from sqlalchemy import select
-from sqlalchemy import func as sqlfunc
+from util.json_handle import dict_get_or_panic
+from util.reply_ctx import add_reply_ctx
+
 from sqlalchemy import desc
 
-from sqlalchemy.orm import Session
-
-import crud.dbapi as dbapi
-
-from crud.objects.offer import OfferCRUD
-
-# TODO: replace with QueryCRUD
 from crud.models import Query
+from crud.objects.offer import OfferCRUD
 from crud.objects.query import QueryCRUD
 
-from util.json_handle import dict_get_or_panic
-import crud.message_group_id_generator as mgig
-
-import json
-
-import db_functional_service.rmq_handle as rmq
-
-import util.parse_env as ps
-
-from util.reply_ctx import add_reply_ctx
+from db_functional_service.reply import Reply
+from db_functional_service.broker.broker import Broker
 
 
 # Updates data_dict. Inserts:
@@ -42,11 +30,11 @@ def select_from_query(data_dict, req_data, srv_req_data) -> None:
         RuntimeError(
             inspect.cleandoc(
                 f"""
-        Unexpected error: no such message_group_id in table.
-        message_group_id: {data_dict["message_group_id"]}
-        req_data: {json.dumps(req_data, indent=2)}
-        srv_req_data: {json.dumps(srv_req_data, indent=2)}"""
-            )
+Unexpected error: no such message_group_id in table.
+message_group_id: {data_dict["message_group_id"]}
+req_data: {json.dumps(req_data, indent=2)}
+srv_req_data: {json.dumps(srv_req_data, indent=2)}"""
+                )
         )
     print(f"-----------------------------")
     print(f"result_set = {result_set}")
@@ -61,7 +49,12 @@ def select_from_query(data_dict, req_data, srv_req_data) -> None:
     data_dict.update(res)
 
 
-def insert_offers(req_data, reply, srv_req_data):
+def insert_offers(
+        req_data,
+        srv_req_data,
+        reply: Reply,
+        broker: Broker
+) -> None:
     print("Enter insert_offers")
 
     required_keys = [
@@ -87,12 +80,15 @@ def insert_offers(req_data, reply, srv_req_data):
             }
         )
 
-        answer_list.append({
-            "customer_id": data_dict["customer_id"],
-            "client_id": data_dict["client_id"],
-            "file_path": data_dict["file_path"],
-        })
+        answer_list.append(
+            {
+                "customer_id": data_dict["customer_id"],
+                "client_id": data_dict["client_id"],
+                "file_path": data_dict["file_path"],
+            }
+        )
 
+    print("Preparing answer")
     answer = {
         "array_data": answer_list,
     }
@@ -104,21 +100,8 @@ def insert_offers(req_data, reply, srv_req_data):
     answer = json.dumps(answer, indent=2)
     print(f"Answer:\n{answer}")
 
-    if not ps.is_on_host():
-        rmq.RmqHandle.basic_publish(answer, reply)
-
-    #     # Insert new customer.
-    #     for query_dict in insert_dicts:
-    #         if not ClientDAO.contain(query_dict["client_id"]):
-    #             ClientDAO.insert_one({
-    #                 "client_id": query_dict["client_id"],
-    #                 "attitude": "default"
-    #             })
-    #
-    #     # Insert queries.
-    #     QueryDAO.insert_all(insert_dicts)
-    #
-    # # Send query to rabbitmq.
-    # answer = json.dumps(group_ids, indent=2)
-    # print(f"Answer:\n{answer}")
-    # # ...
+    print("sending reply")
+    broker.basic_publish_unknown(
+        reply.get_publisher(),
+        answer.encode("utf-8"),
+    )

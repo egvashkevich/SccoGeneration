@@ -1,43 +1,17 @@
 import inspect
-from typing import Callable
 
 import pika
 from pika.adapters.blocking_connection import BlockingConnection
 from pika.adapters.blocking_connection import BlockingChannel
 
-import ml_generation.broker_config as bc
+from db_functional_service.broker.broker import Broker
+from db_functional_service.broker.broker import Publisher
+from db_functional_service.broker.broker import Consumer
+
+import util.app_config as app_cfg
 
 
-# TODO: add on_reply
-class Publisher:
-    def __init__(
-            self,
-            name: str,
-            exchange: str,
-            queue: str,
-            routing_key: str,
-    ):
-        self.name = name
-        self.exchange = exchange
-        self.queue = queue
-        self.routing_key = routing_key
-
-
-class Consumer:
-    def __init__(
-            self,
-            exchange: str,
-            queue: str,
-            routing_key: str,
-            callback: Callable,
-    ):
-        self.exchange = exchange
-        self.queue = queue
-        self.routing_key = routing_key
-        self.callback = callback
-
-
-class RmqBroker:
+class RmqBroker(Broker):
     ############################################################################
     # API
 
@@ -53,6 +27,7 @@ class RmqBroker:
         )
         self.chan.queue_declare(
             queue=publisher.queue,
+            durable=True,
         )
         self.chan.queue_bind(
             exchange=publisher.exchange,
@@ -67,6 +42,7 @@ class RmqBroker:
         )
         q = self.chan.queue_declare(
             queue=consumer.queue,
+            durable=True,
         )
         q_name = q.method.queue  # if consumer.queue == "" - auto generate queue
         consumer.queue = q_name
@@ -98,17 +74,34 @@ class RmqBroker:
             exchange=pub.exchange,
             routing_key=pub.routing_key,
             body=body,
+            properties=pika.BasicProperties(
+                delivery_mode=pika.DeliveryMode.Persistent
+            )
+        )
+
+    def basic_publish_unknown(
+            self,
+            pub: Publisher,
+            body: bytes
+    ) -> None:
+        self.chan.basic_publish(
+            exchange=pub.exchange,
+            routing_key=pub.routing_key,
+            body=body,
+            properties=pika.BasicProperties(
+                delivery_mode=pika.DeliveryMode.Persistent
+            )
         )
 
     ############################################################################
     # Internals
 
-    # One connection for all service.
-    _conn: BlockingConnection = pika.BlockingConnection(
-        pika.ConnectionParameters(host=bc.RMQ_NET_ALIAS)
-    )
-
     @classmethod
     def _create_channel(cls) -> BlockingChannel:
         chan = cls._conn.channel()
         return chan
+
+    # Class fields (Lazy initialization on host)
+    _conn: BlockingConnection = pika.BlockingConnection(
+        pika.ConnectionParameters(host=app_cfg.RMQ_NET_ALIAS)
+    )

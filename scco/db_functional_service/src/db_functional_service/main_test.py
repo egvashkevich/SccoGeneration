@@ -1,14 +1,10 @@
 import sys
-import json
-
-import db_functional_service.data.init_db
-from util.json_handle import dict_get_or_panic
 
 import crud.dbapi as dbapi
 from crud.models import Base
 
-import db_functional_service.rmq_handle as rmq
-from db_functional_service.rmq_handle import Reply
+from db_functional_service.broker.host_broker import HostBroker
+from db_functional_service.dispatcher import Dispatcher
 
 ################################################################################
 
@@ -24,7 +20,7 @@ from db_functional_service.data.data_preproc.get_customers_lists import (
     request_1 as gcl_request_1,
 )
 from db_functional_service.data.data_preproc.insert_preprocessed_queries import (
-    request_1 as ipc_request_1,
+    request_1 as ipq_request_1,
 )
 from db_functional_service.data.pdf_co_gen.insert_offers import (
     request_1 as io_request_1,
@@ -37,38 +33,40 @@ from db_functional_service.data.customer_creator.insert_customer import (
 )
 
 ################################################################################
-from db_functional_service.data.init_db import dummy_init_db
 
-from main import dispatch
+
+################################################################################
+from db_functional_service.data.init_db import dummy_init_db
 
 
 def custom_init_database():
     print("Creating db engine", flush=True)
     engine = dbapi.DbEngine.get_engine()
-    print("Db engine created", flush=True)
 
     print("Removing old tables", flush=True)
     Base.metadata.drop_all(engine)
-    print("Old tables removed", flush=True)
 
     print("Creating tables", flush=True)
     Base.metadata.create_all(engine)
-    print("Tables created", flush=True)
 
+    print("Inserting dummy values", flush=True)
     dummy_init_db()
 
 
 def main():
     custom_init_database()
 
-    # dispatch(fnq_request_1)
-    # dispatch(inq_csv_request_1)
-    # dispatch(gcl_request_1)
-    # dispatch(ipc_request_1)
-    # dispatch(io_request_1)
-    dispatch(gifcog_request_1)
-    # dispatch(ic_request_1)
-    # dispatch(io_request_1)
+    broker = HostBroker()
+    dispatcher = Dispatcher(broker)
+
+    # dispatcher.dispatch_function(fnq_request_1)
+    # dispatcher.dispatch_function(inq_csv_request_1)
+    # dispatcher.dispatch_function(gcl_request_1)
+    # dispatcher.dispatch_function(ipq_request_1)
+    # dispatcher.dispatch_function(io_request_1)
+    # dispatcher.dispatch_function(gifcog_request_1)
+    dispatcher.dispatch_function(ic_request_1)
+    # # dispatcher.dispatch_function(io_request_1)
 
     # rmq.RmqHandle.setup_rmq(gateway_callback)
     # rmq.RmqHandle.start_consume()  # Infinite loop.
@@ -81,7 +79,8 @@ if __name__ == "__main__":
         print('Interrupted', file=sys.stderr)
     except Exception as e:
         print(f'Internal service unexpected error: {e}', file=sys.stderr)
-        sys.exit(2)
+        raise e
+        # sys.exit(2)
 
 
 ################################################################################

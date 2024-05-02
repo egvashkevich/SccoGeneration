@@ -1,31 +1,23 @@
+import json
 import inspect
 
-from sqlalchemy import select
-from sqlalchemy import func as sqlfunc
 from sqlalchemy import desc
 
-from sqlalchemy.orm import Session
-import crud.dbapi as dbapi
+from util.json_handle import dict_get_or_panic
+from util.reply_ctx import add_reply_ctx
 
 from crud.models import Query
 from crud.models import Client
 from crud.models import Customer
 from crud.models import CustomerService
 
-from util.json_handle import dict_get_or_panic
-
-import json
-
-import db_functional_service.rmq_handle as rmq
-
-import util.parse_env as ps
-
 from crud.objects.query import QueryCRUD
 from crud.objects.client import ClientCRUD
 from crud.objects.customer import CustomerCRUD
 from crud.objects.customer_service import CustomerServiceCRUD
 
-from util.reply_ctx import add_reply_ctx
+from db_functional_service.reply import Reply
+from db_functional_service.broker.broker import Broker
 
 
 def arise_error(field_name, data_dict, query_data, db_query):
@@ -210,7 +202,12 @@ def get_from_customer_service_table(
     return answer
 
 
-def get_info_for_co_generation(req_data, reply, srv_req_data):
+def get_info_for_co_generation(
+        req_data,
+        srv_req_data,
+        reply: Reply,
+        broker: Broker
+) -> None:
     required_keys = [
         "message_group_id",
     ]
@@ -256,6 +253,8 @@ def get_info_for_co_generation(req_data, reply, srv_req_data):
     )
     answer.update(answer_customer_service)
 
+    print("Preparing answer")
+
     # Add reply_ctx.
     add_reply_ctx(srv_req_data, answer)
 
@@ -263,5 +262,8 @@ def get_info_for_co_generation(req_data, reply, srv_req_data):
     answer = json.dumps(answer, indent=2)
     print(f"Answer:\n{answer}")
 
-    if not ps.is_on_host():
-        rmq.RmqHandle.basic_publish(answer, reply)
+    print("sending reply")
+    broker.basic_publish_unknown(
+        reply.get_publisher(),
+        answer.encode("utf-8"),
+    )
