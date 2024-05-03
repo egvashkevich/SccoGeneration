@@ -47,4 +47,3 @@ request = {
 answer = model.generate_offer_text(request)
 
 print(answer["main_text"])
-
