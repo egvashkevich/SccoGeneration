@@ -8,9 +8,9 @@ import java.io.Serializable;
 @Data
 public class DBInsertOneResponseDTO implements Serializable {
     @JsonProperty("customer_id")
-    long customerID;
+    String customerID;
     @JsonProperty("client_id")
-    long clientID;
+    String clientID;
     @JsonProperty("file_path")
     String filePath;
 

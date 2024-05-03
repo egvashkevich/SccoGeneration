@@ -9,9 +9,9 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class PDFResponseDTO implements Serializable {
     @JsonProperty("customer_id")
-    long customerId;
+    String customerId;
     @JsonProperty("client_id")
-    long clientID;
+    String clientID;
     @JsonProperty("file_path")
     String CPlink;
 }

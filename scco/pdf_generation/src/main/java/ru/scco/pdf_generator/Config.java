@@ -85,13 +85,13 @@ public class Config {
     }
 
     @Bean
-    Queue dbQueue(@Value("${rabbit.pdf_generation_queue}") String name) {
+    Queue dbQueue(@Value("${rabbit.db_functional_queue}") String name) {
         return new Queue(name, true);
     }
 
     @Bean
     Binding dbBinding(Queue dbQueue, TopicExchange dbExchange,
-                      @Value("${rabbit.db_functional_queue}")
+                      @Value("${rabbit.db_functional_routing_key}")
                       String key) {
         return BindingBuilder.bind(dbQueue).to(dbExchange).with(key);
     }
