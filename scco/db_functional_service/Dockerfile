@@ -16,12 +16,8 @@ RUN ["./run.sh", "-n"]
 
 #CMD ["/bin/bash", "-c", "./run.sh -f ${MAIN_FILE}"]
 ENTRYPOINT ["/bin/bash", "-c"]
-CMD ["./run.sh -f main.py"]
-#CMD ["./run.sh -f main.py"]
-#CMD ./run.sh -f ${MAIN_FILE}
-
-#CMD ["python3", "-u", "fake_main.py"]
-
+CMD ["./run.sh -f src/service/main.py"]
+#CMD ["pytest"]  # for testing
 
 # Dependencies for psycopg2.
 #RUN apt-get install \
