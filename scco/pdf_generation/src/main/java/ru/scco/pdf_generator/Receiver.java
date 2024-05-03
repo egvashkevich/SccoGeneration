@@ -23,17 +23,22 @@ public class Receiver {
 
     @RabbitListener(queues = {"${rabbit.pdf_generation_queue}"})
     public void consume(PDFGeneratorRequestDTO request) {
+        log.info("got request" + request);
         generatorPool.execute(() -> {
             String cp;
             try {
+                log.info("start process");
                 cp = processingChain.process(request.mainText());
             } catch (InvalidCPException invalidCPException) {
                 // TODO:
+                log.info("invalid cp" + invalidCPException.getMessage());
                 sender.sendError(request.messageId(), invalidCPException.getMessage());
                 return;
             }
+            log.info("start generating");
             String fileLink = pdfGenerator.generate(request.messageId(),
                                                     cp);
+            log.info("end generating");
             if (fileLink == null) {
                 sender.sendError(request.messageId(),
                                  errorsMessages.fileError());
@@ -47,6 +52,7 @@ public class Receiver {
 
     @RabbitListener(queues = {"${rabbit.db_response_queue}"})
     public void consumeDBResponse(DBInsertAllResponseDTO responses) {
+        log.info("got response:" + responses);
         for (DBInsertOneResponseDTO response :  responses.getResponses()) {
             sender.sendCPToOutput(response.getCustomerID(),
                                   response.getClientID(), response.getFilePath());
