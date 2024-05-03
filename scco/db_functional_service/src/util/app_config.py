@@ -51,3 +51,6 @@ _IS_ON_HOST_BOOL = pe.contains("IS_ON_HOST")
 
 def is_on_host() -> bool:
     return _IS_ON_HOST_BOOL
+
+
+DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S"
