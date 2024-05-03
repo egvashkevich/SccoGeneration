@@ -20,8 +20,8 @@ def main():
     print("Preproc created")
 
     print("Creating CoGen...")
-    # ml_model = CoMlModel()  # TODO: enable when ml is ready
-    ml_model = DummyMlModel()
+    ml_model = CoMlModel()  # TODO: enable when ml is ready
+    # ml_model = DummyMlModel()
     co_gen = CoGen(broker, ml_model)
     print("CoGen created")
 

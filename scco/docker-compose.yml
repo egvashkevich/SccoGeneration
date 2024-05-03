@@ -13,8 +13,8 @@ services:
     container_name: "${COMPOSE_PROJECT_NAME}_${DATA_PREPROCESSING_FOLDER}"
     env_file:
       - .env
-    volumes:
-      - "${OUTSIDE_CSV_VOLUME}:${OUTSIDE_CSV_VOLUME_DOCKER_FOLDER}" # csv file
+#    volumes:
+#      - "${OUTSIDE_CSV_VOLUME}:${OUTSIDE_CSV_VOLUME_DOCKER_FOLDER}" # csv file
     restart: "no"
 #    restart: on-failure
     networks:
@@ -53,6 +53,8 @@ services:
       - .env
     restart: "no"
 #    restart: on-failure
+    volumes:
+      - generated_offers:/generated_offers/
     networks:
 #      int_network:
 #        aliases:
@@ -140,3 +142,5 @@ networks:
 volumes:
   postgres_fs_volume:
     name: "${POSTGRES_FS_VOLUME_NAME}"
+  generated_offers:
+    name: "${PDF_GENERATION_VOLUME_NAME}"

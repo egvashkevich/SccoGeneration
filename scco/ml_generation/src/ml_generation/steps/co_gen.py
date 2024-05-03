@@ -1,5 +1,6 @@
 import inspect
 import json
+import base64
 
 import util.app_config as app_cfg
 
@@ -67,10 +68,13 @@ class CoGen:
         print(f"model.generate_offer_text() finished, gen_data:\n{gen_data}")
 
         main_text = gen_data["main_text"]
+        main_text_bytes = main_text.encode('utf-8')
+        main_text_b64_bytes = base64.b64encode(main_text_bytes)
+        main_text_b64_string = main_text_b64_bytes.decode('utf-8')
 
         answer = {
             "message_group_id": message_group_id,
-            "main_text": main_text,
+            "main_text": main_text_b64_string,
         }
         request = json.dumps(answer)
         body = request.encode("utf-8")
