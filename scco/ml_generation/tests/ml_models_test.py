@@ -1,9 +1,11 @@
 # import ml_models.gigachat_api_gate.api as ml_models_api
 import ml_models.co_gen.api as co_gen_api
+import ml_models.white_list_generation.api as whitelist_gen_api
 
 # TODO: expected API as below
 
-model = co_gen_api.SCCOGenerator('co_gen/configs')
+co_gen = co_gen_api.SCCOGenerator()
+whitelist_gen = whitelist_gen_api.KeyWordsGenerator()
 
 request = {
     "customer_id": "customer_1",
@@ -45,6 +47,8 @@ request = {
     "reply_ctx": "something"
 }
 
-answer = model.generate_offer_text(request)
+whitelist = whitelist_gen.generate(request)
+main_response = co_gen.generate(request)
 
-print(answer["main_text"])
+print(main_response["main_text"])
+print(whitelist)

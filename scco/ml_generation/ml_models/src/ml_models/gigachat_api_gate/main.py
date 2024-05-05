@@ -44,6 +44,6 @@ request = {
   "reply_ctx": "something"
 }
 
-answer = model.generate_offer_text(request)
+answer = model.generate(request)
 
 print(answer["main_text"])
