@@ -46,7 +46,6 @@ class SCCOGenerator(GenerateGateWrapper):
 
     @override
     def generate(self, request) -> dict:
-        print('generate')
         self._set_system_params(request, make_system_prompt)
         messages = self.system_prompts + \
             UserMessageWrapper.handle_messages(request['messages'])
