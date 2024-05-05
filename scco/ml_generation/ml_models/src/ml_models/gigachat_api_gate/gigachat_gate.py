@@ -1,4 +1,4 @@
-from ml_models.co_gen.token_update import ChatAccessManager
+from ml_models.gigachat_api_gate.token_update import ChatAccessManager
 import json
 import requests
 import configparser
@@ -57,5 +57,6 @@ class GigaChatAPIManager:
 
     def generate_request(self, messages):
         update_response = self.access_manager.update_token()
+        print(update_response)
         response = self._try_generate_request(messages)
         return response
