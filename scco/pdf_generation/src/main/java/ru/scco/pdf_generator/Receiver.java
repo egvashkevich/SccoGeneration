@@ -9,6 +9,7 @@ import ru.scco.pdf_generator.dto.DBInsertOneResponseDTO;
 import ru.scco.pdf_generator.dto.PDFGeneratorRequestDTO;
 import ru.scco.pdf_generator.processors.ProcessingChain;
 
+import java.util.Base64;
 import java.util.concurrent.ExecutorService;
 
 @Slf4j
@@ -28,7 +29,8 @@ public class Receiver {
             String cp;
             try {
                 log.info("start process");
-                cp = processingChain.process(request.mainText());
+                cp = new String(Base64.getDecoder().decode(request.mainText()));
+                cp = processingChain.process(cp);
             } catch (InvalidCPException invalidCPException) {
                 // TODO:
                 log.info("invalid cp" + invalidCPException.getMessage());
