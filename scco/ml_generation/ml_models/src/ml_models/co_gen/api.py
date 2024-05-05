@@ -1,45 +1,58 @@
-from typing import List
+from ml_models.gigachat_api_gate.api import GenerateGateWrapper
 
-from importlib.resources import files
-
-import ml_models.co_gen.make_prompts as make_prompts
-from ml_models.co_gen.make_prompts import UserMessageWrapper
+from ml_models.gigachat_api_gate.utils import UserMessageWrapper
 import configparser as configparser
-from ml_models.co_gen.gigachat_gate import GigaChatAPIManager
+
+from overrides import override
+
+pos_to_insert_in_system = {
+    'company_name': '[COMPANY]',
+    'channel_name': '[CHANNEL]',
+    'services': '[SERVICES]',
+    'specific': '[SPECIFIC]',
+}
 
 
-class GenerateGateWrapper:
+def parse_custormer_services(request: dict):
+    res_list = []
+    for service in request['customer_services']:
+        name, desc = service['service_name'], service['service_desc']
+        res_list.append(name + f'({desc})')
+    return ', '.join(res_list)
+
+
+def make_system_prompt(request, path_to_conf):
+    config = configparser.ConfigParser()
+    config.read(path_to_conf)
+
+    basic = config['PROMPTS']['basic_system']
+
+    basic = basic.replace(
+        pos_to_insert_in_system['company_name'], request['company_name'])
+    basic = basic.replace(
+        pos_to_insert_in_system['channel_name'], request['channel_ids'][0])
+    basic = basic.replace(
+        pos_to_insert_in_system['services'], parse_custormer_services(request))
+    basic = basic.replace(pos_to_insert_in_system['specific'], ', '.join(
+        request['specific_features']))
+
+    return basic
+
+
+class SCCOGenerator(GenerateGateWrapper):
     def __init__(self):
-        self.params_config_path = str(
-            files("ml_models").joinpath(
-                "co_gen/configs/params.ini"
-            )
-        )
-        self.system_prompt_config_path = str(
-            files("ml_models").joinpath(
-                'co_gen/configs/prompts.ini'
-            ) 
-        )
-        self.gate = GigaChatAPIManager(self.params_config_path)
+        cfg_path = 'co_gen/configs'
+        super().__init__(cfg_path)
 
-    def _set_system_params(self, request):
-        system_content = make_prompts.make_system_prompt(request, self.system_prompt_config_path)
-
-        self.system_prompts = [
-            {
-                'role': 'system',
-                'content': system_content
-            }
-        ]
-
-    def generate_offer_text(self, request) -> dict:
-        self._set_system_params(request)
+    @override
+    def generate(self, request) -> dict:
+        self._set_system_params(request, make_system_prompt)
         messages = self.system_prompts + \
             UserMessageWrapper.handle_messages(request['messages'])
         # TODO: for every message channel is separate (channel_ids)
         response = self.gate.generate_request(messages)
         text_response = response.json()['choices'][0]['message']['content']
         result = {
-           "main_text": text_response,
+            "main_text": text_response,
         }
         return result

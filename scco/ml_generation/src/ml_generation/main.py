@@ -6,7 +6,7 @@ from ml_generation.broker.rmq_broker import RmqBroker
 from ml_generation.steps.co_gen import CoGen
 from ml_generation.steps.preproc import Preproc
 
-from ml_models.co_gen.api import GenerateGateWrapper as CoMlModel
+from ml_models.gigachat_api_gate.api import GenerateGateWrapper as CoMlModel
 from ml_generation.dummy_ml_model import DummyMlModel
 
 

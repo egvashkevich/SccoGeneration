@@ -8,7 +8,7 @@ from ml_generation.broker.broker import Broker
 from ml_generation.broker.broker import Publisher
 from ml_generation.broker.broker import Consumer
 
-from ml_models.co_gen.api import GenerateGateWrapper as CoMlModel
+from ml_models.gigachat_api_gate.api import GenerateGateWrapper as CoMlModel
 
 
 class CoGen:

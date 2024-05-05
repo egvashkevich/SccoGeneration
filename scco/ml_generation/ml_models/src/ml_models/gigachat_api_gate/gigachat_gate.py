@@ -1,4 +1,4 @@
-from ml_models.co_gen.token_update import ChatAccessManager
+from ml_models.gigachat_api_gate.token_update import ChatAccessManager
 import json
 import requests
 import configparser

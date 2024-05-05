@@ -1,4 +1,4 @@
-import ml_models.co_gen.api as ml_models_api
+import ml_models.gigachat_api_gate.api as ml_models_api
 
 # TODO: expected API as below
 
@@ -44,6 +44,6 @@ request = {
   "reply_ctx": "something"
 }
 
-answer = model.generate_offer_text(request)
+answer = model.generate(request)
 
 print(answer["main_text"])

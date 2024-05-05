@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 def load_local_env():
     dotenv_path = str(files("ml_models").joinpath(
-        "co_gen/api_token.secret.env"
+        "gigachat_api_gate/api_token.secret.env"
     ))
     load_dotenv(dotenv_path)
 
