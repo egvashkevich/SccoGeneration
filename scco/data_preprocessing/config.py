@@ -21,9 +21,10 @@ CONTAINS_QUERY_ROUTING_KEY = f'{IN_ROUTING_KEY}_contains'
 NEW_QUERIES_CSV_FOLDER = 'new_queries/'
 NEW_QUERIES_PREFIX_FOR_SENDING = '../data_preprocessing/new_queries/'
 
-# INSERT_BEFORE_PREPROCESSING_QUERY_EXCHANGE = 'insert_before_preprocessing'
-# INSERT_BEFORE_PREPROCESSING_QUERY_QUEUE = 'insert_before_preprocessing_queue'
-# INSERT_BEFORE_PREPROCESSING_QUERY_ROUTING_KEY = 'insert_before_preprocessing_rk'
+# TODO
+INSERT_BEFORE_PREPROCESSING_QUERY_EXCHANGE = 'insert_before_preprocessing'
+INSERT_BEFORE_PREPROCESSING_QUERY_QUEUE = 'insert_before_preprocessing_queue'
+INSERT_BEFORE_PREPROCESSING_QUERY_ROUTING_KEY = 'insert_before_preprocessing_rk'
 
 # CUSTOMER_LISTS_QUERY_EXCHANGE = 'customer_lists'
 # CUSTOMER_LISTS_QUERY_QUEUE = 'customer_lists_queue'

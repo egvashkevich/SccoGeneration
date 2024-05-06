@@ -1,15 +1,18 @@
+import numpy as np
 import pandas as pd
 import json
 import os
 import pika
 import sys
 import uuid
+import datetime
 from io import StringIO
-from rabbit_rpc import FilterRpcClient
+from rabbit_rpc import FilterRpcClient, SaveCsvRpcClient
 from abc import ABC, abstractmethod
 
 import config
 from tools.dict_occurrence import DictOccurrenceManager
+from tools.pattern_text_matching import Matcher
 
 
 class Operation(ABC):
@@ -18,7 +21,7 @@ class Operation(ABC):
         pass
 
 
-class BlackList(ABC):
+class MatchingList(ABC):
     @abstractmethod
     def load(self):
         pass
@@ -63,66 +66,132 @@ class FilterAlreadySeen(Operation):
         self.rpc_client = rpc_client
 
     def __call__(self, data):
-        query_data = []
+        request_data = []
         for index, row in data.iterrows():
             item = dict()
             for col in self.by:
                 item[col] = row[col]
             item['customer_id'] = self.customer_id
-            query_data.append(item)
-        response = self.rpc_client.call(query_data)  # json-like object -> json-like object
+            request_data.append(item)
+        response = self.rpc_client.call(request_data)  # json-like object -> json-like object
         result = pd.read_json(StringIO(json.dumps(response)), orient='records')
         return data.merge(result, how='right', on=self.by)
 
 
-class FilterByBlackList(Operation):
-    def __init__(self, black_list, on_nothing_left, errors_num=0):
-        self.black_list = black_list
-        self.on_nothing_left = on_nothing_left
-        self.errors_num = errors_num
+class SaveNewQueries:
+    def __init__(self, new_queries_csv_info, rpc_client: SaveCsvRpcClient):
+        self.new_queries_csv_info = new_queries_csv_info
+        self.rpc_client = rpc_client
 
     def __call__(self, data):
-        black_list = self.black_list.load()
-        occurrence_manager = DictOccurrenceManager(black_list)
+        today = datetime.date.today().strftime('%y-%m-%y')  # yyyy-mm-dd
+        unique_id = uuid.uuid4().hex  # unique sting of hex symbols
+        new_queries_csv_name = f'new-queries-{today}-{unique_id}.csv'
+        os.makedirs(config.NEW_QUERIES_CSV_FOLDER, exist_ok=True)
+        data.to_csv(os.path.join(config.NEW_QUERIES_CSV_FOLDER, new_queries_csv_name))
+        new_queries_csv_path = config.NEW_QUERIES_PREFIX_FOR_SENDING + new_queries_csv_name
+        self.new_queries_csv_info['path'] = new_queries_csv_path
 
-        if self.errors_num < 0:
-            predicate = lambda s: not occurrence_manager.check_occurence_adaptive(s)
-        elif self.errors_num == 0:
-            predicate = lambda s: not occurrence_manager.check_exact_occurrence(s)
+        # TODO insert_csv_path_do_db(new_queries_csv_path)
+
+
+class FilterByTextMatch(Operation):
+    def __init__(self, matching_list, mode, on_nothing_left, algorithm='substring'):
+        self.matching_list = matching_list
+        self.mode = mode
+        self.algorithm = algorithm
+        self.on_nothing_left = on_nothing_left
+
+    def __call__(self, data):
+        matching_list = self.matching_list.load()
+
+        if self.algorithm == 'word':
+            occurrence_manager = DictOccurrenceManager(matching_list)
+
+            def any_match(s):
+                return occurrence_manager.check_exact_occurrence(s)
+
+        elif self.algorithm == 'substring':
+            matcher = Matcher()
+
+            def any_match(s):
+                for pattern in matching_list:
+                    print(f'Debug: search {pattern=} in {s=} with matcher:',
+                          matcher.count_matches(pattern, s), flush=True)
+                    print(f'Debug: search {pattern=} in {s=} with in:', pattern in s, flush=True)
+                    if pattern in s:  # matcher.count_matches(pattern, s) > 0:
+                        return True
+                return False
+
         else:
-            predicate = lambda s: not occurrence_manager.check_occurrence_with_errors(s, self.errors_num)
+            raise ValueError(f'Unknown algorithm for FilterByTextMatch: {self.algorithm}')
 
-        return data[[predicate(s) for s in data['message']]]
+        print(f' [x] Matching with {self.mode}', flush=True)
+        mask = np.empty(len(data), dtype=bool)
+        for i, s in enumerate(data['message']):
+            if i % 20 == 0:
+                print(f"{i} lines processed", flush=True)
+            mask[i] = any_match(s)
+
+        if self.mode == 'blacklist':
+            return data[np.logical_not(mask)]
+        elif self.mode == 'whitelist':
+            return data[mask]
+        else:
+            raise ValueError(f'Unknown mode for FilterByTextMatch: {self.mode}')
 
 
-class CommonBlackList(BlackList):
+# class FilterByBlackList(Operation):
+#     def __init__(self, black_list, on_nothing_left, errors_num=0):
+#         self.black_list = black_list
+#         self.on_nothing_left = on_nothing_left
+#         self.errors_num = errors_num
+
+#     def __call__(self, data):
+#         black_list = self.black_list.load()
+#         occurrence_manager = DictOccurrenceManager(black_list)
+
+#         if self.errors_num < 0:
+#             predicate = lambda s: not occurrence_manager.check_occurence_adaptive(s)
+#         elif self.errors_num == 0:
+#             predicate = lambda s: not occurrence_manager.check_exact_occurrence(s)
+#         else:
+#             predicate = lambda s: not occurrence_manager.check_occurrence_with_errors(s, self.errors_num)
+
+#         return data[[predicate(s) for s in data['message']]]
+
+
+class CommonMatchingList(MatchingList):
+    def __init__(self, path='resources/common_blacklist.txt'):
+        self.path = path
+
     def load(self):
-        with open('resources/common_blacklist.txt', 'r') as f:
-            common_black_list = {s.strip() for s in f.readlines()}
-        if '' in common_black_list:
-            common_black_list.remove('')
-        return common_black_list
+        with open(self.path, 'r') as f:
+            common_matching_list = {s.strip() for s in f.readlines()}
+        if '' in common_matching_list:
+            common_matching_list.remove('')
+        return common_matching_list
 
 
-class CustomerBlackList(BlackList):
-    def __init__(self, customer_id):
-        self.customer_id = customer_id
+# class CustomerMatchingList(BlackList):
+#     def __init__(self, customer_id):
+#         self.customer_id = customer_id
 
-    def load(self):
-        query = json.dumps({
-            "query_name": "black_list_query",
-            "reply": {
-                "exchange": config.BLACK_LIST_QUERY_EXCHANGE,
-                "queue": "<generated queue name>",  # TODO
-                "routing_key": config.BLACK_LIST_QUERY_ROUTING_KEY,
-            },
-            "query_data": {
-                "customer_id": self.customer_id
-            }
-        })
-        print(query)  # TODO: send query
-        black_list = set()
-        return black_list
+#     def load(self):
+#         query = json.dumps({
+#             "query_name": "black_list_query",
+#             "reply": {
+#                 "exchange": config.BLACK_LIST_QUERY_EXCHANGE,
+#                 "queue": "<generated queue name>",  # TODO
+#                 "routing_key": config.BLACK_LIST_QUERY_ROUTING_KEY,
+#             },
+#             "query_data": {
+#                 "customer_id": self.customer_id
+#             }
+#         })
+#         print(query)  # TODO: send query
+#         black_list = set()
+#         return black_list
 
 
 class InsertToDatabase(Operation):
