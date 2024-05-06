@@ -1,16 +1,12 @@
-import pandas as pd
 import json
 import os
+import pandas as pd
 import pika
 import sys
-from rabbit_rpc import FilterRpcClient
-from emoji import replace_emoji
 
 import config
-from pipeline_operations import (
-    ColumnTransform, StableSortBy, GroupBy, FilterAlreadySeen,
-    FilterByTextMatch, InsertToDatabase, CommonMatchingList  # , CustomerMatchingList
-)
+from pipeline import PreprocessingPipeline
+from rabbit_rpc import FilterRpcClient
 
 
 class Preprocessor:
@@ -50,53 +46,11 @@ class Preprocessor:
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
 
-        pipeline = [
-            ColumnTransform('message', lambda s: replace_emoji(s, '')),
-            ColumnTransform('message', str.lower),
-            StableSortBy('message_date'),
-            GroupBy(['channel_id', 'client_id', 'message_date'], agg={'message': (lambda x: list(x)[-1])}),
-            # FilterAlreadySeen(by=['channel_id', 'client_id', 'message_date'],
-            #                   customer_id=customer_id, on_nothing_left='all messages were already seen',
-            #                   rpc_client=self.filter_rpc_client),
-            # SaveNewQueries(self.new_queries_csv_info),
-            FilterByTextMatch(CommonMatchingList(), mode='blacklist', algorithm='word',
-                              on_nothing_left='all messages filtered out by common black list'),
-            FilterByTextMatch(CommonMatchingList('resources/test_lists/trusted_strong_blacklist'), mode='blacklist',
-                              on_nothing_left='all messages filtered out by common strong black list'),
-            # FilterByTextMatch(CommonMatchingList('resources/test_lists/trusted_strong_whitelist'), mode='whitelist',
-            #                   on_nothing_left='all messages filtered out by common strong white list'),
-            FilterByTextMatch(CommonMatchingList('resources/test_lists/trusted_week_whitelist'), mode='whitelist',
-                              on_nothing_left='all messages filtered out by common weak white list'),
-            FilterByTextMatch(CommonMatchingList('resources/test_lists/trusted_week_blacklist'), mode='blacklist',
-                              on_nothing_left='all messages filtered out by common weak black list'),
-            # TODO week -> weak
-            FilterByTextMatch(CommonMatchingList('resources/test_lists/user_blacklist'), mode='blacklist',
-                              on_nothing_left='all messages filtered out by user black list'),
-            # FilterByTextMatch(CommonMatchingList('resources/test_lists/user_whitelist'), mode='whitelist',
-            #                   on_nothing_left='all messages filtered out by user white list'),
-            # TODO these for users
-
-            # FilterByBlackList(CommonBlackList(), on_nothing_left='all messages had words from common black list'),
-            # FilterByBlackList(CustomerBlackList(customer_id),
-            #                   on_nothing_left='all messages had words from customer\'s black list'),
-            GroupBy(['client_id'], agg={'channel_id': list, 'message': list, 'message_date': list},
-                    rename={'channel_id': 'channel_ids', 'message': 'messages', 'message_date': 'message_dates'}),
-            # InsertToDatabase(customer_id=customer_id, new_queries_csv=new_queries_csv_path)
-        ]
-
-        for operation in pipeline:
-            print(f'before op {type(operation)}', flush=True)
-            print(f'{data=}', flush=True)
-            data = operation(data)
-            print(f'finished op {type(operation)}', flush=True)
-            print(f'{data=}', flush=True)
-            if data.empty:
-                if hasattr(operation, 'on_nothing_left'):
-                    print(' [x] Nothing to send further:', operation.on_nothing_left, flush=True)
-                else:
-                    raise ValueError('Nothing to send further, for an unpredicted reason')
-                ch.basic_ack(delivery_tag=method.delivery_tag)
-                return
+        pipeline = PreprocessingPipeline(customer_id=customer_id)
+        data = pipeline(data)
+        if data.empty:
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+            return
 
         print(f" [x] Sending {len(data)} messages")
         with open('/data/new_queries/out.txt', 'w') as f:

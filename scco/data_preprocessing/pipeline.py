@@ -2,15 +2,14 @@ import numpy as np
 import pandas as pd
 import json
 import os
-import pika
-import sys
 import uuid
 import datetime
-from io import StringIO
-from rabbit_rpc import FilterRpcClient, SaveCsvRpcClient
 from abc import ABC, abstractmethod
+from emoji import replace_emoji
+from io import StringIO
 
 import config
+from rabbit_rpc import FilterRpcClient, SaveCsvRpcClient
 from tools.dict_occurrence import DictOccurrenceManager
 from tools.pattern_text_matching import Matcher
 
@@ -21,10 +20,56 @@ class Operation(ABC):
         pass
 
 
-class MatchingList(ABC):
-    @abstractmethod
-    def load(self):
-        pass
+class PreprocessingPipeline:
+    def __init__(self, customer_id):
+        self.pipeline = [
+            ColumnTransform('message', lambda s: replace_emoji(s, '')),
+            ColumnTransform('message', str.lower),
+            StableSortBy('message_date'),
+            GroupBy(['channel_id', 'client_id', 'message_date'], agg={'message': (lambda x: list(x)[-1])}),
+            # FilterAlreadySeen(by=['channel_id', 'client_id', 'message_date'],
+            #                   customer_id=customer_id, on_nothing_left='all messages were already seen',
+            #                   rpc_client=self.filter_rpc_client),
+            # SaveNewQueries(self.new_queries_csv_info),
+            FilterByTextMatch(CommonMatchingList(), mode='blacklist', algorithm='word',
+                              on_nothing_left='all messages filtered out by common black list'),
+            FilterByTextMatch(CommonMatchingList('resources/test_lists/trusted_strong_blacklist'), mode='blacklist',
+                              on_nothing_left='all messages filtered out by common strong black list'),
+            # FilterByTextMatch(CommonMatchingList('resources/test_lists/trusted_strong_whitelist'), mode='whitelist',
+            #                   on_nothing_left='all messages filtered out by common strong white list'),
+            FilterByTextMatch(CommonMatchingList('resources/test_lists/trusted_week_whitelist'), mode='whitelist',
+                              on_nothing_left='all messages filtered out by common weak white list'),
+            FilterByTextMatch(CommonMatchingList('resources/test_lists/trusted_week_blacklist'), mode='blacklist',
+                              on_nothing_left='all messages filtered out by common weak black list'),
+            # TODO week -> weak
+            FilterByTextMatch(CommonMatchingList('resources/test_lists/user_blacklist'), mode='blacklist',
+                              on_nothing_left='all messages filtered out by user black list'),
+            # FilterByTextMatch(CommonMatchingList('resources/test_lists/user_whitelist'), mode='whitelist',
+            #                   on_nothing_left='all messages filtered out by user white list'),
+            # TODO these for users
+
+            # FilterByBlackList(CommonBlackList(), on_nothing_left='all messages had words from common black list'),
+            # FilterByBlackList(CustomerBlackList(customer_id),
+            #                   on_nothing_left='all messages had words from customer\'s black list'),
+            GroupBy(['client_id'], agg={'channel_id': list, 'message': list, 'message_date': list},
+                    rename={'channel_id': 'channel_ids', 'message': 'messages', 'message_date': 'message_dates'}),
+            # InsertToDatabase(customer_id=customer_id, new_queries_csv=new_queries_csv_path)
+        ]
+
+    def __call__(self, data):
+        print(" [x] Data before pipeline:")
+        print(data, flush=True)
+        for operation in self.pipeline:
+            data = operation(data)
+            print(f" [x] Data after operation {type(operation)}:")
+            print(data, flush=True)
+            if data.empty:
+                if hasattr(operation, 'on_nothing_left'):
+                    print(' [x] Nothing to send further:', operation.on_nothing_left, flush=True)
+                    break
+                else:
+                    raise ValueError('Nothing to send further, for an unpredicted reason')
+        return data
 
 
 class ColumnTransform(Operation):
@@ -116,10 +161,10 @@ class FilterByTextMatch(Operation):
 
             def any_match(s):
                 for pattern in matching_list:
-                    print(f'Debug: search {pattern=} in {s=} with matcher:',
-                          matcher.count_matches(pattern, s), flush=True)
-                    print(f'Debug: search {pattern=} in {s=} with in:', pattern in s, flush=True)
-                    if pattern in s:  # matcher.count_matches(pattern, s) > 0:
+                    # print(f'Debug: search {pattern=} in {s=} with matcher:',
+                    #       matcher.count_matches(pattern, s), flush=True)
+                    # print(f'Debug: search {pattern=} in {s=} with in:', pattern in s, flush=True)
+                    if pattern in s:  # TODO: matcher.count_matches(pattern, s) > 0:
                         return True
                 return False
 
@@ -141,24 +186,10 @@ class FilterByTextMatch(Operation):
             raise ValueError(f'Unknown mode for FilterByTextMatch: {self.mode}')
 
 
-# class FilterByBlackList(Operation):
-#     def __init__(self, black_list, on_nothing_left, errors_num=0):
-#         self.black_list = black_list
-#         self.on_nothing_left = on_nothing_left
-#         self.errors_num = errors_num
-
-#     def __call__(self, data):
-#         black_list = self.black_list.load()
-#         occurrence_manager = DictOccurrenceManager(black_list)
-
-#         if self.errors_num < 0:
-#             predicate = lambda s: not occurrence_manager.check_occurence_adaptive(s)
-#         elif self.errors_num == 0:
-#             predicate = lambda s: not occurrence_manager.check_exact_occurrence(s)
-#         else:
-#             predicate = lambda s: not occurrence_manager.check_occurrence_with_errors(s, self.errors_num)
-
-#         return data[[predicate(s) for s in data['message']]]
+class MatchingList(ABC):
+    @abstractmethod
+    def load(self):
+        pass
 
 
 class CommonMatchingList(MatchingList):
