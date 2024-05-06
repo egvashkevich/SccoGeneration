@@ -106,7 +106,7 @@ class GroupBy(Operation):
     def __call__(self, data):
         result = data.groupby(self.columns).agg(self.agg).reset_index()
         if self.rename:
-            result.rename(columns=self.rename)
+            result.rename(columns=self.rename, inplace=True)
         return result
 
 
@@ -143,7 +143,7 @@ class SaveNewQueries:
         os.makedirs(config.NEW_QUERIES_CSV_FOLDER, exist_ok=True)
         data.to_csv(os.path.join(config.NEW_QUERIES_CSV_FOLDER, new_queries_csv_name))
 
-        new_queries_csv_path = config.NEW_QUERIES_PREFIX_FOR_SENDING + new_queries_csv_name
+        new_queries_csv_path = new_queries_csv_name
         self.new_queries_csv_info['path'] = new_queries_csv_path
 
         _ = self.rpc_client.call()

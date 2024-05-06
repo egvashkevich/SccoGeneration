@@ -1,4 +1,6 @@
 import pika
+from pika import BlockingConnection
+from pika.adapters.blocking_connection import BlockingChannel
 import json
 import uuid
 import config
@@ -15,7 +17,8 @@ def declare_rabbit_db_service(ch):
 
 
 class FilterRpcClient:
-    def __init__(self, connection, channel):
+    def __init__(self, connection: BlockingConnection, channel: BlockingChannel):
+
         self.connection = connection
         self.channel = channel
         declare_rabbit_db_service(self.channel)
@@ -29,16 +32,18 @@ class FilterRpcClient:
         )
 
         self.channel.basic_consume(
-            queue=config.CONTAINS_REQUEST_QUEUE, on_message_callback=self.on_response, auto_ack=True
-        )  # TODO not auto_ack
+            queue=config.CONTAINS_REQUEST_QUEUE, on_message_callback=self.on_response, auto_ack=False
+        )
 
         self.reply_ctx = None
         self.response = None
 
     def on_response(self, ch, method, props, body):
+        print('Debug: Filter on response', flush=True)
         json_body = json.loads(body.decode())
         if self.reply_ctx == json_body['reply_ctx']:
             self.response = json_body['not_exist']
+            ch.basic_ack(delivery_tag=method.delivery_tag)
 
     def call(self, request_data):
         self.response = None
@@ -63,12 +68,13 @@ class FilterRpcClient:
         )
 
         while self.response is None:
-            self.connection.process_data_events(time_limit=None)
+            print('Debug: Filter loop', flush=True)
+            self.connection.process_data_events(time_limit=1)
         return self.response
 
 
 class SaveCsvRpcClient:
-    def __init__(self, connection, channel, new_queries_csv_info):
+    def __init__(self, connection: BlockingConnection, channel: BlockingChannel, new_queries_csv_info: dict):
         self.connection = connection
         self.channel = channel
         declare_rabbit_db_service(self.channel)
@@ -84,8 +90,8 @@ class SaveCsvRpcClient:
         )
 
         self.channel.basic_consume(
-            queue=config.INSERT_NEW_QUERIES_REQUEST_QUEUE, on_message_callback=self.on_response, auto_ack=True
-        )  # TODO not auto_ack
+            queue=config.INSERT_NEW_QUERIES_REQUEST_QUEUE, on_message_callback=self.on_response, auto_ack=False
+        )
 
         self.new_queries_csv_info = new_queries_csv_info
         self.response = None
@@ -94,6 +100,7 @@ class SaveCsvRpcClient:
         json_body = json.loads(body.decode())
         if self.new_queries_csv_info['path'] == json_body['csv_path']:  # TODO is it ok?
             self.response = json_body['csv_path']
+            ch.basic_ack(delivery_tag=method.delivery_tag)
 
     def call(self):
         self.response = None
@@ -118,12 +125,12 @@ class SaveCsvRpcClient:
         )
 
         while self.response is None:
-            self.connection.process_data_events(time_limit=None)
+            self.connection.process_data_events(time_limit=1)
         return self.response
 
 
 class MatchingListsRpcClient:
-    def __init__(self, connection, channel, new_queries_csv_info):
+    def __init__(self, connection: BlockingConnection, channel: BlockingChannel, new_queries_csv_info: dict):
         self.connection = connection
         self.channel = channel
         declare_rabbit_db_service(self.channel)
@@ -139,17 +146,33 @@ class MatchingListsRpcClient:
         )
 
         self.channel.basic_consume(
-            queue=config.CUSTOMER_LISTS_REQUEST_QUEUE, on_message_callback=self.on_response, auto_ack=True
-        )  # TODO not auto_ack
+            queue=config.CUSTOMER_LISTS_REQUEST_QUEUE, on_message_callback=self.on_response, auto_ack=False
+        )
 
         self.reply_ctx = None
         self.response = None
         self.saved = dict()
 
+    def load_default_lists(self):
+        with open('resources/sample_data/user_blacklist') as f:
+            black_list = [s.strip() for s in f.readlines()]
+        if '' in black_list:
+            black_list.remove('')
+        with open('resources/sample_data/user_whitelist') as f:
+            white_list = [s.strip() for s in f.readlines()]
+        if '' in white_list:
+            white_list.remove('')
+        return {'black_list': black_list, 'white_list': white_list}
+
     def on_response(self, ch, method, props, body):
         json_body = json.loads(body.decode())
         if self.reply_ctx == json_body['reply_ctx']:
-            self.response = json_body['array_data'][0]
+            if len(json_body['array_data']) > 0:
+                self.response = json_body['array_data'][0]
+            else:
+                print('Warning: black or white list for client not found. Loading default lists')
+                self.response = self.load_default_lists()
+            ch.basic_ack(delivery_tag=method.delivery_tag)
 
     def call(self, customer_id):
         self.response = None
@@ -178,7 +201,7 @@ class MatchingListsRpcClient:
         )
 
         while self.response is None:
-            self.connection.process_data_events(time_limit=None)
+            self.connection.process_data_events(time_limit=1)
         return self.response
 
     def get_black_list(self, customer_id):
@@ -194,7 +217,7 @@ class MatchingListsRpcClient:
 
 
 class InsertToDbRpcClient:
-    def __init__(self, connection, channel, new_queries_csv_info):
+    def __init__(self, connection: BlockingConnection, channel: BlockingChannel, new_queries_csv_info: dict):
         self.connection = connection
         self.channel = channel
         declare_rabbit_db_service(self.channel)
@@ -210,8 +233,8 @@ class InsertToDbRpcClient:
         )
 
         self.channel.basic_consume(
-            queue=config.INSERT_RESULT_REQUEST_QUEUE, on_message_callback=self.on_response, auto_ack=True
-        )  # TODO not auto_ack
+            queue=config.INSERT_RESULT_REQUEST_QUEUE, on_message_callback=self.on_response, auto_ack=False
+        )
 
         self.new_queries_csv_info = new_queries_csv_info
         self.response = None
@@ -220,6 +243,7 @@ class InsertToDbRpcClient:
         json_body = json.loads(body.decode())
         if self.new_queries_csv_info['path'] == json_body['reply_ctx']:  # TODO is it ok?
             self.response = json_body['array_data']
+            ch.basic_ack(delivery_tag=method.delivery_tag)
 
     def call(self, items):
         self.response = None
@@ -243,5 +267,5 @@ class InsertToDbRpcClient:
         )
 
         while self.response is None:
-            self.connection.process_data_events(time_limit=None)
+            self.connection.process_data_events(time_limit=1)
         return self.response

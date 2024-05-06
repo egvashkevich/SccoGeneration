@@ -14,7 +14,8 @@ services:
     env_file:
       - .env
     volumes:
-      - "${NEW_CSV_VOLUME}:${NEW_CSV_VOLUME_DOCKER_FOLDER}"
+      - "${PARSER_BOT_CSV_VOLUME_NAME}:${PARSER_BOT_CSV_VOLUME_PATH}"
+      - "${UNPROCESSED_PARSER_BOT_CSV_VOLUME_NAME}:${UNPROCESSED_PARSER_BOT_CSV_VOLUME_PATH}"
     restart: "no"
 #    restart: on-failure
     networks:
