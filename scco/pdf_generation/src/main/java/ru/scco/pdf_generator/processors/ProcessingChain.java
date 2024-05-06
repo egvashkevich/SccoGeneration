@@ -8,13 +8,31 @@ import java.util.List;
 
 @Component
 public class ProcessingChain implements ProcessNode {
+    private final static String punctuation = "[.!?;\n]";
+    private final static String notPunctuation = "[^.!?;\n]";
+    private final static String endOfPreviousSentence =
+            "(?:^|" + punctuation + ")";
+    private final static String endOfSentence = "(?:$|" + punctuation + ")";
+    private final static String anythingInsideSentence = notPunctuation + "*";
+
 
     List<ProcessNode> processNodeList = new ArrayList<>();
 
     public ProcessingChain() {
-        processNodeList.add(new DeleteInPart(0.7f, 1,
-                                             "(?:^|[.!?;])[^.!?;]*уважени[^"
-                                             + ".!?;$\\n]*(?:[.!?;\\n]|$)"));
+        processNodeList.add(new DeleteInPart(
+                0.7f, 1,
+                endOfPreviousSentence +
+                anythingInsideSentence +
+                "[у|У]важени" +
+                anythingInsideSentence +
+                endOfSentence));
+        processNodeList.add(new DeleteInPart(0, 1,
+                                             endOfPreviousSentence
+                                             + anythingInsideSentence + "\\["
+                                             + anythingInsideSentence + "\\]"
+                                             + anythingInsideSentence
+                                             + endOfSentence));
+
     }
 
     ProcessingChain append(ProcessNode processNode) {
