@@ -9,51 +9,58 @@ from emoji import replace_emoji
 from io import StringIO
 
 import config
-from rabbit_rpc import FilterRpcClient, SaveCsvRpcClient
+from rabbit_rpc import FilterRpcClient, SaveCsvRpcClient, MatchingListsRpcClient, InsertToDbRpcClient
 from tools.dict_occurrence import DictOccurrenceManager
-from tools.pattern_text_matching import Matcher
+# from tools.pattern_text_matching import Matcher
 
 
 class Operation(ABC):
     @abstractmethod
-    def __call__(self, data):
+    def __call__(self, data: pd.DataFrame) -> pd.DataFrame:
         pass
 
 
 class PreprocessingPipeline:
-    def __init__(self, customer_id):
+    def __init__(self,
+                 customer_id,
+                 new_queries_csv_info,  # TODO lifecycle
+                 filter_rpc_client: FilterRpcClient,
+                 save_csv_rpc_client: SaveCsvRpcClient,
+                 matching_lists_rpc_client: MatchingListsRpcClient,
+                 insert_to_db_rpc_client: InsertToDbRpcClient):
         self.pipeline = [
             ColumnTransform('message', lambda s: replace_emoji(s, '')),
             ColumnTransform('message', str.lower),
+
             StableSortBy('message_date'),
             GroupBy(['channel_id', 'client_id', 'message_date'], agg={'message': (lambda x: list(x)[-1])}),
-            # FilterAlreadySeen(by=['channel_id', 'client_id', 'message_date'],
-            #                   customer_id=customer_id, on_nothing_left='all messages were already seen',
-            #                   rpc_client=self.filter_rpc_client),
-            # SaveNewQueries(self.new_queries_csv_info),
+            FilterAlreadySeen(by=['channel_id', 'client_id', 'message_date'],
+                              customer_id=customer_id, on_nothing_left='all messages were already seen',
+                              rpc_client=filter_rpc_client),
+            SaveNewQueries(new_queries_csv_info, save_csv_rpc_client),
+
             FilterByTextMatch(CommonMatchingList(), mode='blacklist', algorithm='word',
                               on_nothing_left='all messages filtered out by common black list'),
-            FilterByTextMatch(CommonMatchingList('resources/test_lists/trusted_strong_blacklist'), mode='blacklist',
-                              on_nothing_left='all messages filtered out by common strong black list'),
-            # FilterByTextMatch(CommonMatchingList('resources/test_lists/trusted_strong_whitelist'), mode='whitelist',
-            #                   on_nothing_left='all messages filtered out by common strong white list'),
-            FilterByTextMatch(CommonMatchingList('resources/test_lists/trusted_week_whitelist'), mode='whitelist',
-                              on_nothing_left='all messages filtered out by common weak white list'),
-            FilterByTextMatch(CommonMatchingList('resources/test_lists/trusted_week_blacklist'), mode='blacklist',
-                              on_nothing_left='all messages filtered out by common weak black list'),
-            # TODO week -> weak
-            FilterByTextMatch(CommonMatchingList('resources/test_lists/user_blacklist'), mode='blacklist',
-                              on_nothing_left='all messages filtered out by user black list'),
-            # FilterByTextMatch(CommonMatchingList('resources/test_lists/user_whitelist'), mode='whitelist',
-            #                   on_nothing_left='all messages filtered out by user white list'),
-            # TODO these for users
 
-            # FilterByBlackList(CommonBlackList(), on_nothing_left='all messages had words from common black list'),
-            # FilterByBlackList(CustomerBlackList(customer_id),
-            #                   on_nothing_left='all messages had words from customer\'s black list'),
+            FilterByTextMatch(CommonMatchingList('resources/trusted_strong_blacklist'), mode='blacklist',
+                              on_nothing_left='all messages filtered out by common strong black list'),
+            # FilterByTextMatch(CommonMatchingList('resources/trusted_strong_whitelist'), mode='whitelist',
+            #                   on_nothing_left='all messages filtered out by common strong white list'),
+
+            FilterByTextMatch(CommonMatchingList('resources/trusted_weak_whitelist'), mode='whitelist',
+                              on_nothing_left='all messages filtered out by common weak white list'),
+            FilterByTextMatch(CommonMatchingList('resources/trusted_weak_blacklist'), mode='blacklist',
+                              on_nothing_left='all messages filtered out by common weak black list'),
+
+            # order of these two matters, see MatchingListsRpcClient
+            FilterByTextMatch(CustomerBlackList(customer_id, matching_lists_rpc_client), mode='blacklist',
+                              on_nothing_left='all messages filtered out by customer\'s black list'),
+            FilterByTextMatch(CustomerWhiteList(customer_id, matching_lists_rpc_client), mode='whitelist',
+                              on_nothing_left='all messages filtered out by customer\'s white list'),
+
             GroupBy(['client_id'], agg={'channel_id': list, 'message': list, 'message_date': list},
                     rename={'channel_id': 'channel_ids', 'message': 'messages', 'message_date': 'message_dates'}),
-            # InsertToDatabase(customer_id=customer_id, new_queries_csv=new_queries_csv_path)
+            InsertToDatabase(customer_id, insert_to_db_rpc_client, new_queries_csv_info)
         ]
 
     def __call__(self, data):
@@ -132,12 +139,16 @@ class SaveNewQueries:
         today = datetime.date.today().strftime('%y-%m-%y')  # yyyy-mm-dd
         unique_id = uuid.uuid4().hex  # unique sting of hex symbols
         new_queries_csv_name = f'new-queries-{today}-{unique_id}.csv'
+
         os.makedirs(config.NEW_QUERIES_CSV_FOLDER, exist_ok=True)
         data.to_csv(os.path.join(config.NEW_QUERIES_CSV_FOLDER, new_queries_csv_name))
+
         new_queries_csv_path = config.NEW_QUERIES_PREFIX_FOR_SENDING + new_queries_csv_name
         self.new_queries_csv_info['path'] = new_queries_csv_path
 
-        # TODO insert_csv_path_do_db(new_queries_csv_path)
+        _ = self.rpc_client.call()
+
+        return data
 
 
 class FilterByTextMatch(Operation):
@@ -157,7 +168,7 @@ class FilterByTextMatch(Operation):
                 return occurrence_manager.check_exact_occurrence(s)
 
         elif self.algorithm == 'substring':
-            matcher = Matcher()
+            # matcher = Matcher()
 
             def any_match(s):
                 for pattern in matching_list:
@@ -204,31 +215,29 @@ class CommonMatchingList(MatchingList):
         return common_matching_list
 
 
-# class CustomerMatchingList(BlackList):
-#     def __init__(self, customer_id):
-#         self.customer_id = customer_id
+class CustomerBlackList(MatchingList):
+    def __init__(self, customer_id, rpc_client: MatchingListsRpcClient):
+        self.customer_id = customer_id
+        self.rpc_client = rpc_client
 
-#     def load(self):
-#         query = json.dumps({
-#             "query_name": "black_list_query",
-#             "reply": {
-#                 "exchange": config.BLACK_LIST_QUERY_EXCHANGE,
-#                 "queue": "<generated queue name>",  # TODO
-#                 "routing_key": config.BLACK_LIST_QUERY_ROUTING_KEY,
-#             },
-#             "query_data": {
-#                 "customer_id": self.customer_id
-#             }
-#         })
-#         print(query)  # TODO: send query
-#         black_list = set()
-#         return black_list
+    def load(self):
+        return set(self.rpc_client.get_black_list(self.customer_id))
+
+
+class CustomerWhiteList(MatchingList):
+    def __init__(self, customer_id, rpc_client: MatchingListsRpcClient):
+        self.customer_id = customer_id
+        self.rpc_client = rpc_client
+
+    def load(self):
+        return set(self.rpc_client.get_white_list(self.customer_id))
 
 
 class InsertToDatabase(Operation):
-    def __init__(self, customer_id, new_queries_csv):
+    def __init__(self, customer_id, insert_to_db_rpc_client, new_queries_csv_info):
         self.customer_id = customer_id
-        self.new_queries_csv = new_queries_csv
+        self.insert_to_db_rpc_client = insert_to_db_rpc_client
+        self.new_queries_csv_info = new_queries_csv_info
 
     def __call__(self, data):
         items = []
@@ -238,18 +247,6 @@ class InsertToDatabase(Operation):
                 item[col] = row[col]
             item['customer_id'] = self.customer_id
             items.append(item)
-        query = json.dumps({
-            "query_name": "insert_after_preprocessing_query",
-            "reply": {
-                "exchange": config.INSERT_AFTER_PREPROCESSING_QUERY_EXCHANGE,
-                "queue": "<generated queue name>",  # TODO
-                "routing_key": config.INSERT_AFTER_PREPROCESSING_QUERY_ROUTING_KEY,
-            },
-            "query_data": {
-                "csv_path": self.new_queries_csv,
-                "array_data": items
-            }
-        })
-        print(json.loads(query))  # TODO
-        result = pd.DataFrame(data.index)
+        response = self.insert_to_db_rpc_client.call(items)
+        result = pd.DataFrame({'group_id': response})  # TODO
         return result

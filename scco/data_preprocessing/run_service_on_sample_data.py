@@ -22,6 +22,7 @@ def main():
     })
     # in docker: {"customer_id": "0", "parsed_csv": "file:///data_preprocessing/resources/sample_input.csv"}
     # {"customer_id": "0", "parsed_csv": "file:///data_preprocessing/resources/test_data/it/all_freelance/Messages_Request_From_2024_04_29 (3).csv"}
+    # {"customer_id": "0", "parsed_csv": "file:///data/new_queries/Messages_Request_From_2024_04_29 (3).csv"}
 
     channel.basic_publish(exchange="", routing_key=config.IN_QUEUE, body=message,
                           properties=pika.BasicProperties(
