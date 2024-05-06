@@ -9,6 +9,7 @@ import ru.scco.pdf_generator.dto.DBInsertOneResponseDTO;
 import ru.scco.pdf_generator.dto.PDFGeneratorRequestDTO;
 import ru.scco.pdf_generator.processors.ProcessingChain;
 
+import java.util.Base64;
 import java.util.concurrent.ExecutorService;
 
 @Slf4j
@@ -23,17 +24,23 @@ public class Receiver {
 
     @RabbitListener(queues = {"${rabbit.pdf_generation_queue}"})
     public void consume(PDFGeneratorRequestDTO request) {
+        log.info("got request" + request);
         generatorPool.execute(() -> {
             String cp;
             try {
-                cp = processingChain.process(request.mainText());
+                log.info("start process");
+                cp = new String(Base64.getDecoder().decode(request.mainText()));
+                cp = processingChain.process(cp);
             } catch (InvalidCPException invalidCPException) {
                 // TODO:
+                log.info("invalid cp" + invalidCPException.getMessage());
                 sender.sendError(request.messageId(), invalidCPException.getMessage());
                 return;
             }
+            log.info("start generating");
             String fileLink = pdfGenerator.generate(request.messageId(),
                                                     cp);
+            log.info("end generating");
             if (fileLink == null) {
                 sender.sendError(request.messageId(),
                                  errorsMessages.fileError());
@@ -47,6 +54,7 @@ public class Receiver {
 
     @RabbitListener(queues = {"${rabbit.db_response_queue}"})
     public void consumeDBResponse(DBInsertAllResponseDTO responses) {
+        log.info("got response:" + responses);
         for (DBInsertOneResponseDTO response :  responses.getResponses()) {
             sender.sendCPToOutput(response.getCustomerID(),
                                   response.getClientID(), response.getFilePath());

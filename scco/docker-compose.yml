@@ -53,6 +53,8 @@ services:
       - .env
     restart: "no"
 #    restart: on-failure
+    volumes:
+      - generated_offers:/generated_offers/
     networks:
 #      int_network:
 #        aliases:
@@ -140,3 +142,5 @@ networks:
 volumes:
   postgres_fs_volume:
     name: "${POSTGRES_FS_VOLUME_NAME}"
+  generated_offers:
+    name: "${PDF_GENERATION_VOLUME_NAME}"

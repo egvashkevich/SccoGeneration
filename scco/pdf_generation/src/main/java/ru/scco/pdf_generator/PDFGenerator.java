@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -136,9 +137,10 @@ public class PDFGenerator {
 
     private String fillMultiPageTemplate(long messageID,
                                          String mainText) {
-        try (PDDocument doc = Loader.loadPDF(new File(Objects.requireNonNull(
-                                                                     PDFGenerator.class.getResource(templatePath))
-                                                             .toURI()))) {
+        try (PDDocument doc =
+                     Loader.loadPDF(IOUtils.toByteArray(Objects.requireNonNull(
+                             PDFGenerator.class.getResourceAsStream(templatePath)))
+                     )) {
             PDFont font = PDType0Font.load(doc,
                                            PDFGenerator.class.getResourceAsStream(
                                                    fontPath), false);
@@ -204,7 +206,7 @@ public class PDFGenerator {
             Path filePath = Path.of(destinationPath, messageID + ".pdf");
             doc.save(filePath.toAbsolutePath().toString());
             return filePath.toString();
-        } catch (IOException | URISyntaxException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }

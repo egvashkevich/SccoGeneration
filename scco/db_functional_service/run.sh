@@ -30,7 +30,7 @@ UNINSTALL=""
 
 ENV_FILES=$(echo "${ENV_FILES}" | awk '{ print $1 }')
 PIP_INSTALL_ARGS="."
-MAIN_FILE=""
+PATH_TO_MAIN_FILE=""
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -41,7 +41,7 @@ while [ "$#" -gt 0 ]; do
       REINSTALL="1"
       shift 1 ;;
     -f|--file)
-      MAIN_FILE="$2"
+      PATH_TO_MAIN_FILE="$2"
       shift 2 ;;
     -n|--not-run)
       NOT_RUN="1"
@@ -64,7 +64,7 @@ if [ -n "${UNINSTALL}" ]; then
   exit 0
 fi
 
-if [ -z "${MAIN_FILE}" ]; then
+if [ -z "${PATH_TO_MAIN_FILE}" ]; then
   if [ -z "${NOT_RUN}" ]; then
     echo "-f option is omitted, but required to specify file"
     exit 1
@@ -105,5 +105,5 @@ set +o allexport
 
 if [ -z "${NOT_RUN}" ]; then
   echo -e "Run package main.\n-----------------------------------------------"
-  python3 -u "src/${PACKAGE_NAME}/${MAIN_FILE}"
+  python3 -u "${PATH_TO_MAIN_FILE}"
 fi

@@ -86,3 +86,14 @@ docker run -it --name scco_debug_db_functional_service --entrypoint="/bin/bash" 
 docker rm scco_debug_db_functional_service
 docker rmi scco_debug_db_functional_service
 ```
+
+# Testing
+* Mocking: https://pytest-with-eric.com/mocking/pytest-mocking/
+* `sqlalchemy.engine.row.Row` emulates `namedtuple` API: https://stackoverflow.com/questions/68967890/how-to-manually-create-a-sqlalchemy-query-object
+
+## CI
+Нужно из корневой папки микросервиса `db_functional_service` выполнить:
+```bash
+docker build -t scco_test_db_functional_service .
+docker run --name scco_test_db_functional_service scco_test_db_functional_service pytest
+```
