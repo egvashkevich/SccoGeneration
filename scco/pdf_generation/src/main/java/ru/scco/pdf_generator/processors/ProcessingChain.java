@@ -8,7 +8,6 @@ import java.util.List;
 
 @Component
 public class ProcessingChain implements ProcessNode {
-    String s = "(?:^|[.!?;])[^.!?;]*уважени[^.!?;$\\n]*(?:[.!?;\\n]|$)";
     private final static String punctuation = "[.!?;\n]";
     private final static String notPunctuation = "[^.!?;\n]";
     private final static String endOfPreviousSentence =

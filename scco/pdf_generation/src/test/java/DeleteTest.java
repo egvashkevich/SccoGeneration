@@ -37,7 +37,7 @@ public class DeleteTest {
     }
 
     @Test
-    public void tooSmallCPTest() throws InvalidCPException {
+    public void tooSmallCPTest() {
         Assertions.assertThrows(InvalidCPException.class, () -> chain.process(
                 "- И немедленно выпил…"));
     }

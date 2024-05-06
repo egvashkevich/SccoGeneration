@@ -21,7 +21,7 @@ public class DeleteName implements ProcessNode {
     }
 
     @Override
-    public String process(String cp) throws InvalidCPException {
+    public String process(String cp) {
         Matcher matcher = namePattern.matcher(cp);
         if (matcher.find()) {
             StringBuilder newCpBuilder = new StringBuilder();
