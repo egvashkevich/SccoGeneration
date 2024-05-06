@@ -13,8 +13,9 @@ services:
     container_name: "${COMPOSE_PROJECT_NAME}_${DATA_PREPROCESSING_FOLDER}"
     env_file:
       - .env
-#    volumes:
-#      - "${OUTSIDE_CSV_VOLUME}:${OUTSIDE_CSV_VOLUME_DOCKER_FOLDER}" # csv file
+    volumes:
+      - "${PARSER_BOT_CSV_VOLUME_NAME}:${PARSER_BOT_CSV_VOLUME_PATH}"
+      - "${UNPROCESSED_PARSER_BOT_CSV_VOLUME_NAME}:${UNPROCESSED_PARSER_BOT_CSV_VOLUME_PATH}"
     restart: "no"
 #    restart: on-failure
     networks:
