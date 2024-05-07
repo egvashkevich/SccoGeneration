@@ -22,24 +22,26 @@ answer_simple = {
     {
       "customer_id": "customer_1",
       "black_list": [
-        "fuck",
-        "shit",
-        "nigger"
+        "php",
+        "wordpress",
+        "c#"
       ],
       "white_list": [
-        "python_synonym",
-        "b2b_synonym"
+        "frontend",
+        "вёрстка",
+        "javascript",
+        "веб-сайт"
       ]
     },
     {
       "customer_id": "customer_2",
       "black_list": [
-        "bitch",
-        "freak"
+        "отделка",
+        "кровля"
       ],
       "white_list": [
-        "golang_synonym",
-        "devops_synonym"
+        "электрика",
+        "сантехника"
       ]
     }
   ],

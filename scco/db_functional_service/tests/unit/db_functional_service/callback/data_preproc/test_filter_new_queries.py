@@ -71,5 +71,4 @@ class TestFilterNewQueries:
 
         # Check
         crud_patcher.assert_called_once()
-        # crud_patcher.assert_called_once()
         assert exp_answer == act_answer

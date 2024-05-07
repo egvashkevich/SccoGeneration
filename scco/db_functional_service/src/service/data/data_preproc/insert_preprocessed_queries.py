@@ -70,4 +70,3 @@ answer_simple = {
   ],
   "reply_ctx": "something"
 }
-

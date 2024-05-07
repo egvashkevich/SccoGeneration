@@ -12,26 +12,28 @@ request_simple = {
             "backend",
             "java",
         ],
-        "white_list": ["synonym_to_tag_1", "synonym_to_tag_2"],
+        "white_list": [
+            "backend",
+            "java",
+            "spring",
+            "kotlin"
+        ],
         "specific_features": [
-            "some customer comment 1",
-            "some customer comment 2",
+            "Specific feature 1",
+            "Specific feature 2",
         ],
         "services": [
             {
                 "service_name": "(1) First service",
-                "service_desc": "First service description. Very long "
-                                "description."
+                "service_desc": "First service description."
             },
             {
                 "service_name": "(2) Second service",
-                "service_desc": "Second service description. Very long "
-                                "description."
+                "service_desc": "Second service description."
             },
             {
                 "service_name": "(3) Third service",
-                "service_desc": "Third service description. Very long "
-                                "description."
+                "service_desc": "Third service description."
             }
         ]
     }
