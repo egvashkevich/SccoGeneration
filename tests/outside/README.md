@@ -7,7 +7,7 @@
 # run
 docker-compose --env-file ../.env up --build -d
 # stop
-docker-compose --env-file ../.env down --rmi all --remove-orphans
+docker-compose --env-file ../.env down --remove-orphans --volumes
 ```
 Достаточно один раз запустить контейнер, после чего он будет постоянно работать и при перезапуске системы автоматически запускаться (так работают все сервисы в docker-compose). Если в вашем сервисе возникает ошибка `Unexpected error: [Errno -3] Temporary failure in name resolution`, то скорее всего вы неправильно используете переменные окружения, которые отвечают за кролика (`RMQ_NET_ALIAS`, например).
 
