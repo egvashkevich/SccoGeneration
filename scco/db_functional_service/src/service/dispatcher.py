@@ -129,7 +129,7 @@ def publish_answer(
     add_reply_ctx(srv_req_data, answer)
 
     # Send query to rabbitmq.
-    answer = json.dumps(answer, indent=2)
+    answer = json.dumps(answer, indent=2, ensure_ascii=False)
     print(f"Answer:\n{answer}")
 
     print("sending reply")
