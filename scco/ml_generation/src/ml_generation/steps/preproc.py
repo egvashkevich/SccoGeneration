@@ -1,16 +1,16 @@
-import inspect
-import json
-
 import util.app_config as app_cfg
 
-from ml_generation.broker.broker import Broker
-from ml_generation.broker.broker import Publisher
-from ml_generation.broker.broker import Consumer
+from ml_generation.dispatcher import get_callback_data
+from ml_generation.dispatcher import publish_answer
+
+from broker.broker import Broker
+from broker.broker import Publisher
+from broker.broker import Consumer
 
 
 class Preproc:
     # Publishers.
-    db_service = "preproc.db_service"
+    db_functional_service_pub = "db_service_pub"
 
     def __init__(self, broker: Broker):
         self.broker = broker
@@ -25,7 +25,7 @@ class Preproc:
         )
         broker.add_publisher(
             Publisher(
-                name=self.db_service,
+                name=self.db_functional_service_pub,
                 exchange=app_cfg.DB_FUNCTIONAL_SERVICE_EXCHANGE,
                 queue=app_cfg.DB_FUNCTIONAL_SERVICE_QUEUE,
                 routing_key=app_cfg.DB_FUNCTIONAL_SERVICE_ROUTING_KEY,
@@ -34,22 +34,18 @@ class Preproc:
 
     def callback(self, ch, method, props, body):
         print("Preproc callback started")
+        passed_data = get_callback_data(body)
 
-        # Get data from body.
-        body = body.decode("utf-8")
-        print(
-            inspect.cleandoc(
-                f"""body from preprocessed_data:
------------
-{body}
-----------"""
-            )
-        )
-        passed_data = json.loads(body)
+        answer = self.callback_handle(passed_data)
 
+        publish_answer(answer, self.db_functional_service_pub, self.broker)
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+        print("Preproc callback finished")
+
+    def callback_handle(self, passed_data) -> dict:
         message_group_id = passed_data["message_group_id"]
 
-        request = {
+        answer = {
             "request_name": "get_info_for_co_generation",
             "reply": {
                 "exchange": app_cfg.CO_GEN_EXCHANGE,
@@ -60,11 +56,5 @@ class Preproc:
                 "message_group_id": message_group_id,
             }
         }
-        request = json.dumps(request)
-        body = request.encode("utf-8")
-        print(f"Sending body:\n----------\n{body}\n-----------")
-        self.broker.basic_publish(self.db_service, body)
 
-        ch.basic_ack(delivery_tag=method.delivery_tag)
-
-        print("Preproc callback finished")
+        return answer

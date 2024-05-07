@@ -23,6 +23,7 @@ answer_simple = {
   ],
   "attitude": "Вы",
   "company_name": "Web Сфера",
+  "contact_info": "<@telegram_link>",
   "tags": [
     "frontend",
     "вёрстка"

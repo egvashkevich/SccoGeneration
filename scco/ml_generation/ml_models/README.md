@@ -1,5 +1,5 @@
 ## Файлы с секретами
-1) Файл `api_token.secret.env` по пути `scco/ml_generation/ml_models/src/ml_models/co_gen/api_token.secret.env`
+1) Файл `api_token.secret.env` по пути `scco/ml_generation/ml_models/src/ml_models/gigachat_api_gate/api_token.secret.env`
    Содержимое файла:
    ```bash
    GIGACHAT_API_SCOPE="GIGACHAT_API_PERS"

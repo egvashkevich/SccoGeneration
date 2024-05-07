@@ -3,7 +3,7 @@ import sys
 import crud.dbapi as dbapi
 from crud.models import Base
 
-from service.broker.rmq_broker import RmqBroker
+from broker.rmq_broker import RmqBroker
 from service.dispatcher import Dispatcher
 from db_insert_on_first_startup import db_insert_on_first_startup
 

@@ -1,4 +1,4 @@
-from service.broker.broker import Publisher
+from broker.broker import Publisher
 from util.app_errors import dict_get_or_panic
 
 
@@ -24,4 +24,3 @@ class Reply:
             queue="",  # not used
             routing_key=self._routing_key,
         )
-

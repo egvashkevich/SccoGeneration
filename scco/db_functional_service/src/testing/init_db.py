@@ -28,7 +28,7 @@ def parse_customer(json_path: str) -> (dict, list[dict]):
     # Customer services
     customer_services = customer_json["customer_services"]
     for service in customer_services:
-        service.update({"customer_id": "customer_1"})
+        service.update({"customer_id": customer["customer_id"]})
 
     return customer, customer_services
 
@@ -62,6 +62,12 @@ def dummy_init_db() -> None:
     ])
     print("Finished insert customer_service")
 
+    insert_misc(customer_1, customer_2)
+
+    print("finished dummy_init_db")
+
+
+def insert_misc(customer_1, customer_2):
     ############################################################################
     # Client.
     client_1 = {
@@ -73,10 +79,12 @@ def dummy_init_db() -> None:
         "attitude": "Ты",
     }
     print("Start insert clients")
-    ClientCRUD.insert_all([
-        client_1,
-        client_2,
-    ])
+    ClientCRUD.insert_all(
+        [
+            client_1,
+            client_2,
+        ]
+    )
     print("Finished insert clients")
 
     ############################################################################
@@ -88,10 +96,12 @@ def dummy_init_db() -> None:
         "csv_path": "path/to/new_queries2.csv",
     }
     print("Start insert new_queries_csv")
-    csv_ids = NewQueriesCsvCRUD.insert_all([
-        new_queries_csv_1,
-        new_queries_csv_2,
-    ])
+    csv_ids = NewQueriesCsvCRUD.insert_all(
+        [
+            new_queries_csv_1,
+            new_queries_csv_2,
+        ]
+    )
     print("Finished insert new_queries_csv")
 
     ############################################################################
@@ -107,7 +117,7 @@ def dummy_init_db() -> None:
             Нужен разработчик на python для вёрстки сайта авто компании.
             Предложения пишите в телеграм: @client_1_tg
             """
-            ),
+        ),
         "message_group_id": mgig.IdGenerator.reserve_id(),
         "message_date": datetime.datetime.strptime(
             "2023-12-31T22:59:00",
@@ -123,7 +133,7 @@ def dummy_init_db() -> None:
             """Нужен разработчик на android
             Требуется сделать приложение для онлайн-магазина, подробности в лс
             """
-            ),
+        ),
         "message_group_id": mgig.IdGenerator.reserve_id(),
         "message_date": datetime.datetime.strptime(
             "2023-12-31T23:59:00",
@@ -131,10 +141,12 @@ def dummy_init_db() -> None:
         ),
     }
     print("Start insert queries")
-    query_id_list = QueryCRUD.insert_all([
-        query_1,
-        query_2,
-    ])
+    query_id_list = QueryCRUD.insert_all(
+        [
+            query_1,
+            query_2,
+        ]
+    )
     print("Finished insert queries")
 
     ############################################################################
@@ -148,12 +160,10 @@ def dummy_init_db() -> None:
         "file": "/path/to/offer2",
     }
     print("Start insert offers")
-    OfferCRUD.insert_all([
-        offer_1,
-        # offer_2,
-    ])
+    OfferCRUD.insert_all(
+        [
+            offer_1,
+            # offer_2,
+        ]
+    )
     print("Finished insert offers")
-
-    ############################################################################
-
-    print("finished dummy_init_db")

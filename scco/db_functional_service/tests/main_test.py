@@ -3,7 +3,7 @@ import sys
 import crud.dbapi as dbapi
 from crud.models import Base
 
-from service.broker.host_broker import HostBroker
+from broker.host_broker import HostBroker
 from service.dispatcher import Dispatcher
 
 from testing.init_db import dummy_init_db
@@ -81,7 +81,7 @@ def main():
         "insert_customer": ic_request,
     }
 
-    name = "insert_preprocessed_queries"  # CHANGE ME
+    name = "get_info_for_co_generation"  # CHANGE ME
 
     dispatcher.dispatch_function(disp_requests[name])
 

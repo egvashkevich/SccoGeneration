@@ -4,6 +4,7 @@ from crud.objects.customer import CustomerCRUD
 from crud.objects.customer_service import CustomerServiceCRUD
 
 from testing.init_db import parse_customer
+from testing.init_db import insert_misc
 
 SERVICE_PKG_DIR = os.path.dirname(__file__)
 
@@ -40,4 +41,10 @@ def db_insert_on_first_startup() -> None:
 
     ############################################################################
 
+    additional_insert_for_testing(customer_1, customer_2)
+
     print("finished dummy_init_db")
+
+
+def additional_insert_for_testing(customer_1, customer_2):
+    insert_misc(customer_1, customer_2)

@@ -4,11 +4,11 @@ import pika
 from pika.adapters.blocking_connection import BlockingConnection
 from pika.adapters.blocking_connection import BlockingChannel
 
-from service.broker.broker import Broker
-from service.broker.broker import Publisher
-from service.broker.broker import Consumer
-
 import util.app_config as app_cfg
+
+from broker.broker import Broker
+from broker.broker import Publisher
+from broker.broker import Consumer
 
 
 class RmqBroker(Broker):

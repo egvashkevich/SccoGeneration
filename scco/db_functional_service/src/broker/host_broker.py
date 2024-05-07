@@ -1,6 +1,6 @@
-from service.broker.broker import Broker
-from service.broker.broker import Publisher
-from service.broker.broker import Consumer
+from broker.broker import Broker
+from broker.broker import Publisher
+from broker.broker import Consumer
 
 
 class HostBroker(Broker):
