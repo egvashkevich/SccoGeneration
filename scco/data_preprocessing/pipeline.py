@@ -248,5 +248,5 @@ class InsertToDatabase(Operation):
             item['customer_id'] = self.customer_id
             items.append(item)
         response = self.insert_to_db_rpc_client.call(items)
-        result = pd.DataFrame({'group_id': response})  # TODO
+        result = pd.DataFrame({'message_group_id': response})
         return result
