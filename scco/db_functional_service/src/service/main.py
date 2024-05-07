@@ -5,25 +5,29 @@ from crud.models import Base
 
 from service.broker.rmq_broker import RmqBroker
 from service.dispatcher import Dispatcher
-from testing.init_db import dummy_init_db
+from db_insert_on_first_startup import db_insert_on_first_startup
 
-
-def fake_init_db_data():
-    dummy_init_db()
+insert_dummy_values_on_first_startup = True
 
 
 def init_database():
     print("Creating db engine", flush=True)
     engine = dbapi.DbEngine.get_engine()
 
-    print("Removing old tables", flush=True)
-    Base.metadata.drop_all(engine)
+    # print("Removing old tables", flush=True)
+    # Base.metadata.drop_all(engine)
 
     print("Creating tables", flush=True)
     Base.metadata.create_all(engine)
 
-    print("Inserting dummy values", flush=True)
-    fake_init_db_data()
+    global insert_dummy_values_on_first_startup
+    if insert_dummy_values_on_first_startup:
+        print("Inserting customers on first startup", flush=True)
+        db_insert_on_first_startup()
+        insert_dummy_values_on_first_startup = False
+    else:
+        print("Skip inserting customers on first startup"
+              "(must be already inserted)", flush=True)
 
 
 def main():

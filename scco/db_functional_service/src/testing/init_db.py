@@ -1,5 +1,7 @@
 import inspect
 import datetime
+import json
+import os
 
 import crud.message_group_id_generator as mgig
 
@@ -12,69 +14,69 @@ from crud.objects.offer import OfferCRUD
 
 import util.app_config as app_cfg
 
+TESTING_PKG_DIR = os.path.dirname(__file__)
+
+
+def parse_customer(json_path: str) -> (dict, list[dict]):
+    with open(json_path, "r") as f:
+        customer_json = json.load(f)
+
+    # Customer
+    customer = dict(customer_json)
+    del customer["customer_services"]
+
+    # Customer services
+    customer_services = customer_json["customer_services"]
+    for service in customer_services:
+        service.update({"customer_id": "customer_1"})
+
+    return customer, customer_services
+
 
 def dummy_init_db() -> None:
-    print("start insert_dummy_values")
+    print("start dummy_init_db")
 
     ############################################################################
     # Customer.
-    customer_1 = {
-        "customer_id": "customer_1",
-        "contact_info": "telegram_link",
-        "company_name": "Company of customer 1",
-        "black_list": ["fuck", "shit", "nigger"],
-        "tags": ["python", "b2b"],
-        "white_list": ["python_synonym", "b2b_synonym"],
-        "specific_features": ["feature_1", "feature_2"],
-    }
-    customer_2 = {
-        "customer_id": "customer_2",
-        "contact_info": "whatsapp_link",
-        "company_name": "Company of customer 2",
-        "black_list": ["bitch", "freak"],
-        "tags": ["golang", "devops"],
-        "white_list": ["golang_synonym", "devops_synonym"],
-        "specific_features": ["feature_1", "feature_2"],
-    }
+    customer_1, customer_1_services = parse_customer(
+        f"{TESTING_PKG_DIR}/data/customer_1.json"
+    )
+    customer_2, customer_2_services = parse_customer(
+        f"{TESTING_PKG_DIR}/data/customer_2.json"
+    )
+
     print("Start insert customers")
-    CustomerCRUD.insert_all([customer_1, customer_2])
+    CustomerCRUD.insert_all([
+        customer_1,
+        customer_2,
+    ])
     print("Finished insert customers")
 
     ############################################################################
     # CustomerService.
-    customer_services = [
-        {
-            "customer_id": "customer_1",
-            "service_name": "customer 1, service 1",
-            "service_desc": "description 1",
-        },
-        {
-            "customer_id": "customer_1",
-            "service_name": "customer 1, service 2",
-            "service_desc": "description 2",
-        },
-        {
-            "customer_id": "customer_2",
-            "service_name": "customer 2, service 1",
-            "service_desc": "description 1",
-        }
-    ]
-    print("Start insert customer_services")
-    CustomerServiceCRUD.insert_all(customer_services)
-    print("Finished insert customer_services")
+
+    print("Start insert customer_service")
+    CustomerServiceCRUD.insert_all([
+        *customer_1_services,
+        *customer_2_services,
+    ])
+    print("Finished insert customer_service")
 
     ############################################################################
     # Client.
     client_1 = {
         "client_id": "client_1",
-        "attitude": "arrogant",
+        "attitude": "Вы",
     }
     client_2 = {
         "client_id": "client_2",
-        "attitude": "famous",
+        "attitude": "Ты",
     }
     print("Start insert clients")
-    ClientCRUD.insert_all([client_1, client_2])
+    ClientCRUD.insert_all([
+        client_1,
+        client_2,
+    ])
     print("Finished insert clients")
 
     ############################################################################
@@ -86,7 +88,10 @@ def dummy_init_db() -> None:
         "csv_path": "path/to/new_queries2.csv",
     }
     print("Start insert new_queries_csv")
-    csv_ids = NewQueriesCsvCRUD.insert_all([new_queries_csv_1, new_queries_csv_2])
+    csv_ids = NewQueriesCsvCRUD.insert_all([
+        new_queries_csv_1,
+        new_queries_csv_2,
+    ])
     print("Finished insert new_queries_csv")
 
     ############################################################################
@@ -97,13 +102,16 @@ def dummy_init_db() -> None:
         "client_id": client_1["client_id"],
         "csv_id": csv_ids[0],
         "channel_id": "phystech.career",
-        "message": inspect.cleandoc("""Good morning.
-            My name is client_1.
-            I need Python developers."""),
+        "message": inspect.cleandoc(
+            """#ищу
+            Нужен разработчик на python для вёрстки сайта авто компании.
+            Предложения пишите в телеграм: @client_1_tg
+            """
+            ),
         "message_group_id": mgig.IdGenerator.reserve_id(),
         "message_date": datetime.datetime.strptime(
-                "2023-12-31T22:59:00",
-                app_cfg.DATETIME_FORMAT
+            "2023-12-31T22:59:00",
+            app_cfg.DATETIME_FORMAT
         ),
     }
     query_2 = {
@@ -111,17 +119,22 @@ def dummy_init_db() -> None:
         "client_id": client_2["client_id"],
         "csv_id": csv_ids[1],
         "channel_id": "phystech.career",
-        "message": inspect.cleandoc("""Hi!
-            My name is client_2.
-            I need C++ developers."""),
+        "message": inspect.cleandoc(
+            """Нужен разработчик на android
+            Требуется сделать приложение для онлайн-магазина, подробности в лс
+            """
+            ),
         "message_group_id": mgig.IdGenerator.reserve_id(),
         "message_date": datetime.datetime.strptime(
-                "2023-12-31T23:59:00",
-                app_cfg.DATETIME_FORMAT
+            "2023-12-31T23:59:00",
+            app_cfg.DATETIME_FORMAT
         ),
     }
     print("Start insert queries")
-    query_id_list = QueryCRUD.insert_all([query_1, query_2])
+    query_id_list = QueryCRUD.insert_all([
+        query_1,
+        query_2,
+    ])
     print("Finished insert queries")
 
     ############################################################################
@@ -130,15 +143,17 @@ def dummy_init_db() -> None:
         "query_id": query_id_list[0],
         "file_path": "/path/to/offer1.pdf",
     }
-    # offer_2 = {
-    #     "query_id": query_id_list[1],
-    #     "file": "/path/to/offer2",
-    # }
+    offer_2 = {
+        "query_id": query_id_list[1],
+        "file": "/path/to/offer2",
+    }
     print("Start insert offers")
-    OfferCRUD.insert_all([offer_1])
-    # OfferCRUD.insert_all([offer_1, offer_2])
+    OfferCRUD.insert_all([
+        offer_1,
+        # offer_2,
+    ])
     print("Finished insert offers")
 
     ############################################################################
 
-    print("finished insert_dummy_values")
+    print("finished dummy_init_db")
