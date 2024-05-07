@@ -7,8 +7,8 @@ request_simple = {
     "reply_ctx": "something",  # not required
     "request_data": [
         {
-            "message_group_id": "2",
-            "file_path": "/path/to/offer2.pdf",
+            "message_group_id": 2,
+            "file_path": "/path/to/inserted_offer_2.pdf",
         },
     ]
 }
@@ -16,12 +16,13 @@ request_simple = {
 ################################################################################
 
 answer_simple = {
-    "array_data": [
-        {
-            "customer_id": "customer_1",
-            "client_id": "client_2",
-            "file_path": "/path/to/offer2.pdf"
-        }
-    ],
-    "reply_ctx": "something"
+  "array_data": [
+    {
+      "customer_id": "customer_1",
+      "client_id": "client_2",
+      "file_path": "/path/to/inserted_offer_2.pdf"
+    }
+  ],
+  "reply_ctx": "something"
 }
+

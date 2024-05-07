@@ -26,12 +26,12 @@ class FakeDbAnswer(NamedTuple):
 
 
 db_insert_data = {
-    "csv_path": "path/to/inserted.csv",
+    "csv_path": "path/to/new_queries1.csv",
 }
 
 fake_db_answer = [
     FakeDbAnswer(
-        csv_path='path/to/inserted.csv',
+        csv_path='path/to/new_queries1.csv',
     )
 ]
 

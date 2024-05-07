@@ -12,17 +12,39 @@ from testing.init_db import dummy_init_db
 
 # Requests.
 
+# data_preprocessing
 from service.data.data_preproc.filter_new_queries import (
-    request_simple as fnq_request_1,
+    request_simple as fnq_request,
 )
+from service.data.data_preproc.insert_new_queries_csv import (
+    request_simple as inq_csv_request,
+)
+from service.data.data_preproc.get_customers_lists import (
+    request_simple as gcl_request,
+)
+from service.data.data_preproc.insert_preprocessed_queries import (
+    request_simple as ipq_request,
+)
+
+# ml_co_gen
+from service.data.ml_co_gen.get_info_for_co_generation import (
+    request_simple as gifcg_request,
+)
+
+# pdf_co_gen
+from service.data.pdf_co_gen.insert_offers import (
+    request_simple as io_request
+)
+
+# customer_creator
 from service.data.customer_creator.insert_customer import (
-    request_simple as ic_request_1,
+    request_simple as ic_request
 )
+
 
 ################################################################################
 
-
-def custom_init_database():
+def init_database():
     print("Creating db engine", flush=True)
     engine = dbapi.DbEngine.get_engine()
 
@@ -37,19 +59,31 @@ def custom_init_database():
 
 
 def main():
-    custom_init_database()
+    init_database()
 
     broker = HostBroker()
     dispatcher = Dispatcher(broker)
 
-    dispatcher.dispatch_function(fnq_request_1)
-    # dispatcher.dispatch_function(inq_csv_request_1)
-    # dispatcher.dispatch_function(gcl_request_1)
-    # dispatcher.dispatch_function(ipq_request_1)
-    # dispatcher.dispatch_function(io_request_1)
-    # dispatcher.dispatch_function(gifcog_request_1)
-    # dispatcher.dispatch_function(ic_request_1)
-    # dispatcher.dispatch_function(io_request_1)
+    disp_requests = {
+        # data_preproc
+        "filter_new_queries": fnq_request,
+        "insert_new_queries_csv": inq_csv_request,
+        "get_customers_lists": gcl_request,
+        "insert_preprocessed_queries": ipq_request,
+
+        # ml_co_gen
+        "get_info_for_co_generation": gifcg_request,
+
+        # pdf_co_gen
+        "insert_offers": io_request,
+
+        # customer_creator
+        "insert_customer": ic_request,
+    }
+
+    name = "insert_preprocessed_queries"  # CHANGE ME
+
+    dispatcher.dispatch_function(disp_requests[name])
 
 
 if __name__ == "__main__":

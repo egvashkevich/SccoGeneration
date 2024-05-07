@@ -45,6 +45,7 @@ class InsertPreprocessedQueries(RequestCallback):
 
             check_lens(data_dict, row, srv_req_data)
 
+            insert_new_client(data_dict["client_id"])
             data_dict["csv_id"] = csv_id
             group_id = insert_message_group(data_dict)
             group_ids.append(group_id)
@@ -54,7 +55,6 @@ class InsertPreprocessedQueries(RequestCallback):
             "array_data": group_ids,
         }
         return answer
-
 
 ################################################################################
 
@@ -129,6 +129,19 @@ def check_lens(data_dict, row, srv_req_data) -> None:
         runtime_error_wrapper(description, row, srv_req_data)
 
 
+def insert_new_client(client_id):
+    # Insert new client.
+    if not ClientCRUD.contain(client_id):
+        print("Insert new client")
+        ClientCRUD.insert_one(
+            {
+                "client_id": client_id,
+                "attitude": "default"
+            }
+        )
+        print("Insert new client finished")
+
+
 def insert_message_group(data_dict) -> type_map.MessageGroupId:
     print("Start insert_message_group")
 
@@ -139,18 +152,6 @@ def insert_message_group(data_dict) -> type_map.MessageGroupId:
     for query_dict in insert_dicts:
         query_dict["csv_id"] = data_dict["csv_id"]
         query_dict["message_group_id"] = group_id
-
-    # Insert new client.
-    for query_dict in insert_dicts:
-        if not ClientCRUD.contain(query_dict["client_id"]):
-            print("Insert new client")
-            ClientCRUD.insert_one(
-                {
-                    "client_id": query_dict["client_id"],
-                    "attitude": "default"
-                }
-            )
-            print("Insert new client finished")
 
     # Insert queries.
     QueryCRUD.insert_all(insert_dicts)

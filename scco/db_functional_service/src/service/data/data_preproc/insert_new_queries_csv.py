@@ -6,13 +6,13 @@ request_simple = {
     },
     "reply_ctx": "something",  # not required
     "request_data": {
-        "csv_path": "path/to/inserted.csv",
+        "csv_path": "path/to/new_queries1.csv",
     }
 }
 
 ################################################################################
 
 answer_simple = {
-  "csv_path": "path/to/inserted.csv",
+  "csv_path": "path/to/new_queries1.csv",
   "reply_ctx": "something"
 }
