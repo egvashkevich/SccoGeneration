@@ -1,4 +1,5 @@
 import datetime
+import dateutil.parser as date_parser
 
 from sqlalchemy import tuple_
 
@@ -46,6 +47,8 @@ class FilterNewQueries(RequestCallback):
         for row in req_data:
             req_dict[get_sort_key(row, required_keys)] = row
 
+        print(f"req_dict = {req_dict}")
+
         # Make db query.
         print("Creating query")
         columns = [
@@ -68,8 +71,12 @@ class FilterNewQueries(RequestCallback):
 
         print("Process result_set")
         res_dict = dict(req_dict)
+        print(f"1) res_dict = {res_dict}")
         for row in result_set:
             print(f"row.customer_id = {row.customer_id}")
+            act_key = get_sort_key_row(row, required_keys)
+            print(f"act_key = {act_key}")
+            print(f"res_dict.keys() = {res_dict.keys()}")
             del res_dict[get_sort_key_row(row, required_keys)]
 
         res = list(res_dict.values())
@@ -88,7 +95,12 @@ class FilterNewQueries(RequestCallback):
 def get_sort_key(row, required_keys):
     res_list = []
     for key in required_keys:
-        res_list.append(row[key])
+        value = row[key]
+        if key == "message_date":
+            # reformat string
+            value_datatime = date_parser.parse(value)
+            value = value_datatime.strftime(app_cfg.DATETIME_FORMAT)
+        res_list.append(value)
     return tuple(res_list)
 
 
@@ -96,9 +108,14 @@ def get_sort_key_row(row, required_keys):
     res_list = []
 
     for key in required_keys:
+        print(f"key = {key}")
         field = row.__getattribute__(key)
+
         if isinstance(field, datetime.datetime):
+            print(f"is instance of datetime.datetime")
             field = field.strftime(app_cfg.DATETIME_FORMAT)
+        print(f"try append {key}")
         res_list.append(field)
 
+    print(f"return tuple: {res_list}")
     return tuple(res_list)

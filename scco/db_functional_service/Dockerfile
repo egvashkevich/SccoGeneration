@@ -2,6 +2,7 @@ FROM python:3.10
 
 #ARG PROJECT_ROOT=project_root
 ENV SERVICE_DIR="/service_root"
+ENV PYTHONUNBUFFERED="1"
 ARG SERVICE_PACKAGE_NAME="db_functional_service"
 ARG MAIN_FILE="main.py"
 
