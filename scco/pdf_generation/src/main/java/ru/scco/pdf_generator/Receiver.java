@@ -29,8 +29,7 @@ public class Receiver {
             String cp;
             try {
                 log.info("start process");
-                cp = new String(Base64.getDecoder().decode(request.mainText()));
-                cp = processingChain.process(cp);
+                cp = processingChain.process(request.mainText());
             } catch (InvalidCPException invalidCPException) {
                 // TODO:
                 log.info("invalid cp" + invalidCPException.getMessage());
@@ -39,7 +38,7 @@ public class Receiver {
             }
             log.info("start generating");
             String fileLink = pdfGenerator.generate(request.messageId(),
-                                                    cp);
+                                                    cp, request.contactInfo());
             log.info("end generating");
             if (fileLink == null) {
                 sender.sendError(request.messageId(),

@@ -205,13 +205,13 @@ public class PDFGenerator {
             acroForm.flatten();
             Path filePath = Path.of(destinationPath, messageID + ".pdf");
             doc.save(filePath.toAbsolutePath().toString());
-            return filePath.toString();
+            return filePath.getFileName().toString();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public String generate(long messageId, String cp) {
-        return fillMultiPageTemplate(messageId, cp);
+    public String generate(long messageId, String cp, String contactInfo) {
+        return fillMultiPageTemplate(messageId, cp + "\n" + contactInfo);
     }
 }
