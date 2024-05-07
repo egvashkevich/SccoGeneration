@@ -6,6 +6,7 @@ import java.io.Serializable;
 
 public record PDFGeneratorRequestDTO(
         @JsonProperty("message_group_id") long messageId,
-        @JsonProperty("main_text") String mainText) implements
+        @JsonProperty("main_text") String mainText,
+        @JsonProperty("contact_info") String contactInfo) implements
                           Serializable {
 }
