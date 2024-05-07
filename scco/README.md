@@ -50,6 +50,13 @@
 
 3) Добавить файлы с ключами в микросервис `ml_generation`. Подробнее смотрите раздел "Файлы с секретами" в [README.md](ml_generation/ml_models/README.md) этого микросервиса.
 
+4) Создать volumes. Из проекта запустить скрипт `setup.sh`:
+   ```bash
+   ./setup.sh
+   ./setup.sh -e # to make external to project volumes (parser bot)
+   ./setup.sh -r # recreate volumes
+   ```
+   Volumes будут созданы в папке `volumes` в корне проекта.
 
 ### Запуск и остановка всех микросервисов
 
@@ -120,3 +127,34 @@ docker-compose ps -a
 # Note
 
 `POSTGRES_HOST` must be the same as the service name or network alias in `docker compose`!!!!!
+
+
+# Volumes
+
+Maybe install `local-persist` docker plugin: https://dbafromthecold.com/2018/05/02/changing-the-location-of-docker-named-volumes/
+
+From the `scco` root folder run.
+```bash
+# Parser bot csv
+docker volume create --driver local \
+      --name parser_bot_csv_volume \
+      --opt type=volume \
+      --opt device=$(pwd)/volumes/parser_bot_csv_folder \
+      --opt o=bind
+
+# Generated offers
+docker volume create --driver local \
+      --name parser_bot_csv_volume \
+      --opt type=volume \
+      --opt device=$(pwd)/volumes/parser_bot_csv_folder \
+      --opt o=bind
+```
+
+# Start services
+Send to `scco_debug_data_preprocessing_queue` message:
+```json
+{
+  "customer_id": "customer_it",
+  "parsed_csv": "Messages_Request_From_2024_04_29.csv"
+}
+```

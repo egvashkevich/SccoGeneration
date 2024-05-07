@@ -33,3 +33,4 @@ venv/
 # Others
 .env.secret*
 *.secret.env
+volumes/
