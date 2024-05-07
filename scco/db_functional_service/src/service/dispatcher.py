@@ -4,14 +4,13 @@ import json
 from util.app_errors import dict_get_or_panic
 from util.app_errors import runtime_error_wrapper
 
-from service.reply import Reply
+from util.reply import Reply
+from util.reply import add_reply_ctx
 
-from service.broker.broker import Broker
-from service.broker.broker import Consumer
+from broker.broker import Broker
+from broker.broker import Consumer
 
 import util.app_config as app_cfg
-
-from util.reply_ctx import add_reply_ctx
 
 ################################################################################
 

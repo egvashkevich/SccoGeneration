@@ -164,6 +164,7 @@ def get_from_customer_table(data_dict, req_data, srv_req_data) -> dict:
     result_one = CustomerCRUD.select_one(
         [
             Customer.company_name,
+            Customer.contact_info,
             Customer.tags,
             Customer.white_list,
             Customer.specific_features,
@@ -181,6 +182,7 @@ def get_from_customer_table(data_dict, req_data, srv_req_data) -> dict:
 
     answer = {
         "company_name": result_one.company_name,
+        "contact_info": result_one.contact_info,
         "tags": result_one.tags,
         "white_list": result_one.white_list,
         "specific_features": result_one.specific_features,

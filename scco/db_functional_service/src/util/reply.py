@@ -1,4 +1,4 @@
-from service.broker.broker import Publisher
+from broker.broker import Publisher
 from util.app_errors import dict_get_or_panic
 
 
