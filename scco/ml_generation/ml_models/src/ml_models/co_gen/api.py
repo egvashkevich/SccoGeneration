@@ -25,7 +25,7 @@ def make_system_prompt(request, path_to_conf):
     config = configparser.ConfigParser()
     config.read(path_to_conf)
 
-    basic = config['PROMPTS']['basic_system']
+    basic = config['PROMPTS']['second_system']
 
     basic = basic.replace(
         pos_to_insert_in_system['company_name'], request['company_name'])
@@ -47,6 +47,8 @@ class SCCOGenerator(GenerateGateWrapper):
     @override
     def generate(self, request) -> dict:
         self._set_system_params(request, make_system_prompt)
+        request['messages'][0] = "Сообщение от потенциального клиента: " + \
+            request['messages'][0]
         messages = self.system_prompts + \
             UserMessageWrapper.handle_messages(request['messages'])
         # TODO: for every message channel is separate (channel_ids)
