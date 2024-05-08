@@ -11,7 +11,7 @@ request = {
     "contact_info": "<@telegram_link>",
     "company_name": "Web сфера",
     'channel_ids': "Outstaffing",
-    'messages': ['всем привет. мы - команда smartbrainio и сейчас мы в поиске java senior developer мы в поиске кандидата на длительный проект который готов присоединиться в нашу команду требования java8java11 опыт не менее 7 лет уровень английского языка от в1. spring spring-boot spring-data spring-security spring-web spring-aop. опыт проектирования и реализации микросервисов. junit. jsjsp. опыт работы с реляционными бд sqlserver postgres mysql. большим плюсом будет опыт работы с dockerkubernetes aws. желателен опыт работа с gitjenkins elk vaadin. плюсом будет опыт работы с hibernate axis struts vaadin jooq hk2. опыт проектирования production систем с нуля. гибкое мышление disagree and commit principle задачи проектирование и реализация отказоустойчивых масштабируемых и высоконагруженных приложений. проектирование и разработка интерфейсов микро сервисов сервисов soaprest библиотек. проектирование процессов по бесшовной миграции текущих приложений на новые анализ и рефакторинг текущих приложений как часть этого процесса. разработка unit тестов. написание sql запросовхранимых процедурфункций проектирование схем бд оптимизация запросов. использование и развитие инструментов командной работы git ci. сопровождение текущего функционала библиотеки soaprest сервисы вэб-приложения в основном с целью изучения существующего функционала. проведение code review. наставничество telegram @lera_smartbrainio'],
+    'messages': ["вакансия #работа #job #ios #swift вакансия ios-разработчик. компания лайв тайпинг. город удалённо. формат работы удаленно. уровень зп от 200 000 до 300 000 в месяц. опыт в разработке ios от 3-х лет. тип занятости full-time вариант оформления самозанятость или ип. гражданство и локация кандидата рф привет мы компания лайв тайпинг уже более 13 лет создаём мобильные приложения и веб-сервисы мы сотрудничали с такими известными брендами как sephora иль дэ ботэ pepsico samsung mastercard httplivetypingcomruмы ищем ios-разработчика который хочет работать с нами в формате аутстафф стек на котором мы работаем. viper-c. rxswift. rswift. moya. resolverdi. swiftlint swiftformat. snapkit. codable. fakery для моков ты нам подходишь если имеешь опыт разработки приложений не менее 3-х лет уверенно владеешь rxswift пишешь качественный и чистый код преимущества работы с нами гибкий график и работа на удалёнке мы берем на себя все заботы по поиску проекта общения с заказчиком и оплате помогаем договориться с клиентом о графике дейликов и работы удобном для тебя возможность совмещать с другими проектами возможность взять следующий проект если нам понравится сотрудничать друг с другом буду рада обсудить детали. кристина. тг @christinait"],
     "black_list": [
         "php",
         "wordpress",
@@ -101,16 +101,13 @@ request = {
 
 
 main_response = co_gen.generate(request)
-
 print(main_response["main_text"])
 
-#import json
-#for num in range(3, 15+1):
-#    with open('clients_messages/'+f'clients_messages_{num}.txt', 'r', encoding='utf-8') as f:
-#        d = json.load(f)
-#        request['messages'] = d['messages']
-#    print(request['messages'])
-#    main_response = co_gen.generate(request)
-#    with open(f'answers/ans{num}.txt', 'w') as f:
-#        f.write(main_response['main_text'])
-
+import json
+for num in range(3, 15+1):
+    with open('clients_messages/'+f'clients_messages_{num}.txt', 'r', encoding='utf-8') as f:
+       d = json.load(f)
+       request['messages'] = d['messages']
+    main_response = co_gen.generate(request)
+    with open(f'answers/ans{num}.txt', 'w') as f:
+        f.write(main_response['main_text'])
