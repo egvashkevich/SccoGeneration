@@ -1,3 +1,5 @@
+import os
+
 import util.parse_env as pe
 
 ################################################################################
@@ -5,45 +7,52 @@ import util.parse_env as pe
 
 RMQ_NET_ALIAS = pe.get_or_default(
     "RMQ_NET_ALIAS",
-    "not_presented"
+    "env variable not found"
 )
 
 DB_FUNCTIONAL_SERVICE_EXCHANGE = pe.get_or_default(
     "DB_FUNCTIONAL_SERVICE_EXCHANGE",
-    "not_presented",
+    "env variable not found",
 )
 DB_FUNCTIONAL_SERVICE_QUEUE = pe.get_or_default(
     "DB_FUNCTIONAL_SERVICE_QUEUE",
-    "not_presented"
+    "env variable not found"
 )
 DB_FUNCTIONAL_SERVICE_ROUTING_KEY = pe.get_or_default(
     "DB_FUNCTIONAL_SERVICE_ROUTING_KEY",
-    "not_presented"
+    "env variable not found"
 )
 
 POSTGRES_FS_ALIAS = pe.get_or_default(
     "POSTGRES_FS_ALIAS",
-    "not_presented"
+    "env variable not found"
 )
+
+GENERATED_OFFERS_VOLUME_PATH = pe.get_or_default(
+    "GENERATED_OFFERS_VOLUME_PATH",
+    f"{os.getcwd()}/tmp"
+)
+if os.path.basename(GENERATED_OFFERS_VOLUME_PATH) == "tmp":
+    os.makedirs(GENERATED_OFFERS_VOLUME_PATH, exist_ok=True)
 
 ################################################################################
 # Local setup.
 
 POSTGRES_USER = pe.get_or_default(
     "POSTGRES_USER",
-    "not_presented"
+    "env variable not found"
 )
 POSTGRES_PASSWORD = pe.get_or_default(
     "POSTGRES_PASSWORD",
-    "not_presented"
+    "env variable not found"
 )
 POSTGRES_PORT = pe.get_or_default(
     "POSTGRES_PORT",
-    "not_presented"
+    "env variable not found"
 )
 POSTGRES_DB = pe.get_or_default(
     "POSTGRES_DB",
-    "not_presented"
+    "env variable not found"
 )
 
 _IS_ON_HOST_BOOL = pe.contains("IS_ON_HOST")

@@ -104,6 +104,7 @@ set +o allexport
 # Run.
 
 if [ -z "${NOT_RUN}" ]; then
+  export PYTHONUNBUFFERED="1"
   echo -e "Run package main.\n-----------------------------------------------"
   python3 -u "${PATH_TO_MAIN_FILE}"
 fi

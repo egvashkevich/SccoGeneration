@@ -7,6 +7,15 @@ from testing.init_db import parse_customer
 from testing.init_db import insert_misc
 
 SERVICE_PKG_DIR = os.path.dirname(__file__)
+FIRST_STARTUP_LOCK_FILE_NAME = "first-startup.lock"
+
+
+def check_first_startup() -> bool:
+    lock_file = f"{SERVICE_PKG_DIR}/{FIRST_STARTUP_LOCK_FILE_NAME}"
+    if os.path.exists(lock_file):
+        return False
+    open(lock_file, "w")  # creating lock file
+    return True
 
 
 def db_insert_on_first_startup() -> None:

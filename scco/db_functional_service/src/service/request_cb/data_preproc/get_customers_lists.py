@@ -1,7 +1,9 @@
-from util.app_errors import dict_get_or_panic
+from util.app_errors import get_correctly_typed_dicts
+from util.app_errors import check_not_empty_array
 
 from crud.models import Customer
 from crud.objects.customer import CustomerCRUD
+import crud.type_map as type_map
 
 from service.request_cb.request_cb import RequestCallback
 
@@ -17,16 +19,23 @@ class GetCustomersLists(RequestCallback):
     ) -> any:
         print("Enter GetCustomersLists callback")
 
-        # Check keys.
-        required_keys = [
-            "customer_id",
-        ]
+        # Validate req_data to be array
+        if not check_not_empty_array(req_data, srv_req_data):
+            print("Exit without sending answer")
+            return
+
+        # Validate keys.
+        required_keys_type_map = {
+            "customer_id": type_map.CustomerId,
+        }
+        req_dict = get_correctly_typed_dicts(
+            required_keys_type_map=required_keys_type_map,
+            data=req_data,
+        )
 
         customer_ids = []
-
-        for row in req_data:
-            for key in required_keys:
-                customer_ids.append(dict_get_or_panic(row, key, srv_req_data))
+        for elem in req_dict:
+            customer_ids.append(elem["customer_id"])
 
         # Make db query.
         print("Start query")
