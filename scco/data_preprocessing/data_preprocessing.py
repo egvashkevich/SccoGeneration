@@ -82,7 +82,8 @@ class Preprocessor:
 
         print(f" [x] Sending {len(data)} messages")
         for index, row in data.iterrows():
-            json_str = json.dumps({col: str(row[col]) for col in data.columns})
+            json_str = json.dumps({col: str(row[col]) for col in data.columns}, ensure_ascii=False)
+            print(" [x] Sending message", json_str)
             self.send_message(ch, json_str)
         print(" [x] Done", flush=True)
 

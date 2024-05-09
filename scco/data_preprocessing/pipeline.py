@@ -152,7 +152,7 @@ class FilterAlreadySeen(Operation):
         response = self.rpc_client.call(request_data)  # json-like object -> json-like object
 
         if len(response) > 0:
-            result = pd.read_json(StringIO(json.dumps(response)), orient='records')
+            result = pd.read_json(StringIO(json.dumps(response, ensure_ascii=False)), orient='records')
         else:
             result = pd.DataFrame(columns=['customer_id', 'client_id', 'channel_id', 'message_date'])
 
