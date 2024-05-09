@@ -170,8 +170,8 @@ class SaveNewQueries:
             csv_name = self.in_csv_name[:-4]  # remove ".csv"
         else:
             csv_name = self.in_csv_name
-        now = datetime.datetime.now().isoformat(sep='_', timespec='seconds')
-        return csv_name + '_only_new_' + now
+        now = datetime.datetime.now().isoformat(sep='_', timespec='seconds').replace('-', '_')
+        return csv_name + '_Only_New_' + now
 
     def try_save_file(self, data, filename):
         try:

@@ -15,7 +15,11 @@ class Preprocessor:
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=config.RABBIT_ADDRESS))
         self.channel = self.connection.channel()
 
-        rpc_connection = pika.BlockingConnection(pika.ConnectionParameters(config.RABBIT_ADDRESS))
+        # TODO: heartbeat=0 is bad (https://www.rabbitmq.com/docs/heartbeats#disabling)
+        # this is a temporary solution to ensure rabbit doesn't close connection
+        rpc_connection = pika.BlockingConnection(
+            pika.ConnectionParameters(config.RABBIT_ADDRESS, heartbeat=0)
+        )
         rpc_channel = rpc_connection.channel()
 
         self.channel.exchange_declare(exchange=config.IN_EXCHANGE, exchange_type='topic', durable=True)
