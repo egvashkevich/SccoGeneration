@@ -50,7 +50,8 @@ class Preprocessor:
         try:
             json_in = json.loads(body.decode())
 
-            data = pd.read_csv(os.path.join(config.PARSER_BOT_CSV_FOLDER, json_in['parsed_csv']))
+            csv_name = json_in['parsed_csv']
+            data = pd.read_csv(os.path.join(config.PARSER_BOT_CSV_FOLDER, csv_name))
             data.columns = ['channel_id', 'client_id', 'message', 'message_date']
             customer_id = json_in['customer_id']
         except Exception as e:
@@ -62,6 +63,7 @@ class Preprocessor:
 
         pipeline = PreprocessingPipeline(
             customer_id,
+            csv_name,
             self.new_queries_csv_info,
             self.filter_rpc_client,
             self.save_csv_rpc_client,
