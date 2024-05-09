@@ -148,8 +148,14 @@ class FilterAlreadySeen(Operation):
                 item[col] = row[col]
             item['customer_id'] = self.customer_id
             request_data.append(item)
+
         response = self.rpc_client.call(request_data)  # json-like object -> json-like object
-        result = pd.read_json(StringIO(json.dumps(response)), orient='records')
+
+        if len(response) > 0:
+            result = pd.read_json(StringIO(json.dumps(response)), orient='records')
+        else:
+            result = pd.DataFrame(columns=['customer_id', 'client_id', 'channel_id', 'message_date'])
+
         return data.merge(result, how='right', on=self.by)
 
 
