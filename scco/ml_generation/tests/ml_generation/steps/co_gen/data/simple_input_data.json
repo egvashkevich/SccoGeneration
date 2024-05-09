@@ -5,35 +5,41 @@
     "phystech.career"
   ],
   "messages": [
-    "Good morning.\nMy name is client_1.\nI need Python developers."
+    "#ищу\nНужен разработчик на python для вёрстки сайта авто компании.\nПредложения пишите в телеграм: @client_1_tg"
   ],
-  "attitude": "arrogant",
-  "company_name": "Company of customer 1",
-  "black_list": [
-    "fuck",
-    "shit",
-    "nigger"
-  ],
+  "attitude": "Вы",
+  "company_name": "Web Сфера",
+  "contact_info": "<@telegram_link>",
   "tags": [
-    "python",
-    "b2b"
+    "frontend",
+    "вёрстка"
   ],
   "white_list": [
-    "python_synonym",
-    "b2b_synonym"
+    "frontend",
+    "вёрстка",
+    "javascript",
+    "веб-сайт"
   ],
   "specific_features": [
-    "feature_1",
-    "feature_2"
+    "25-летний опыт.",
+    "Cотни довольных клиентов."
   ],
   "customer_services": [
     {
-      "service_name": "customer 1, service 1",
-      "service_desc": "description 1"
+      "service_name": "Создание MVP",
+      "service_desc": "Запуск нового продукта."
     },
     {
-      "service_name": "customer 1, service 2",
-      "service_desc": "description 2"
+      "service_name": "Модернизация UI",
+      "service_desc": "Преобразуем устаревший UI."
+    },
+    {
+      "service_name": "Электрика",
+      "service_desc": "Монтаж кабель-канала."
+    },
+    {
+      "service_name": "Сантехника",
+      "service_desc": "Установка смесителей."
     }
   ],
   "reply_ctx": 1

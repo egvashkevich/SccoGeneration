@@ -12,3 +12,6 @@
 docker build -t scco_test_ml_generation .
 docker run --name scco_test_ml_generation scco_test_ml_generation pytest
 ```
+
+## Файлы с секретами
+Смотри ридми в папке `ml_modules`.

@@ -44,11 +44,44 @@ include-package-data = true
 #zip_safe = false
 
 #[tool.setuptools_scm]
-#version_file = "crud/_version.py"
+#version_file = "crud/__version__.py"
 
 ################################################################################
 
 [project.scripts]
-run_db_functional_service = "db_functional_service.main:main"
+run_db_functional_service = "db_service.main:main"
 
 ################################################################################
+
+# Pytest configuration:
+# 1) https://docs.pytest.org/en/7.1.x/reference/reference.html#configuration-options
+# 2) https://habr.com/ru/articles/448796/
+
+[tool.pytest.ini_options]
+minversion = "8.2.0"
+addopts = "-rsxX -l --tb=short --strict"
+#addopts = "-rsxX -l --tb=short --strict -s" # enforce output
+testpaths = [
+    "tests",
+]
+norecursedirs = [
+    ".*",
+    ".venv*",
+    "src",
+    "*.egg",
+    "dist",
+    "build",
+]
+python_classes = [
+    "*Test",
+    "Test*",
+    "*Suite",
+]
+python_files = [
+    "test_*",
+    "*_test",
+]
+python_functions = [
+    "test_*",
+    "*_test",
+]

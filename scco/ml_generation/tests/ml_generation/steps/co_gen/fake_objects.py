@@ -3,15 +3,17 @@ import json
 
 import util.app_config as app_cfg
 
-from ml_generation.broker.broker import Broker
-from ml_generation.broker.broker import Publisher
-from ml_generation.broker.broker import Consumer
+from broker.broker import Broker
+from broker.broker import Publisher
+from broker.broker import Consumer
 
 from ml_generation.steps.co_gen import CoGen
 
+from ml_generation.ml_model import MlModel
 
-class CoGenTestMlModel:
-    def generate_offer_text(self, data):
+
+class CoGenTestMlModel(MlModel):
+    def generate(self, data):
         gen_data = {
             "main_text": "some_useful_text"
         }

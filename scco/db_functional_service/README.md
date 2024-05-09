@@ -1,80 +1,53 @@
-- [ ] установка постгреса: https://help.ubuntu.com/community/PostgreSQL
-- [ ] сериализация объектов
+# db_functional_service
 
+## Description
 
+* `PostrgeSQL` is used as a database.
+* `sqlalchemy` orm is used for interaction with database.
+* Database schema:
+* [Entity Relationship Diagram](https://miro.com/app/board/uXjVKZsS6Io=/)
+![models_schema](./docs/models_schema.jpg)
 
-
-# Разработка
-
-Используем постгру и `peewee` в качестве ORM.
-
-- Типы, поддерживаемые peewee: http://docs.peewee-orm.com/en/latest/peewee/models.html#field-types-table
-
-# API
-
-Формат взаимодействия с БД
-
-# БД
-
-* Метадата + доки методов: https://docs.sqlalchemy.org/en/20/core/metadata.html#metadata-describing
-
-* Working with metadata: https://docs.sqlalchemy.org/en/20/tutorial/metadata.html#tutorial-working-with-metadata
-
-* Unified tutorial: https://docs.sqlalchemy.org/en/20/tutorial/index.html
-
-* Threading with rabbitmq: https://stackoverflow.com/questions/60308045/calling-more-than-one-functions-as-rabbitmq-message
-
-* aio_pika: https://aio-pika.readthedocs.io/en/latest/rabbitmq-tutorial/6-rpc.html
-
-- [ ] Как будут удаляться данные из БД?
-
-sqlalchemy.types.JSON - для хранения json: https://stackoverflow.com/questions/75379948/what-is-correct-mapped-annotation-for-json-in-sqlalchemy-2-x-version
-
-- [ ] [Entity Relationship Diagram](https://miro.com/app/board/uXjVKZsS6Io=/)
-
-Postgres url:
-```text
-postgresql://[user[:password]@][netloc][:port][/dbname][?param1=value1&...]
-```
-
-### Pgadmin
-
-* Нажать `Server` -> `Create`.
-* Ввести произвольное название сервера.
-* В поле `host` ввести название **контейнера**: `scco_crud_test_postgres_container` (если запуск из tests).
-* Остальные поля заполнять из файла `.env.secret.postgres`
-
-Link to python multiline string: https://stackoverflow.com/a/48112903/16704057
-
-### Several postgresql databases
-
-Multiple databases vs multiple schemas: https://stackoverflow.com/questions/28951786/postgresql-multiple-database-vs-multiple-schemas
-
-### Installation and run
+## Installation and run
 ```bash
 ./run.sh --file main_test.py
 ```
 
-### Development
+## CI
+From `db_functional_service` folder run:
+```bash
+docker build -t scco_test_db_functional_service .
+docker run --name scco_test_db_functional_service scco_test_db_functional_service pytest
+```
 
-To run postgresql + pgadmin locally (from tests dir).
+## Pgadmin
+
+* Go to `localhost:5050`
+* Choose `Servers` -> `Register` -> `Server`.
+* Enter a custom server name.
+* Set `host` to **container name**:
+  * `scco_crud_test_postgres_container`, in case run locally from `tests`
+  * `scco_debug_postgres_fs_container`, in case all services are run.
+* Other fields must satisfy `.env.secret.postgres` (its setup is in common service's README.md)
+
+Some queries are located in [docs/sql_queries.md](docs/sql_queries.md).
+
+## Development
+
+Run `postgresql` + `pgadmin` locally (from `tests` folder).
 ```bash
 docker-compose up --build -d
 docker-compose down --remove-orphans --volumes
-
 ```
 
-
-To run service (from service root).
+Run service locally (from `db_functional_service` folder).
 ```bash
-./run.sh --reinstall --editable --file main_test.py
-./run.sh -r -e -f main_test.py # short version
+./run.sh --reinstall --editable --host --file tests/main_test.py
+./run.sh -r -e -h -f tests/main_test.py # short version
+./run.sh -h -f tests/main_test.py # without reinstall
 ```
 
-Написать про виртуальное окружение в установке.
-
-# Debug
-
+Debug
 ```bash
 # Build image.
 docker build -t scco_debug_db_functional_service .
@@ -86,3 +59,13 @@ docker run -it --name scco_debug_db_functional_service --entrypoint="/bin/bash" 
 docker rm scco_debug_db_functional_service
 docker rmi scco_debug_db_functional_service
 ```
+
+## Handy
+
+* Postgres url:
+  ```text
+  postgresql://[user[:password]@][netloc][:port][/dbname][?param1=value1&...]
+  ```
+* Multiple databases vs multiple schemas: https://stackoverflow.com/questions/28951786/postgresql-multiple-database-vs-multiple-schemas
+* Mocking: https://pytest-with-eric.com/mocking/pytest-mocking/
+* `sqlalchemy.engine.row.Row` emulates `namedtuple` API: https://stackoverflow.com/questions/68967890/how-to-manually-create-a-sqlalchemy-query-object

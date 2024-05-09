@@ -14,13 +14,11 @@ services:
     env_file:
       - .env
     volumes:
-      - "${OUTSIDE_CSV_VOLUME}:${OUTSIDE_CSV_VOLUME_DOCKER_FOLDER}" # csv file
+      - "parser_bot_csv_volume:${PARSER_BOT_CSV_VOLUME_PATH}"
+      - "unprocessed_parser_bot_csv_volume:${UNPROCESSED_PARSER_BOT_CSV_VOLUME_PATH}"
     restart: "no"
 #    restart: on-failure
     networks:
-#      int_network:
-#        aliases:
-#          - "${DATA_PREPROCESSING_NET_ALIAS}"
       rmq_network:
 
   ml_generation:
@@ -33,12 +31,11 @@ services:
     container_name: "${COMPOSE_PROJECT_NAME}_${ML_GENERATION_FOLDER}"
     env_file:
       - .env
+#    volumes:
+#      - /home/ownstreamer/Proga/MIPT/InnovationWorkshop/CorpApp/workspace/scco/scco/clients_messages:/clients_messages/
     restart: "no"
 #    restart: on-failure
     networks:
-#      int_network:
-#        aliases:
-#          - "${ML_GENERATION_NET_ALIAS}"
       rmq_network:
 
   pdf_generation:
@@ -53,15 +50,14 @@ services:
       - .env
     restart: "no"
 #    restart: on-failure
+    volumes:
+      - "generated_offers:${GENERATED_OFFERS_VOLUME_PATH}"
     networks:
-#      int_network:
-#        aliases:
-#          - "${PDF_GENERATION_NET_ALIAS}"
       rmq_network:
 
   customer_creator:
     profiles:
-      - prod
+      - none
     build:
       context: "${CUSTOMER_CREATOR_FOLDER}"
       dockerfile: Dockerfile
@@ -72,9 +68,6 @@ services:
     restart: "no"
 #    restart: on-failure
     networks:
-#      int_network:
-#        aliases:
-#          - "${PDF_GENERATION_NET_ALIAS}"
       rmq_network:
 
   db_functional_service:
@@ -82,7 +75,7 @@ services:
       - crud
       - prod
     depends_on:
-      postgres_functional_service:
+      postgres_fs:
         condition: service_healthy
     build:
       context: "${DB_FUNCTIONAL_SERVICE_FOLDER}"
@@ -94,13 +87,10 @@ services:
     restart: "no"
 #    restart: on-failure
     networks:
-#      int_network:
-#        aliases:
-#          - "${DB_FUNCTIONAL_SERVICE_NET_ALIAS}"
       rmq_network:
       postgres_fs_network:
 
-  postgres_functional_service:
+  postgres_fs:
     profiles:
       - crud
       - prod
@@ -125,18 +115,54 @@ services:
       timeout: 5s
       retries: 5
 
+  pgadmin_fs:
+    profiles:
+      - crud
+    container_name: "${COMPOSE_PROJECT_NAME}_pgadmin_fs_container"
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin_fs_volume:/var/lib/pgadmin
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    networks:
+      - postgres_fs_network
+    restart: unless-stopped
+
 
 networks:
+  # db_functional_service
+  postgres_fs_network:
+    name: "${POSTGRES_FS_NETWORK_NAME}"
+
+  # External
   rmq_network:
     name: "${RMQ_NET}"
     external: true
-#  int_network:
-#    name: "${INT_NET}"
-  postgres_fs_network:
-    name: "${POSTGRES_FS_NETWORK_NAME}"
 
 
 #  To reuse volumes across multiple services
 volumes:
+  # db_functional_service
   postgres_fs_volume:
     name: "${POSTGRES_FS_VOLUME_NAME}"
+  pgadmin_fs_volume:
+    name: "${PGADMIN_FS_VOLUME_NAME}"
+
+  # data_preprocessing
+  unprocessed_parser_bot_csv_volume:
+    name: "${UNPROCESSED_PARSER_BOT_CSV_VOLUME_NAME}"
+    external: true
+
+  # pdf_generation
+  generated_offers:
+    name: "${GENERATED_OFFERS_VOLUME_NAME}"
+    external: true
+
+  # parser bot
+  parser_bot_csv_volume:
+    name: "${PARSER_BOT_CSV_VOLUME_NAME}"
+    external: true

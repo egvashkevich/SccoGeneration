@@ -46,7 +46,17 @@
    ```
    Для локального тестирования можно поставить произвольные значения &mdash; всё должно работать.
 
-2) Поднять контейнер с кроликом из папки `outside` (смотри [работу с микросервисами](#работа-с-микросервисами)). **Нужен только RannitMQ, остадльные сервисы поднимать не нужно**.
+2) Поднять контейнер с кроликом из папки `tests/outside` (смотри [работу с микросервисами](#работа-с-микросервисами)). **Нужен только RabbitMQ, остальные сервисы поднимать не нужно**.
+
+3) Добавить файлы с ключами в микросервис `ml_generation`. Подробнее смотрите раздел "Файлы с секретами" в [README.md](ml_generation/ml_models/README.md) этого микросервиса.
+
+4) Создать volumes. Из проекта запустить скрипт `setup.sh`:
+   ```bash
+   ./setup.sh
+   ./setup.sh -e # to make external to project volumes (parser bot)
+   ./setup.sh -r # recreate volumes
+   ```
+   Volumes будут созданы в папке `volumes` в корне проекта.
 
 ### Запуск и остановка всех микросервисов
 
@@ -61,19 +71,12 @@ docker-compose down --remove-orphans --volumes # удаляет volume для po
 docker-compose down --remove-orphans --volumes --rmi all # удаляет все образы
 ```
 
-После нескольких запусков у вас может образоваться много "висячих" образов, которые будут занимать память. Для **удаления висячих образов** воспользуйтесь командой:
-```bash
-docker images -f dangling=true # посмотреть список висячих образов
-docker rmi $(docker images -f dangling=true -q)
-docker image prune # более короткий вариант
-```
-
-Для **удаления контейнеров**:
-```bash
-# Удаление всех остановленных контейнеров.
-docker container prune
-# Удаление всех <none> контейнеров.
-docker ps -a | grep '<none>' | awk '{ print $1; }' | xargs docker rm
+Send to `scco_debug_data_preprocessing_queue` message:
+```json
+{
+  "customer_id": "customer_it",
+  "parsed_csv": "Messages_Request_From_2024_04_29.csv"
+}
 ```
 
 ### Запуск и остановка конкретных сервисов
@@ -101,19 +104,39 @@ docker ps -a | grep '<none>' | awk '{ print $1; }' | xargs docker rm
    docker-compose down --rmi all --remove-orphans --volumes # удаляет все контейнеры и образы (даже скачанные)
    ```
 
+# Queries to database
+Для произвольных запросов нужно запустить сервис `pgadmin_fs`.
+```bash
+docker-compose up --build -d pgadmin_fs
+```
+Далее нужно следовать инструкциям из [README.md](./db_functional_service/README.md) сервиса `db_functional_service`.
+
+
+# Handy
+
+`POSTGRES_HOST` must be the same as the service name or network alias in `docker compose`.
+
+После нескольких запусков у вас может образоваться много "висячих" образов, которые будут занимать память. Для **удаления висячих образов** воспользуйтесь командой:
+```bash
+docker images -f dangling=true # посмотреть список висячих образов
+docker rmi $(docker images -f dangling=true -q)
+docker image prune # более короткий вариант
+```
+
+**Удаление контейнеров**:
+```bash
+# Удаление всех остановленных контейнеров.
+docker container prune
+# Удаление всех <none> контейнеров.
+docker ps -a | grep '<none>' | awk '{ print $1; }' | xargs docker rm
+```
+
 Посмотреть текущее состояние сервисов:
 ```bash
 docker-compose ps -a
 ```
 
-
-### Удаление контейнеров и образов, связанных с `scco`, вручную
-
-В папке `outside` выполнить команду
+Для удаления контейнеров и образов, связанных с `scco`, нужно в папке `outside` выполнить команду
 ```bash
 ./clear_docker.sh
 ```
-
-# Note
-
-`POSTGRES_HOST` must be the same as the service name or network alias in `docker compose`!!!!!

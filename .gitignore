@@ -31,6 +31,6 @@ venv/
 *.log
 
 # Others
-outside/
 .env.secret*
 *.secret.env
+volumes/

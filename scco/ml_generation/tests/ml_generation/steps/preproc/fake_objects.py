@@ -3,9 +3,9 @@ import json
 
 import util.app_config as app_cfg
 
-from ml_generation.broker.broker import Broker
-from ml_generation.broker.broker import Publisher
-from ml_generation.broker.broker import Consumer
+from broker.broker import Broker
+from broker.broker import Publisher
+from broker.broker import Consumer
 
 from ml_generation.steps.preproc import Preproc
 
@@ -30,7 +30,7 @@ class PreprocTestBroker(Broker):
     def add_publisher(self, publisher: Publisher):
         self.pubs[publisher.name] = publisher
 
-        assert publisher.name == Preproc.db_service
+        assert publisher.name == Preproc.db_functional_service_pub
         assert publisher.exchange == app_cfg.DB_FUNCTIONAL_SERVICE_EXCHANGE
         assert publisher.queue == app_cfg.DB_FUNCTIONAL_SERVICE_QUEUE
         assert publisher.routing_key == \
