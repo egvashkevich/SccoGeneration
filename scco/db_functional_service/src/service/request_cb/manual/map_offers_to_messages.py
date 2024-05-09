@@ -1,6 +1,7 @@
 import inspect
 import os
 import json
+import enum
 
 import util.app_config as app_cfg
 from util.app_errors import dict_get_or_panic
@@ -17,9 +18,16 @@ from crud.type_map import MessageGroupId
 from crud.type_map import QueryId
 from crud.type_map import FilePath
 from crud.type_map import Text
+from crud.type_map import CustomerId
 
 from service.request_cb.request_cb import RequestCallback
 from service.request_cb.request_cb import print_result_set
+
+
+class FileStatus(enum.Enum):
+    OFFER_FILE_NOT_EXIST = 1
+    MESSAGES_FILE_EXIST = 2
+    MESSAGES_FILE_SAVED = 3
 
 
 class MapOffersToMessages(RequestCallback):
@@ -40,6 +48,7 @@ class MapOffersToMessages(RequestCallback):
         ]
 
         file_exist_mg_ids = []
+        offer_file_not_exist_mg_ids = []
 
         # Validate keys.
         data_dict = {}
@@ -72,14 +81,25 @@ class MapOffersToMessages(RequestCallback):
 
         print("Start cycle")
         for mg_id, q_id in zip(mg_ids, q_ids):
-            messages = select_messages(mg_id, req_data, srv_req_data)
+            messages, customers = select_messages(mg_id, req_data, srv_req_data)
             print("Extract offer path")
             offer_path = offer_paths[q_id]
-            file_exist = save_mapping_file(messages, offer_path, mg_id)
-            if file_exist:
+            file_status = save_mapping_file(
+                messages,
+                customers,
+                offer_path,
+                mg_id,
+            )
+            if file_status == FileStatus.MESSAGES_FILE_EXIST:
                 file_exist_mg_ids.append(mg_id)
+            elif file_status == FileStatus.OFFER_FILE_NOT_EXIST:
+                offer_file_not_exist_mg_ids.append(mg_id)
 
-        answer = prepare_answer(handled_mg_ids, file_exist_mg_ids)
+        answer = prepare_answer(
+            handled_mg_ids,
+            file_exist_mg_ids,
+            offer_file_not_exist_mg_ids,
+        )
         return answer
 
 
@@ -150,11 +170,12 @@ def select_messages(
         mg_id: MessageGroupId,
         req_data,
         srv_req_data,
-) -> list[Text]:
+) -> (list[Text], list[CustomerId]):
     print("Starting select_messages")
     print("Make query")
     result_set = QueryCRUD.select_all(
         columns=[
+            Query.customer_id,
             Query.message,
         ],
         wheres_cond=[
@@ -176,19 +197,22 @@ def select_messages(
         runtime_error_wrapper(description, req_data, srv_req_data)
 
     print("Collecting result_set")
-    res = []
+    msg_list = []
+    customer_list = []
     for row in result_set:
-        res.append(row.message)
+        msg_list.append(row.message)
+        customer_list.append(row.customer_id)
 
-    return res
+    return msg_list, customer_list
 
 
 def save_mapping_file(
         messages: list[Text],
+        customers: list[CustomerId],
         offer_path: FilePath,
         mg_id: MessageGroupId,
         overwrite: bool = False,
-) -> bool:
+) -> FileStatus:
     print("Starting save_mapping_file")
     dir_inside_volume = os.path.dirname(offer_path)
     dump_file_path = (f"{app_cfg.GENERATED_OFFERS_VOLUME_PATH}/"
@@ -203,7 +227,16 @@ def save_mapping_file(
         print("file exist")
         if not overwrite:
             print("overwriting file")
-            return True
+            return FileStatus.MESSAGES_FILE_EXIST
+
+    docker_offer_path = (f"{app_cfg.GENERATED_OFFERS_VOLUME_PATH}/"
+                         f"{offer_path}")
+    if not os.path.exists(docker_offer_path):
+        # file with generated offer was removed
+        # we will not generate json in that case
+        print("file of offer does not exist, messages won't be saved")
+        print(f"docker_offer_path: {docker_offer_path}")
+        return FileStatus.OFFER_FILE_NOT_EXIST
 
     dump_file_dir = os.path.dirname(dump_file_path)
     if not os.path.exists(dump_file_dir):
@@ -217,9 +250,10 @@ def save_mapping_file(
         print(description)
         os.makedirs(dump_file_dir, exist_ok=True)
 
-    print("dump to file")
+    print("dump to file and save it")
     dump_obj = {
         "offer_file": offer_path,
+        "customer_ids": customers,
         "messages": messages,
     }
 
@@ -227,16 +261,18 @@ def save_mapping_file(
         json.dump(dump_obj, f, ensure_ascii=False, indent=2)
     print("dump finished")
 
-    return False
+    return FileStatus.MESSAGES_FILE_SAVED
 
 
 def prepare_answer(
         handled_message_group_ids: list[MessageGroupId],
         file_exist_message_group_ids: list[MessageGroupId],
+        offer_file_not_exist_mg_ids: list[MessageGroupId],
 ) -> dict:
     print("Preparing answer")
     answer = {
         "handled_message_group_ids": handled_message_group_ids,
         "file_exist_message_group_ids": file_exist_message_group_ids,
+        "offer_file_not_exist_message_group_ids": offer_file_not_exist_mg_ids,
     }
     return answer

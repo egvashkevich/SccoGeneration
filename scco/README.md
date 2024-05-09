@@ -75,7 +75,13 @@ Send to `scco_debug_data_preprocessing_queue` message:
 ```json
 {
   "customer_id": "customer_it",
-  "parsed_csv": "Messages_Request_From_2024_04_29.csv"
+  "parsed_csv": "it/generated_outstuff_agency_100.csv"
+}
+```
+```json
+{
+  "customer_id": "customer_builder",
+  "parsed_csv": "build/vsem_podryad/vsem_podryad_50(1).csv"
 }
 ```
 

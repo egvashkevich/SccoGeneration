@@ -175,7 +175,9 @@ class SaveNewQueries:
 
     def try_save_file(self, data, filename):
         try:
-            data.to_csv(os.path.join(config.NEW_QUERIES_CSV_FOLDER, filename), mode='x')
+            file_path = os.path.join(config.NEW_QUERIES_CSV_FOLDER, filename)
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            data.to_csv(file_path, mode='x')
             return True
         except FileExistsError:
             return False
