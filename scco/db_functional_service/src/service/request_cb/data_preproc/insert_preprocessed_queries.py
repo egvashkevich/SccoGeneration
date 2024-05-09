@@ -3,6 +3,10 @@ import inspect
 from util.app_errors import dict_get_or_panic
 from util.app_errors import runtime_error_wrapper
 
+from util.app_errors import check_not_empty_array
+from util.app_errors import get_correctly_typed_dicts
+from util.app_errors import assert_cast
+
 import crud.message_group_id_generator as mgig
 from crud.models import NewQueriesCsv
 from crud.objects.query import QueryCRUD
@@ -23,31 +27,41 @@ class InsertPreprocessedQueries(RequestCallback):
             srv_req_data,
     ) -> any:
         arr = dict_get_or_panic(req_data, "array_data", srv_req_data)
+        csv_path = dict_get_or_panic(req_data, "csv_path", srv_req_data)
+
+        # Validate req_data to be array
+        if not check_not_empty_array(arr, srv_req_data, "array_data"):
+            print("Exit without sending answer")
+            return
 
         # Check keys of array_data.
-        required_keys = [
-            "customer_id",
-            "client_id",
-            "channel_ids",
-            "messages",
-            "message_dates",
-        ]
+        required_keys_type_map = {
+            "customer_id": type_map.CustomerId,
+            "client_id": type_map.ClientId,
+            "channel_ids": list[type_map.ChannelId],
+            "messages": list[type_map.Text],
+            "message_dates": list[str],
+        }
+        req_dicts = get_correctly_typed_dicts(
+            required_keys_type_map=required_keys_type_map,
+            data=arr,
+        )
 
-        csv_id = get_csv_id(req_data, srv_req_data)
+        csv_id = get_csv_id(csv_path, req_dicts, srv_req_data)
 
         group_ids = []
 
-        for row in arr:
-            # Validate keys.
-            data_dict = {}
-            for key in required_keys:
-                data_dict[key] = dict_get_or_panic(row, key, arr)
+        for row in req_dicts:
+            check_lens(row, srv_req_data)
 
-            check_lens(data_dict, row, srv_req_data)
-
-            insert_new_client(data_dict["client_id"])
-            data_dict["csv_id"] = csv_id
-            group_id = insert_message_group(data_dict)
+            client_id = assert_cast(
+                row["client_id"],
+                type_map.ClientId,
+                "field_name: client_id",
+            )
+            insert_new_client(client_id)
+            row["csv_id"] = csv_id
+            group_id = insert_message_group(row)
             group_ids.append(group_id)
 
         print("Preparing answer")
@@ -60,10 +74,9 @@ class InsertPreprocessedQueries(RequestCallback):
 
 # Helpers
 
-def get_csv_id(req_data, srv_req_data) -> type_map.CsvId:
+def get_csv_id(csv_path: str, req_dicts, srv_req_data) -> type_map.CsvId:
     print("Start get_csv_id")
 
-    csv_path = dict_get_or_panic(req_data, "csv_path", srv_req_data)
     csv_ind = NewQueriesCsvCRUD.select_one(
         [NewQueriesCsv.csv_id],
         [NewQueriesCsv.csv_path == csv_path]
@@ -76,7 +89,7 @@ def get_csv_id(req_data, srv_req_data) -> type_map.CsvId:
             csv_path = {csv_path}
             """
         )
-        runtime_error_wrapper(description, req_data, srv_req_data)
+        runtime_error_wrapper(description, req_dicts, srv_req_data)
     else:
         csv_ind = csv_ind.csv_id
 
@@ -100,11 +113,14 @@ def flatten_data_dict(arr_obj: dict) -> list[dict]:
         res_item = {}
         for k, v in arr_obj.items():
             if k == "channel_ids":
-                res_item["channel_id"] = chan
+                typed_chan = type_map.ChannelId(chan)
+                res_item["channel_id"] = typed_chan
             elif k == "messages":
-                res_item["message"] = msg
+                typed_msg = type_map.Text(msg)
+                res_item["message"] = typed_msg
             elif k == "message_dates":
-                res_item["message_date"] = date
+                typed_date = str(date)
+                res_item["message_date"] = typed_date
             else:
                 res_item[k] = v
         res.append(res_item)
@@ -112,10 +128,10 @@ def flatten_data_dict(arr_obj: dict) -> list[dict]:
     return res
 
 
-def check_lens(data_dict, row, srv_req_data) -> None:
-    ch_ids_len = len(data_dict["channel_ids"])
-    msg_len = len(data_dict["messages"])
-    msg_dates_len = len(data_dict["message_dates"])
+def check_lens(row, srv_req_data) -> None:
+    ch_ids_len = len(row["channel_ids"])
+    msg_len = len(row["messages"])
+    msg_dates_len = len(row["message_dates"])
 
     if msg_len != ch_ids_len or msg_len != msg_dates_len:
         description = inspect.cleandoc(

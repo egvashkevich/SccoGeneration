@@ -47,6 +47,7 @@ from crud.type_map import type_map
 # metadata_obj = MetaData(schema="scco_schema")
 metadata_obj = MetaData()
 
+
 # bigint = Annotated[int, "bigint"]
 
 
@@ -61,6 +62,7 @@ class Base(DeclarativeBase):
         #     # num_6_2: Numeric(6, 2),
         # }
     )
+
 
 ################################################################################
 # Models.
@@ -115,7 +117,8 @@ class Query(Base):
     )
 
     def __repr__(self) -> str:
-        return (inspect.cleandoc(f"""Query(
+        return inspect.cleandoc(
+            f"""Query(
                 query_id={self.query_id!r}, 
                 customer_id={self.customer_id!r},
                 client_id={self.client_id!r},
@@ -124,7 +127,8 @@ class Query(Base):
                 message={self.message!r},
                 message_group_id={self.message_group_id!r},
                 message_date={self.message_date!r},
-                )"""))
+                )"""
+        )
 
 
 class NewQueriesCsv(Base):
@@ -142,10 +146,12 @@ class NewQueriesCsv(Base):
     )
 
     def __repr__(self) -> str:
-        return (inspect.cleandoc(f"""NewQueriesCsv(
+        return inspect.cleandoc(
+            f"""NewQueriesCsv(
                 csv_id={self.csv_id!r}, 
                 csv_path={self.csv_path!r},
-                )"""))
+                )"""
+        )
 
 
 class Customer(Base):
@@ -168,7 +174,8 @@ class Customer(Base):
     )
 
     def __repr__(self) -> str:
-        return (inspect.cleandoc(f"""Customer(
+        return inspect.cleandoc(
+            f"""Customer(
                 customer_id={self.customer_id!r},
                 contact_info={self.contact_info!r},
                 company_name={self.company_name!r},
@@ -176,7 +183,8 @@ class Customer(Base):
                 tags={self.tags!r},
                 white_list={self.white_list!r},
                 specific_features={self.specific_features!r},
-                )"""))
+                )"""
+        )
 
 
 class CustomerService(Base):
@@ -199,13 +207,13 @@ class CustomerService(Base):
     )
 
     def __repr__(self) -> str:
-        return (inspect.cleandoc(
+        return inspect.cleandoc(
             f"""CustomerService(
                 customer_id={self.customer_id!r}, 
                 service_name={self.service_name!r},
                 service_desc={self.service_desc!r},
                 )"""
-            ))
+        )
 
 
 class Client(Base):
@@ -220,10 +228,12 @@ class Client(Base):
     )
 
     def __repr__(self) -> str:
-        return (inspect.cleandoc(f"""Client(
+        return inspect.cleandoc(
+            f"""Client(
                 client_id={self.client_id!r}, 
                 attitude={self.attitude!r},
-                )"""))
+                )"""
+        )
 
 
 class Offer(Base):
@@ -245,13 +255,14 @@ class Offer(Base):
     )
 
     def __repr__(self) -> str:
-        return (inspect.cleandoc(f"""Offer(
+        return inspect.cleandoc(
+            f"""Offer(
                 query_id={self.query_id!r}, 
                 file_path={self.file_path!r},
-                )"""))
+                )"""
+        )
 
 #############################################################################
-
 
 
 #############################################################################
@@ -327,7 +338,8 @@ class Offer(Base):
 #         PrimaryKeyConstraint("log_id"),
 #         ForeignKeyConstraint(["query_id"], ["query.query_id"]),
 #         ForeignKeyConstraint(["service_id"], ["service.service_id"]),
-#         ForeignKeyConstraint(["rejection_id"], ["service_rejection.rejection_id"]),
+#         ForeignKeyConstraint(["rejection_id"],
+#         ["service_rejection.rejection_id"]),
 #     )
 #
 #     log_id: Mapped[LogIdMapType]

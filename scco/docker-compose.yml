@@ -85,6 +85,8 @@ services:
     env_file:
       - .env
     restart: "no"
+    volumes:
+      - "generated_offers:${GENERATED_OFFERS_VOLUME_PATH}"
 #    restart: on-failure
     networks:
       rmq_network:

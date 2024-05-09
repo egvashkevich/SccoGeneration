@@ -1,6 +1,7 @@
-from util.app_errors import dict_get_or_panic
+from util.app_errors import get_correctly_typed_dict
 
 from crud.objects.new_queries_csv import NewQueriesCsvCRUD
+import crud.type_map as type_map
 
 from service.request_cb.request_cb import RequestCallback
 
@@ -17,24 +18,24 @@ class InsertNewQueriesCsv(RequestCallback):
         print("Enter InsertNewQueriesCsv callback")
 
         # Check keys.
-        required_keys = [
-            "csv_path",
-        ]
-
-        data_dict = {}
-        for key in required_keys:
-            data_dict[key] = dict_get_or_panic(req_data, key, srv_req_data)
+        required_keys_type_map = {
+            "csv_path": type_map.FilePath,
+        }
+        req_dict = get_correctly_typed_dict(
+            required_keys_type_map=required_keys_type_map,
+            data=req_data,
+        )
 
         # Make db query.
         print("Start query")
         NewQueriesCsvCRUD.insert_one(
             {
-                "csv_path": data_dict["csv_path"],
+                "csv_path": req_dict["csv_path"],
             }
         )
 
         print("Preparing answer")
         answer = {
-            "csv_path": data_dict["csv_path"],
+            "csv_path": req_dict["csv_path"],
         }
         return answer
