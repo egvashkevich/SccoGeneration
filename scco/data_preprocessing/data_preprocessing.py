@@ -15,7 +15,11 @@ class Preprocessor:
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=config.RABBIT_ADDRESS))
         self.channel = self.connection.channel()
 
-        rpc_connection = pika.BlockingConnection(pika.ConnectionParameters(config.RABBIT_ADDRESS))
+        # TODO: heartbeat=0 is bad (https://www.rabbitmq.com/docs/heartbeats#disabling)
+        # this is a temporary solution to ensure rabbit doesn't close connection
+        rpc_connection = pika.BlockingConnection(
+            pika.ConnectionParameters(config.RABBIT_ADDRESS, heartbeat=0)
+        )
         rpc_channel = rpc_connection.channel()
 
         self.channel.exchange_declare(exchange=config.IN_EXCHANGE, exchange_type='topic', durable=True)
@@ -50,7 +54,8 @@ class Preprocessor:
         try:
             json_in = json.loads(body.decode())
 
-            data = pd.read_csv(os.path.join(config.PARSER_BOT_CSV_FOLDER, json_in['parsed_csv']))
+            csv_name = json_in['parsed_csv']
+            data = pd.read_csv(os.path.join(config.PARSER_BOT_CSV_FOLDER, csv_name))
             data.columns = ['channel_id', 'client_id', 'message', 'message_date']
             customer_id = json_in['customer_id']
         except Exception as e:
@@ -62,6 +67,7 @@ class Preprocessor:
 
         pipeline = PreprocessingPipeline(
             customer_id,
+            csv_name,
             self.new_queries_csv_info,
             self.filter_rpc_client,
             self.save_csv_rpc_client,
@@ -76,7 +82,8 @@ class Preprocessor:
 
         print(f" [x] Sending {len(data)} messages")
         for index, row in data.iterrows():
-            json_str = json.dumps({col: str(row[col]) for col in data.columns})
+            json_str = json.dumps({col: str(row[col]) for col in data.columns}, ensure_ascii=False)
+            print(" [x] Sending message", json_str)
             self.send_message(ch, json_str)
         print(" [x] Done", flush=True)
 

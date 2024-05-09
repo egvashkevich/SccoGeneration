@@ -57,8 +57,10 @@ class FilterRpcClient:
                 },
                 "reply_ctx": self.reply_ctx,
                 "request_data": request_data,
-            }
+            },
+            ensure_ascii=False
         )
+        print(" [X] Sending request", request, flush=True)
 
         self.channel.basic_publish(
             exchange=config.DB_FUNCTIONAL_SERVICE_EXCHANGE,
@@ -114,8 +116,10 @@ class SaveCsvRpcClient:
                 "request_data": {
                     "csv_path": self.new_queries_csv_info['path'],
                 },
-            }
+            },
+            ensure_ascii=False
         )
+        print(" [X] Sending request", request, flush=True)
 
         self.channel.basic_publish(
             exchange=config.DB_FUNCTIONAL_SERVICE_EXCHANGE,
@@ -190,8 +194,10 @@ class MatchingListsRpcClient:
                         "customer_id": customer_id,
                     }
                 ],
-            }
+            },
+            ensure_ascii=False
         )
+        print(" [X] Sending request", request, flush=True)
 
         self.channel.basic_publish(
             exchange=config.DB_FUNCTIONAL_SERVICE_EXCHANGE,
@@ -256,8 +262,10 @@ class InsertToDbRpcClient:
                     "routing_key": config.INSERT_RESULT_REQUEST_ROUTING_KEY,
                 },
                 "request_data": {"csv_path": self.new_queries_csv_info['path'], "array_data": items},
-            }
+            },
+            ensure_ascii=False
         )
+        print(" [X] Sending request", request, flush=True)
 
         self.channel.basic_publish(
             exchange=config.DB_FUNCTIONAL_SERVICE_EXCHANGE,
