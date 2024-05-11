@@ -10,15 +10,15 @@ RMQ_NET_ALIAS = pe.get_or_default(
 # ----------------------------------------------------------
 
 CUSTOMER_CREATOR_EXCHANGE = pe.get_or_default(
-    "ML_GENERATION_EXCHANGE",
+    "CUSTOMER_CREATOR_EXCHANGE",
     "not_presented"
 )
 CUSTOMER_CREATOR_QUEUE = pe.get_or_default(
-    "ML_GENERATION_QUEUE",
+    "CUSTOMER_CREATOR_QUEUE",
     "not_presented"
 )
-CUSTOMER_CREATOR_KEY = pe.get_or_default(
-    "ML_GENERATION_ROUTING_KEY",
+CUSTOMER_CREATOR_ROUTING_KEY = pe.get_or_default(
+    "CUSTOMER_CREATOR_ROUTING_KEY",
     "not_presented"
 )
 # ----------------------------------------------------------
