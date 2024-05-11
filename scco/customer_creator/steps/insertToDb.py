@@ -39,25 +39,25 @@ body of request:
 
 class InsertToDb:
     # Publishers
-    insert_to_db_pub = "insert_to_db"
+    customer_creator_pub = "customer_creator_pub"
 
     def __init__(self, broker: Broker):
         self.broker = broker
 
         broker.add_consumer(
             Consumer(
-                exchange=app_cfg.INSERT_TO_DB_EXCHANGE,# Добавить в конфиги
-                queue=app_cfg.INSERT_TO_DB_QUEUE, # Добавить в конфиги
-                routing_key=app_cfg.INSERT_TO_DB_ROUTING_KEY, # Добавить в конфиги
+                exchange=app_cfg.CUSTOMER_CREATOR_EXCHANGE,# Добавить в конфиги
+                queue=app_cfg.CUSTOMER_CREATOR_QUEUE, # Добавить в конфиги
+                routing_key=app_cfg.CUSTOMER_CREATOR_ROUTING_KEY, # Добавить в конфиги
                 callback=self.callback,
             )
         )
         broker.add_publisher(
             Publisher(
-                name=INSERT_TO_DB.insert_to_db,
-                exchange=app_cfg.INSERT_REQUEST_EXCHANGE, #Исправить 
-                queue=app_cfg.INSERT_REQUEST_QUEUE, # Исправить
-                routing_key=app_cfg.INSERT_REQUEST_ROUTING_KEY, # Исправить
+                name=InsertToDb.customer_creator_pub,
+                exchange=app_cfg.DB_FUNCTIONAL_SERVICE_EXCHANGE, #Исправить 
+                queue=app_cfg.DB_FUNCTIONAL_SERVICE_QUEUE, # Исправить
+                routing_key=app_cfg.DB_FUNCTIONAL_SERVICE_ROUTING_KEY, # Исправить
             )
         )
 
@@ -67,7 +67,7 @@ class InsertToDb:
 
         answer = self.callback_handle(passed_data)
 
-        publish_answer(answer, self.pdf_generation_pub, self.broker)
+        publish_answer(answer, self.customer_creator_pub, self.broker)
         ch.basic_ack(delivery_tag=method.delivery_tag)
         print("InsertToDb callback finished")
 
