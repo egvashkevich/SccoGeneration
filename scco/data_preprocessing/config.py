@@ -6,6 +6,8 @@ WEAK_BLACKLIST_PATH = 'resources/trusted_weak_blacklist.txt'
 WEAK_WHITELIST_PATH = 'resources/trusted_weak_whitelist.txt'
 SWEAR_WORDS_BLACKLIST_PATH = 'resources/swear_words_blacklist.txt'
 
+REMOVE_HASHTAGS_ENTIRELY = False
+
 
 def from_env(var_name):
     if var_name in os.environ:

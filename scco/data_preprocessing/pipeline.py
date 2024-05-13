@@ -4,12 +4,12 @@ import json
 import os
 import datetime
 from abc import ABC, abstractmethod
-from emoji import replace_emoji
 from io import StringIO
 
 import config
 from rabbit_rpc import FilterRpcClient, SaveCsvRpcClient, MatchingListsRpcClient, InsertToDbRpcClient
 from tools.dict_occurrence import DictOccurrenceManager
+from tools.remove_stuff import remove_emoji, remove_hashtags, remove_hashtags_entirely, remove_at_mentions
 
 # from tools.pattern_text_matching import Matcher
 
@@ -32,65 +32,105 @@ class PreprocessingPipeline:
         insert_to_db_rpc_client: InsertToDbRpcClient,
     ):
         self.pipeline = [
-            ColumnTransform('message', lambda s: replace_emoji(s, '')),
-            ColumnTransform('message', str.lower),
-            StableSortBy('message_date'),
-            GroupBy(['channel_id', 'client_id', 'message_date'], agg={'message': (lambda x: list(x)[-1])}),
-            FilterAlreadySeen(
-                by=['channel_id', 'client_id', 'message_date'],
-                customer_id=customer_id,
-                on_nothing_left='all messages were already seen',
-                rpc_client=filter_rpc_client,
+            ('remove emoji', ColumnTransform('message', remove_emoji)),
+            ('to lowercase', ColumnTransform('message', str.lower)),
+            ('remove @smth', ColumnTransform('message', remove_at_mentions)),
+            ('sort by date', StableSortBy('message_date')),
+            (
+                'groupby 1',
+                GroupBy(['channel_id', 'client_id', 'message_date'], agg={'message': (lambda x: list(x)[-1])}),
             ),
-            SaveNewQueries(csv_name, new_queries_csv_info, save_csv_rpc_client),
-            FilterByTextMatch(
-                CommonMatchingList(config.SWEAR_WORDS_BLACKLIST_PATH),
-                mode='blacklist',
-                algorithm='word',
-                on_nothing_left='all messages filtered out by the black list of swear words',
+            (
+                'filter already seen',
+                FilterAlreadySeen(
+                    by=['channel_id', 'client_id', 'message_date'],
+                    customer_id=customer_id,
+                    on_nothing_left='all messages were already seen',
+                    rpc_client=filter_rpc_client,
+                ),
             ),
-            FilterByTextMatch(
-                CommonMatchingList(config.STRONG_BLACKLIST_PATH),
-                mode='blacklist',
-                on_nothing_left='all messages filtered out by common strong black list',
+            ('save new queries', SaveNewQueries(csv_name, new_queries_csv_info, save_csv_rpc_client)),
+            (
+                'black list of swear words',
+                FilterByTextMatch(
+                    CommonMatchingList(config.SWEAR_WORDS_BLACKLIST_PATH),
+                    mode='blacklist',
+                    algorithm='word',
+                    on_nothing_left='all messages filtered out by the black list of swear words',
+                ),
             ),
-            # FilterByTextMatch(CommonMatchingList(config.STRONG_WHITELIST_PATH), mode='whitelist',
-            #                   on_nothing_left='all messages filtered out by common strong white list'),
-            FilterByTextMatch(
-                CommonMatchingList(config.WEAK_WHITELIST_PATH),
-                mode='whitelist',
-                on_nothing_left='all messages filtered out by common weak white list',
+            (
+                'common strong black list',
+                FilterByTextMatch(
+                    CommonMatchingList(config.STRONG_BLACKLIST_PATH),
+                    mode='blacklist',
+                    on_nothing_left='all messages filtered out by common strong black list',
+                ),
             ),
-            FilterByTextMatch(
-                CommonMatchingList(config.WEAK_BLACKLIST_PATH),
-                mode='blacklist',
-                on_nothing_left='all messages filtered out by common weak black list',
+            # (
+            #     'common white black list',
+            #     FilterByTextMatch(
+            #         CommonMatchingList(config.STRONG_WHITELIST_PATH),
+            #         mode='whitelist',
+            #         on_nothing_left='all messages filtered out by common strong white list',
+            #     ),
+            # ),
+            (
+                'common weak white list',
+                FilterByTextMatch(
+                    CommonMatchingList(config.WEAK_WHITELIST_PATH),
+                    mode='whitelist',
+                    on_nothing_left='all messages filtered out by common weak white list',
+                ),
+            ),
+            (
+                'common weak black list',
+                FilterByTextMatch(
+                    CommonMatchingList(config.WEAK_BLACKLIST_PATH),
+                    mode='blacklist',
+                    on_nothing_left='all messages filtered out by common weak black list',
+                ),
             ),
             # order of these two matters, see MatchingListsRpcClient
-            FilterByTextMatch(
-                CustomerBlackList(customer_id, matching_lists_rpc_client),
-                mode='blacklist',
-                on_nothing_left='all messages filtered out by customer\'s black list',
+            (
+                'customer\'s black list',
+                FilterByTextMatch(
+                    CustomerBlackList(customer_id, matching_lists_rpc_client),
+                    mode='blacklist',
+                    on_nothing_left='all messages filtered out by customer\'s black list',
+                ),
             ),
-            FilterByTextMatch(
-                CustomerWhiteList(customer_id, matching_lists_rpc_client),
-                mode='whitelist',
-                on_nothing_left='all messages filtered out by customer\'s white list',
+            (
+                'customer\'s white list',
+                FilterByTextMatch(
+                    CustomerWhiteList(customer_id, matching_lists_rpc_client),
+                    mode='whitelist',
+                    on_nothing_left='all messages filtered out by customer\'s white list',
+                ),
             ),
-            GroupBy(
-                ['client_id'],
-                agg={'channel_id': list, 'message': list, 'message_date': list},
-                rename={'channel_id': 'channel_ids', 'message': 'messages', 'message_date': 'message_dates'},
+            (
+                'remove hashtags',
+                ColumnTransform(
+                    'message', remove_hashtags_entirely if config.REMOVE_HASHTAGS_ENTIRELY else remove_hashtags
+                ),
             ),
-            InsertToDatabase(customer_id, insert_to_db_rpc_client, new_queries_csv_info),
+            (
+                'groupby 2',
+                GroupBy(
+                    ['client_id'],
+                    agg={'channel_id': list, 'message': list, 'message_date': list},
+                    rename={'channel_id': 'channel_ids', 'message': 'messages', 'message_date': 'message_dates'},
+                ),
+            ),
+            ('insert result to database', InsertToDatabase(customer_id, insert_to_db_rpc_client, new_queries_csv_info)),
         ]
 
     def __call__(self, data):
         print(" [x] Data before pipeline:")
         print(data, flush=True)
-        for operation in self.pipeline:
+        for name, operation in self.pipeline:
             data = operation(data)
-            print(f" [x] Data after operation {type(operation)}:")
+            print(f' [x] Data after operation "{name}" ({type(operation)}):')
             print(data, flush=True)
             if data.empty:
                 if hasattr(operation, 'on_nothing_left'):
