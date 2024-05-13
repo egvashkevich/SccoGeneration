@@ -9,7 +9,7 @@ services:
     build:
       context: "${DATA_PREPROCESSING_FOLDER}"
       dockerfile: Dockerfile
-    image: "${NAMESPACE}${COMPOSE_PROJECT_NAME}_${DATA_PREPROCESSING_FOLDER}"
+    image: "${NAMESPACE}${COMPOSE_PROJECT_NAME}_${DATA_PREPROCESSING_FOLDER}:latest"
     container_name: "${COMPOSE_PROJECT_NAME}_${DATA_PREPROCESSING_FOLDER}"
     env_file:
       - .env
@@ -17,7 +17,7 @@ services:
       - "parser_bot_csv_volume:${PARSER_BOT_CSV_VOLUME_PATH}"
       - "unprocessed_parser_bot_csv_volume:${UNPROCESSED_PARSER_BOT_CSV_VOLUME_PATH}"
     restart: "no"
-#    restart: on-failure
+    #    restart: on-failure
     networks:
       rmq_network:
 
@@ -27,14 +27,14 @@ services:
     build:
       context: "${ML_GENERATION_FOLDER}"
       dockerfile: Dockerfile
-    image: "${NAMESPACE}${COMPOSE_PROJECT_NAME}_${ML_GENERATION_FOLDER}"
+    image: "${NAMESPACE}${COMPOSE_PROJECT_NAME}_${ML_GENERATION_FOLDER}:latest"
     container_name: "${COMPOSE_PROJECT_NAME}_${ML_GENERATION_FOLDER}"
     env_file:
       - .env
-#    volumes:
-#      - /home/ownstreamer/Proga/MIPT/InnovationWorkshop/CorpApp/workspace/scco/scco/clients_messages:/clients_messages/
+    #    volumes:
+    #      - /home/ownstreamer/Proga/MIPT/InnovationWorkshop/CorpApp/workspace/scco/scco/clients_messages:/clients_messages/
     restart: "no"
-#    restart: on-failure
+    #    restart: on-failure
     networks:
       rmq_network:
 
@@ -44,12 +44,12 @@ services:
     build:
       context: "${PDF_GENERATION_FOLDER}"
       dockerfile: Dockerfile
-    image: "${NAMESPACE}${COMPOSE_PROJECT_NAME}_${PDF_GENERATION_FOLDER}"
+    image: "${NAMESPACE}${COMPOSE_PROJECT_NAME}_${PDF_GENERATION_FOLDER}:latest"
     container_name: "${COMPOSE_PROJECT_NAME}_${PDF_GENERATION_FOLDER}"
     env_file:
       - .env
     restart: "no"
-#    restart: on-failure
+    #    restart: on-failure
     volumes:
       - "generated_offers:${GENERATED_OFFERS_VOLUME_PATH}"
     networks:
@@ -57,16 +57,16 @@ services:
 
   customer_creator:
     profiles:
-      - none
+      - prod
     build:
       context: "${CUSTOMER_CREATOR_FOLDER}"
       dockerfile: Dockerfile
-    image: "${NAMESPACE}${COMPOSE_PROJECT_NAME}_${CUSTOMER_CREATOR_FOLDER}"
+    image: "${NAMESPACE}${COMPOSE_PROJECT_NAME}_${CUSTOMER_CREATOR_FOLDER}:latest"
     container_name: "${COMPOSE_PROJECT_NAME}_${CUSTOMER_CREATOR_FOLDER}"
     env_file:
       - .env
     restart: "no"
-#    restart: on-failure
+    #    restart: on-failure
     networks:
       rmq_network:
 
@@ -74,65 +74,19 @@ services:
     profiles:
       - crud
       - prod
-    depends_on:
-      postgres_fs:
-        condition: service_healthy
     build:
       context: "${DB_FUNCTIONAL_SERVICE_FOLDER}"
       dockerfile: Dockerfile
-    image: "${NAMESPACE}${COMPOSE_PROJECT_NAME}_${DB_FUNCTIONAL_SERVICE_FOLDER}"
+    image: "${NAMESPACE}${COMPOSE_PROJECT_NAME}_${DB_FUNCTIONAL_SERVICE_FOLDER}:latest"
     container_name: "${COMPOSE_PROJECT_NAME}_${DB_FUNCTIONAL_SERVICE_FOLDER}"
     env_file:
       - .env
     restart: "no"
-    volumes:
-      - "generated_offers:${GENERATED_OFFERS_VOLUME_PATH}"
-#    restart: on-failure
+    #    restart: on-failure
     networks:
       rmq_network:
       postgres_fs_network:
 
-  postgres_fs:
-    profiles:
-      - crud
-      - prod
-    container_name: "${COMPOSE_PROJECT_NAME}_postgres_fs_container"
-    image: postgres
-    environment:
-      PGDATA: /data/postgres
-    env_file:
-      - "${DB_FUNCTIONAL_SERVICE_FOLDER}/.env.secret.postgres"
-    volumes:
-      - postgres_fs_volume:/data/postgres
-    ports:
-      - "5432:5432"
-    networks:
-      postgres_fs_network:
-        aliases:
-          - "${POSTGRES_FS_ALIAS}"
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  pgadmin_fs:
-    profiles:
-      - crud
-    container_name: "${COMPOSE_PROJECT_NAME}_pgadmin_fs_container"
-    image: dpage/pgadmin4
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-    volumes:
-      - pgadmin_fs_volume:/var/lib/pgadmin
-    ports:
-      - "${PGADMIN_PORT:-5050}:80"
-    networks:
-      - postgres_fs_network
-    restart: unless-stopped
 
 
 networks:
