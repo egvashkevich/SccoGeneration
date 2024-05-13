@@ -31,7 +31,7 @@ class Matcher:
         """
             count all positions, where pattern in text
         """
-        return len(self.get_matching_positions(text, pattern))
+        return len(self.get_matching_positions(pattern, text))
 
     def _prefix_func(self, string):  # only prefix with size of string
         self._reserve(len(string))
@@ -50,6 +50,7 @@ class Matcher:
 
 # Вот примеры:
 # m = Matcher(lambda s: s.lower())
+# print(m.count_matches('ищу', '#ищу того кто соберет или продаст клиентскую базу салонов красотыкосметологических центров москвы пишите пожалуйста сразу с ценой',))
 # print(m.get_matching_positions("Я наверное хотел бы, ну или не хотел бы", "Хотел")) # [11, 31]
 # print(m.get_matching_positions("Я наверное не хотел бы, ну или хотел бы", "Хотел")) # [14, 31]
 # print(m.get_matching_positions("Я наверное бы, ну или не бы", "Хотел")) # []
