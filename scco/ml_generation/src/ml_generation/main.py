@@ -6,8 +6,9 @@ from broker.rmq_broker import RmqBroker
 from ml_generation.steps.co_gen import CoGen
 from ml_generation.steps.preproc import Preproc
 
-from ml_models.co_gen.api import SCCOGenerator
+from ml_models.co_gen.api import COGenerator
 from ml_generation.dummy_ml_model import DummyMlModel
+from ml_generation.ml_model import wrap_ml_model
 
 
 def main():
@@ -20,7 +21,8 @@ def main():
     print("Preproc created")
 
     print("Creating CoGen...")
-    ml_model = SCCOGenerator()
+    ml_model = COGenerator()
+    ml_model = wrap_ml_model(ml_model)
     # ml_model = DummyMlModel()  # Replace to disable ml call
     co_gen = CoGen(broker, ml_model)
     print("CoGen created")
