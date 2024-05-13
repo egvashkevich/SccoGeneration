@@ -11,6 +11,10 @@
 - Для запуска конкретных микросервисов в docker-compose созданы профили (доки смотри в [docker-compose profiles](https://docs.docker.com/compose/profiles/)).
 - Чеклист по докеру можно посмотреть в `docs/docker_checklist.md`.
 
+
+## Важно
+- Метод `db_functional_service` делает только один запрос к БД, `data_preprocessing` не батчит сообщения, поэтому на `csv`, в которых много строк (проверено на 10000), `db_functional_service` падает. Поэтому на данный момент в `data_preprocessing` нужно отправлять `csv` файлы с количеством строк не более 1000 (на таких сервисы не должны падать).
+
 ## Доступные микросервисы
 
 * `data_preprocessing`
