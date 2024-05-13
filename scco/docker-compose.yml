@@ -9,7 +9,7 @@ services:
     build:
       context: "${DATA_PREPROCESSING_FOLDER}"
       dockerfile: Dockerfile
-    image: "${COMPOSE_PROJECT_NAME}_${DATA_PREPROCESSING_FOLDER}"
+    image: "${NAMESPACE}${COMPOSE_PROJECT_NAME}_${DATA_PREPROCESSING_FOLDER}"
     container_name: "${COMPOSE_PROJECT_NAME}_${DATA_PREPROCESSING_FOLDER}"
     env_file:
       - .env
@@ -27,7 +27,7 @@ services:
     build:
       context: "${ML_GENERATION_FOLDER}"
       dockerfile: Dockerfile
-    image: "${COMPOSE_PROJECT_NAME}_${ML_GENERATION_FOLDER}"
+    image: "${NAMESPACE}${COMPOSE_PROJECT_NAME}_${ML_GENERATION_FOLDER}"
     container_name: "${COMPOSE_PROJECT_NAME}_${ML_GENERATION_FOLDER}"
     env_file:
       - .env
@@ -44,7 +44,7 @@ services:
     build:
       context: "${PDF_GENERATION_FOLDER}"
       dockerfile: Dockerfile
-    image: "${COMPOSE_PROJECT_NAME}_${PDF_GENERATION_FOLDER}"
+    image: "${NAMESPACE}${COMPOSE_PROJECT_NAME}_${PDF_GENERATION_FOLDER}"
     container_name: "${COMPOSE_PROJECT_NAME}_${PDF_GENERATION_FOLDER}"
     env_file:
       - .env
@@ -61,7 +61,7 @@ services:
     build:
       context: "${CUSTOMER_CREATOR_FOLDER}"
       dockerfile: Dockerfile
-    image: "${COMPOSE_PROJECT_NAME}_${CUSTOMER_CREATOR_FOLDER}"
+    image: "${NAMESPACE}${COMPOSE_PROJECT_NAME}_${CUSTOMER_CREATOR_FOLDER}"
     container_name: "${COMPOSE_PROJECT_NAME}_${CUSTOMER_CREATOR_FOLDER}"
     env_file:
       - .env
@@ -80,7 +80,7 @@ services:
     build:
       context: "${DB_FUNCTIONAL_SERVICE_FOLDER}"
       dockerfile: Dockerfile
-    image: "${COMPOSE_PROJECT_NAME}_${DB_FUNCTIONAL_SERVICE_FOLDER}"
+    image: "${NAMESPACE}${COMPOSE_PROJECT_NAME}_${DB_FUNCTIONAL_SERVICE_FOLDER}"
     container_name: "${COMPOSE_PROJECT_NAME}_${DB_FUNCTIONAL_SERVICE_FOLDER}"
     env_file:
       - .env
