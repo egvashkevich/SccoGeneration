@@ -9,9 +9,8 @@ from io import StringIO
 import config
 from rabbit_rpc import FilterRpcClient, SaveCsvRpcClient, MatchingListsRpcClient, InsertToDbRpcClient
 from tools.dict_occurrence import DictOccurrenceManager
+from tools.pattern_text_matching import Matcher
 from tools.remove_stuff import remove_emoji, remove_hashtags, remove_hashtags_entirely, remove_at_mentions
-
-# from tools.pattern_text_matching import Matcher
 
 
 class Operation(ABC):
@@ -260,14 +259,15 @@ class FilterByTextMatch(Operation):
                 return occurrence_manager.check_exact_occurrence(s)
 
         elif self.algorithm == 'substring':
-            # matcher = Matcher()
+            matcher = Matcher()
 
             def any_match(s):
                 for pattern in matching_list:
-                    # print(f'Debug: search {pattern=} in {s=} with matcher:',
-                    #       matcher.count_matches(pattern, s), flush=True)
-                    # print(f'Debug: search {pattern=} in {s=} with in:', pattern in s, flush=True)
-                    if pattern in s:  # TODO: matcher.count_matches(pattern, s) > 0:
+                    print(
+                        f'Debug: search {pattern=} in {s=} with matcher:', matcher.count_matches(pattern, s), flush=True
+                    )
+                    print(f'Debug: search {pattern=} in {s=} with in:', pattern in s, flush=True)
+                    if matcher.count_matches(pattern, s) > 0:  # if pattern in s
                         return True
                 return False
 
