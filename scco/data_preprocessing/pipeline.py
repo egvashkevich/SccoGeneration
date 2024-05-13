@@ -243,11 +243,15 @@ class SaveNewQueries:
 
 
 class FilterByTextMatch(Operation):
-    def __init__(self, matching_list, mode, on_nothing_left, algorithm='substring'):
+    def __init__(self, matching_list, mode, on_nothing_left, algorithm='substring', min_entries=1):
         self.matching_list = matching_list
         self.mode = mode
-        self.algorithm = algorithm
         self.on_nothing_left = on_nothing_left
+        self.algorithm = algorithm
+        if algorithm == 'substring':
+            self.min_entries = min_entries
+        elif min_entries != 1:
+            raise ValueError(f"min_entries can't be {min_entries} it must equal 1 unless algorithm is 'substring'")
 
     def __call__(self, data):
         matching_list = self.matching_list.load()
@@ -262,13 +266,16 @@ class FilterByTextMatch(Operation):
             matcher = Matcher()
 
             def any_match(s):
+                num_matches = 0
                 for pattern in matching_list:
                     print(
                         f'Debug: search {pattern=} in {s=} with matcher:', matcher.count_matches(pattern, s), flush=True
                     )
                     print(f'Debug: search {pattern=} in {s=} with in:', pattern in s, flush=True)
                     if matcher.count_matches(pattern, s) > 0:  # if pattern in s
-                        return True
+                        num_matches += 1
+                        if num_matches >= self.min_entries:
+                            return True
                 return False
 
         else:
