@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import json
 import os
-import uuid
 import datetime
 from abc import ABC, abstractmethod
 from emoji import replace_emoji
@@ -45,25 +44,25 @@ class PreprocessingPipeline:
             ),
             SaveNewQueries(csv_name, new_queries_csv_info, save_csv_rpc_client),
             FilterByTextMatch(
-                CommonMatchingList(),
+                CommonMatchingList(config.SWEAR_WORDS_BLACKLIST_PATH),
                 mode='blacklist',
                 algorithm='word',
-                on_nothing_left='all messages filtered out by common black list',
+                on_nothing_left='all messages filtered out by the black list of swear words',
             ),
             FilterByTextMatch(
-                CommonMatchingList('resources/trusted_strong_blacklist'),
+                CommonMatchingList(config.STRONG_BLACKLIST_PATH),
                 mode='blacklist',
                 on_nothing_left='all messages filtered out by common strong black list',
             ),
-            # FilterByTextMatch(CommonMatchingList('resources/trusted_strong_whitelist'), mode='whitelist',
+            # FilterByTextMatch(CommonMatchingList(config.STRONG_WHITELIST_PATH), mode='whitelist',
             #                   on_nothing_left='all messages filtered out by common strong white list'),
             FilterByTextMatch(
-                CommonMatchingList('resources/trusted_weak_whitelist'),
+                CommonMatchingList(config.WEAK_WHITELIST_PATH),
                 mode='whitelist',
                 on_nothing_left='all messages filtered out by common weak white list',
             ),
             FilterByTextMatch(
-                CommonMatchingList('resources/trusted_weak_blacklist'),
+                CommonMatchingList(config.WEAK_BLACKLIST_PATH),
                 mode='blacklist',
                 on_nothing_left='all messages filtered out by common weak black list',
             ),
@@ -257,7 +256,7 @@ class MatchingList(ABC):
 
 
 class CommonMatchingList(MatchingList):
-    def __init__(self, path='resources/common_blacklist.txt'):
+    def __init__(self, path):
         self.path = path
 
     def load(self):
