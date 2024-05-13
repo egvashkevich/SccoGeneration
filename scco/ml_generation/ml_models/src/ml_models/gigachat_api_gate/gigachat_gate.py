@@ -9,14 +9,17 @@ class GigaChatAPIManager:
         """
             path_to_cfg - конфиг с параметрами модели
         """
+        print("Construct GigaChatAPIMAnager", flush=True)
         config = configparser.ConfigParser()
         config.read(path_to_cfg)
 
+        print("Start setting gigachat params [MODEL]")
         self.model_name = config['MODEL']['name']
         self.temperature = float(config['MODEL']['temperature'])
         self.top_p = float(config['MODEL']['top_p'])
         self.max_tokens = int(config['MODEL']['max_tokens'])
         self.repetition_penalty = float(config['MODEL']['repetition_penalty'])
+        print("Finish setting gigachat params [MODEL]")
 
         self.access_manager = ChatAccessManager()
 
@@ -45,7 +48,7 @@ class GigaChatAPIManager:
             'Accept': 'application/json',
             'Authorization': f'Bearer {self.access_manager.access_token}'
         }
-
+        print("Get response from GigaChat", flush=True)
         response = requests.request(
             "POST",
             url,
@@ -56,6 +59,8 @@ class GigaChatAPIManager:
         return response
 
     def generate_request(self, messages):
+        print("Update token", flush=True)
         update_response = self.access_manager.update_token()
+        print("Generate request", flush=True)
         response = self._try_generate_request(messages)
         return response
