@@ -2,6 +2,7 @@
 import ml_models.co_gen.api as co_gen_api
 import ml_models.white_list_generation.api as whitelist_gen_api
 
+
 # TODO: expected API as below
 
 co_gen = co_gen_api.COGenerator()
