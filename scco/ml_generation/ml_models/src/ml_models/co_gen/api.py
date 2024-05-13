@@ -1,7 +1,9 @@
-from ml_models.gigachat_api_gate.api import GenerateGateWrapper
+import configparser
+from importlib.resources import files
 
+from ml_models.gigachat_api_gate.api import GenerateGateWrapper
 from ml_models.gigachat_api_gate.utils import UserMessageWrapper
-import configparser as configparser
+from ml_models.co_gen.user_message_heuristic import UserMessageHeuristics
 
 from overrides import override
 
@@ -13,14 +15,12 @@ pos_to_insert_in_system = {
     'tags': '[TAGS]'
 }
 
-
 def parse_custormer_services(request: dict):
     res_list = []
     for service in request['customer_services']:
         name, desc = service['service_name'], service['service_desc']
         res_list.append(name + f'({desc})')
     return ', '.join(res_list)
-
 
 def make_system_prompt(request, path_to_conf):
     config = configparser.ConfigParser()
@@ -42,22 +42,39 @@ def make_system_prompt(request, path_to_conf):
     return basic
 
 
-class SCCOGenerator(GenerateGateWrapper):
+class COGenerator(GenerateGateWrapper):
     def __init__(self):
         cfg_path = 'co_gen/configs'
-        super().__init__(cfg_path)
+        params_config_path = str(
+            files("ml_models").joinpath(
+                cfg_path + "/params.ini"
+            )
+        )
+        system_prompt_config_path = str(
+            files("ml_models").joinpath(
+                cfg_path+'/prompts.ini'
+            )
+        )
+        super().__init__(params_config_path, system_prompt_config_path)
+
+        path_to_generate_cfg = str(
+            files('ml_models').joinpath(
+                cfg_path + '/prepare_params.ini'
+            )
+        )
+        self.user_message_handler_heur = UserMessageHeuristics(
+            path_to_generate_cfg)
+
+    def get_prepared_messages(self, request):
+        self._set_system_params(request, make_system_prompt)
+        self.user_message_handler_heur(request)
+        messages = self.system_prompts + \
+            UserMessageWrapper.handle_messages(request['messages'])
+        return messages
 
     @override
     def generate(self, request) -> dict:
-        self._set_system_params(request, make_system_prompt)
-        tags = ', '.join(request['tags'])
-        company_name = request['company_name']
-        request['messages'][0] = "Сообщение от потенциального клиента: " + \
-            request['messages'][0][:400] + f'. Мне важны только данные технологии: {tags}, которые ваша компания использует, а также расскажите про вас и услуги вашей компании {company_name}'
-        messages = self.system_prompts + \
-            UserMessageWrapper.handle_messages(request['messages'])
-        print(messages)
-        # TODO: for every message channel is separate (channel_ids)
+        messages = self.get_prepared_messages(request)
         response = self.gate.generate_request(messages)
         text_response = response.json()['choices'][0]['message']['content']
         result = {

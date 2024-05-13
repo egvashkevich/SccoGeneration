@@ -6,7 +6,7 @@ class UserMessageWrapper:
     def handle_message(message: str):
         return {
             "role": "user",
-            "content": "Сообщение от потенциального клиента:" + message
+            "content": message
         }
 
     @staticmethod
