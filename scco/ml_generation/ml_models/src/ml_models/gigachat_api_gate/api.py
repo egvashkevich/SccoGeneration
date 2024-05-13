@@ -9,17 +9,10 @@ from ml_models.gigachat_api_gate.gigachat_gate import GigaChatAPIManager
 
 
 class GenerateGateWrapper:
-    def __init__(self, cfg_path):
-        self.params_config_path = str(
-            files("ml_models").joinpath(
-                cfg_path + "/params.ini"
-            )
-        )
-        self.system_prompt_config_path = str(
-            files("ml_models").joinpath(
-                cfg_path+'/prompts.ini'
-            )
-        )
+    def __init__(self, params_config_path, system_prompt_config_path):
+
+        self.params_config_path = params_config_path
+        self.system_prompt_config_path = system_prompt_config_path
         self.gate = GigaChatAPIManager(self.params_config_path)
 
     def _set_system_params(self, request, make_system_prompt):
