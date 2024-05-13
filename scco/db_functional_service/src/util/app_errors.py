@@ -37,7 +37,63 @@ def logger_wrapper(
     print(str_error(description, invalid_part, srv_req_data), file=sys.stderr)
 
 
+def try_cast(obj, t) -> (bool, any):
+    try:
+        res = t(obj)
+        return True, res
+    except ValueError:
+        return False, None
+
+
+def force_cast(obj, t) -> any:
+    try:
+        res = t(obj)
+        return res
+    except ValueError:
+        raise RuntimeError("Can't cast {} to {}".format(t, type(obj)))
+
+
+def assert_cast(obj, t, error_msg: str) -> any:
+    try:
+        res = t(obj)
+        return res
+    except ValueError:
+        description = inspect.cleandoc(
+            f"""
+            Cast failed: unable to cast {type(obj)} to {t}
+            {error_msg}
+            """
+        )
+        runtime_error_wrapper(description, "not passed", "not passed")
+
+
+def get_correctly_typed_dict(required_keys_type_map: dict, data) -> dict:
+    res_dict = {}
+    for key, t in required_keys_type_map.items():
+        data_val = dict_get_or_panic(data, key)
+        ok, new_val = try_cast(data_val, t)
+        if not ok:
+            description = inspect.cleandoc(
+                f"""
+                Passed types mismatched: unable to cast {type(data_val)} to {t}
+                required_keys: '{required_keys_type_map}'
+                """
+            )
+            runtime_error_wrapper(description, "not passed", "not_passed")
+        res_dict[key] = new_val
+    return res_dict
+
+
+def get_correctly_typed_dicts(required_keys_type_map: dict, data) -> list[dict]:
+    res_dicts = []
+    for elem in data:
+        res_dict = get_correctly_typed_dict(required_keys_type_map, elem)
+        res_dicts.append(res_dict)
+    return res_dicts
+
+
 ################################################################################
+
 
 def dict_has_or_panic(
         json_dict,
@@ -59,10 +115,10 @@ def dict_get_or_panic(
     return json_dict[key]
 
 
-def check_req_data_is_array(req_data, srv_req_data) -> bool:
+def check_is_array(req_data, srv_req_data, arr_name="request_data") -> bool:
     if not isinstance(req_data, list):
         logger_wrapper(
-            "invalid json format: 'request_data' must be a json array",
+            f"invalid json format: '{arr_name}' must be a json array",
             req_data,
             srv_req_data,
         )
@@ -70,12 +126,21 @@ def check_req_data_is_array(req_data, srv_req_data) -> bool:
     return True
 
 
-def check_req_data_array_empty(req_data, srv_req_data) -> bool:
+def check_array_empty(req_data, srv_req_data, arr_name="request_data") -> bool:
     if len(req_data) == 0:
         logger_wrapper(
-            "invalid json format: 'request_data' is empty",
+            f"invalid json format: '{arr_name}' is empty",
             req_data,
             srv_req_data,
         )
         return True
     return False
+
+
+def check_not_empty_array(
+        req_data,
+        srv_req_data,
+        arr_name="request_data",
+) -> bool:
+    return check_is_array(req_data, srv_req_data, arr_name) \
+        and not check_array_empty(req_data, srv_req_data, arr_name)

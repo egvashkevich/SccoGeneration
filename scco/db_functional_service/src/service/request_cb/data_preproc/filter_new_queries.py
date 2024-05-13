@@ -1,16 +1,17 @@
 import datetime
 import dateutil.parser as date_parser
+import json
 
 from sqlalchemy import tuple_
 
 import util.app_config as app_cfg
+from util.app_errors import get_correctly_typed_dicts
 
-from util.app_errors import dict_has_or_panic
-from util.app_errors import check_req_data_is_array
-from util.app_errors import check_req_data_array_empty
+from util.app_errors import check_not_empty_array
 
 from crud.models import Query
 from crud.objects.query import QueryCRUD
+import crud.type_map as type_map
 
 from service.request_cb.request_cb import RequestCallback
 
@@ -26,28 +27,32 @@ class FilterNewQueries(RequestCallback):
     ) -> any:
         print("Enter FilterNewQueries callback")
 
-        if not check_req_data_is_array(req_data, srv_req_data) \
-                or check_req_data_array_empty(req_data, srv_req_data):
+        # Validate req_data to be array
+        if not check_not_empty_array(req_data, srv_req_data):
             print("Exit without sending answer")
             return
 
-        # Check keys.
-        required_keys = [
-            "customer_id",
-            "client_id",
-            "channel_id",
-            "message_date",
-        ]
+        # Validate keys.
+        required_keys_type_map = {
+            "customer_id": type_map.CustomerId,
+            "client_id": type_map.ClientId,
+            "channel_id": type_map.ChannelId,
+            "message_date": str,
+        }
+        required_keys = required_keys_type_map.keys()
+        req_dicts = get_correctly_typed_dicts(
+            required_keys_type_map=required_keys_type_map,
+            data=req_data,
+        )
 
-        for row in req_data:
-            for key in required_keys:
-                dict_has_or_panic(row, key, srv_req_data)
-
-        req_dict = {}
-        for row in req_data:
-            req_dict[get_sort_key(row, required_keys)] = row
-
-        print(f"req_dict = {req_dict}")
+        req_map = {}
+        print("req_map = {")
+        for row in req_dicts:
+            row["client_id"] = row["client_id"]
+            sort_key = get_sort_key(row, required_keys)
+            req_map[sort_key] = row
+            print(f"{sort_key} --- {row}")
+        print("}")
 
         # Make db query.
         print("Creating query")
@@ -58,26 +63,26 @@ class FilterNewQueries(RequestCallback):
             Query.message_date,
         ]
         tup = tuple_(*columns)
-        tup.in_(req_dict.keys())
+        tup.in_(req_map.keys())
 
         print("Start query")
         result_set = QueryCRUD.select_all(
             columns=columns,
             wheres_cond=[
-                tup.in_(req_dict.keys())
+                tup.in_(req_map.keys())
             ],
         )
         print(f"result_set:\n{result_set}")
 
         print("Process result_set")
-        res_dict = dict(req_dict)
-        print(f"1) res_dict = {res_dict}")
+        res_dict = dict(req_map)
         for row in result_set:
-            print(f"row.customer_id = {row.customer_id}")
             act_key = get_sort_key_row(row, required_keys)
-            print(f"act_key = {act_key}")
-            print(f"res_dict.keys() = {res_dict.keys()}")
-            del res_dict[get_sort_key_row(row, required_keys)]
+            if act_key not in res_dict:
+                print(f"row.customer_id = {row.customer_id}")
+                print(f"act_key = {act_key}")
+                print(f"res_dict = {res_dict}")
+            del res_dict[act_key]
 
         res = list(res_dict.values())
 
@@ -86,6 +91,7 @@ class FilterNewQueries(RequestCallback):
             "not_exist": res,
         }
         return answer
+
 
 ################################################################################
 

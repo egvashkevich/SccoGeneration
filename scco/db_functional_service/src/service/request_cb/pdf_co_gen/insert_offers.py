@@ -68,7 +68,7 @@ class InsertOffers(RequestCallback):
 
 
 def select_from_query(data_dict, req_data, srv_req_data) -> dict:
-    result_one = QueryCRUD.select_one(
+    result_all = QueryCRUD.select_all(
         columns=[
             Query.query_id,
             Query.customer_id,
@@ -79,21 +79,22 @@ def select_from_query(data_dict, req_data, srv_req_data) -> dict:
         ],
         order_bys=[desc(Query.message_date)],
     )
-    if result_one is None:
+    if len(result_all) == 0 or result_all is None:
         description = inspect.cleandoc(
             f"""
-            Unexpected error: no such message_group_id in table.
+            unexpected error: no such message_group_id in table.
             message_group_id: {data_dict["message_group_id"]}
             """
         )
         runtime_error_wrapper(description, req_data, srv_req_data)
 
-    print_result_set(result_one)
+    result_first = result_all[0]
+    print_result_set(result_first)
 
     res = {
-        "query_id": result_one.query_id,
-        "customer_id": result_one.customer_id,
-        "client_id": result_one.client_id,
+        "query_id": result_first.query_id,
+        "customer_id": result_first.customer_id,
+        "client_id": result_first.client_id,
     }
 
     return res

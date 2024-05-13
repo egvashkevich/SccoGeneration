@@ -31,7 +31,7 @@ def main():
     print(f" [x] Saving {len(data)} messages to file {out_file}")
     with open(out_file, 'w') as f:
         for index, row in data.iterrows():
-            json_str = json.dumps({col: str(row[col]) for col in data.columns})
+            json_str = json.dumps({col: str(row[col]) for col in data.columns}, ensure_ascii=False)
             print(json_str, file=f)
     print(" [x] Done", flush=True)
 
