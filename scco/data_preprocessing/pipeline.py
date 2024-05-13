@@ -194,6 +194,7 @@ class FilterAlreadySeen(Operation):
         else:
             result = pd.DataFrame(columns=['customer_id', 'client_id', 'channel_id', 'message_date'])
 
+        result['client_id'] = result['client_id'].astype(str)
         return data.merge(result, how='right', on=self.by)
 
 
