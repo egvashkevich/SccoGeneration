@@ -11,7 +11,7 @@ def main():
     print("RmqBroker created")
 
     print("Creating insertToDb...")
-    InsertToDb = InsertToDb(broker)
+    insertToDb = InsertToDb(broker)
     print("InsertToDb created")
 
     print("Start consuming...")
