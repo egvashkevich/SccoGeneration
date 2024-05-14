@@ -90,7 +90,7 @@ class InsertToDb:
                 "tags": request_data["tags"],
                 "white_list": request_data["white_list"],
                 "specific_features": request_data["specific_features"],
-                "customer_services": request_data["customer_services"]
+                "services": request_data["services"]
             }
         }
         return answer
