@@ -6,8 +6,7 @@ from broker_for_creator.rmq_broker import RmqBroker
 from steps.insertToDb import InsertToDb
 
 def main():
-    print("Customer creator:
-Creating RmqBroker...")
+    print("Customer creator:Creating RmqBroker...")
     broker: Broker = RmqBroker()
     print("RmqBroker created")
 

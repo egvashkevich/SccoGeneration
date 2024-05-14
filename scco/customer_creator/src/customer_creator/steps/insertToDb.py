@@ -1,8 +1,8 @@
 import utils.app_config as app_cfg
 
-from broker_for_creator.broker import Broker
-from broker_for_creator.broker import Publisher
-from broker_for_creator.broker import Consumer
+from src.broker_for_creator.broker import Broker
+from src.broker_for_creator.broker import Publisher
+from src.broker_for_creator.broker import Consumer
 
 def get_callback_data(body: bytes):
     body = body.decode("utf-8")
@@ -46,18 +46,18 @@ class InsertToDb:
 
         broker.add_consumer(
             Consumer(
-                exchange=app_cfg.CUSTOMER_CREATOR_EXCHANGE,# Добавить в конфиги
-                queue=app_cfg.CUSTOMER_CREATOR_QUEUE, # Добавить в конфиги
-                routing_key=app_cfg.CUSTOMER_CREATOR_ROUTING_KEY, # Добавить в конфиги
+                exchange=app_cfg.CUSTOMER_CREATOR_EXCHANGE,
+                queue=app_cfg.CUSTOMER_CREATOR_QUEUE,
+                routing_key=app_cfg.CUSTOMER_CREATOR_ROUTING_KEY,
                 callback=self.callback,
             )
         )
         broker.add_publisher(
             Publisher(
                 name=InsertToDb.customer_creator_pub,
-                exchange=app_cfg.DB_FUNCTIONAL_SERVICE_EXCHANGE, #Исправить 
-                queue=app_cfg.DB_FUNCTIONAL_SERVICE_QUEUE, # Исправить
-                routing_key=app_cfg.DB_FUNCTIONAL_SERVICE_ROUTING_KEY, # Исправить
+                exchange=app_cfg.DB_FUNCTIONAL_SERVICE_EXCHANGE,
+                queue=app_cfg.DB_FUNCTIONAL_SERVICE_QUEUE,
+                routing_key=app_cfg.DB_FUNCTIONAL_SERVICE_ROUTING_KEY,
             )
         )
 
