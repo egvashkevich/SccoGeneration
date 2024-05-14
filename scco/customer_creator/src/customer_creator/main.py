@@ -1,7 +1,7 @@
 import sys
 
-from broker_for_creator.broker import Broker
-from broker_for_creator.rmq_broker import RmqBroker
+from broker_for_creator.Broker import Broker
+from broker_for_creator.Rmq_broker import RmqBroker
 
 from steps.insertToDb import InsertToDb
 
