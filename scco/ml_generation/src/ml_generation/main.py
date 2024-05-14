@@ -21,8 +21,8 @@ def main():
     print("Preproc created")
 
     print("Creating CoGen...")
-    ml_model = COGenerator()
-    # ml_model = DummyMlModel()  # Replace to disable ml call
+    # ml_model = COGenerator()
+    ml_model = DummyMlModel()  # Replace to disable ml call
     ml_model = wrap_ml_model(ml_model)
     co_gen = CoGen(broker, ml_model)
     print("CoGen created")
