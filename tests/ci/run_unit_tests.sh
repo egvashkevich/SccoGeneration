@@ -51,16 +51,20 @@ echo ${PDF_GENERATION_EXCHANGE}
 if [ "${SERVICE_NAME}" = "data_preprocessing" ]; then
   docker build -t scco_test_data_preprocessing "./scco/data_preprocessing"
   docker run --name scco_test_data_preprocessing --env-file ./scco/.env scco_test_data_preprocessing python3 run_tests.py
+  docker rm scco_test_data_preprocessing
 elif [ "${SERVICE_NAME}" = "ml_generation" ]; then
   docker build -t scco_test_ml_generation "./scco/ml_generation"
   docker run --name scco_test_ml_generation scco_test_ml_generation pytest
+  docker rm scco_test_ml_generation
 elif [ "${SERVICE_NAME}" = "pdf_generation" ]; then
   docker build -t scco_test_pdf_generation -f ./scco/pdf_generation/TestDockerfile "./scco/pdf_generation"
-  docker run scco_test_pdf_generation
+  docker run --name scco_test_pdf_generation scco_test_pdf_generation
+  docker rm scco_test_pdf_generation
 
 elif [ "${SERVICE_NAME}" = "db_functional_service" ]; then
   docker build -t scco_test_db_functional_service "./scco/db_functional_service"
   docker run --name scco_test_db_functional_service scco_test_db_functional_service pytest
+  docker rm scco_test_db_functional_service
 else
   echo "Unknown service name: ${SERVICE_NAME}"
 fi
