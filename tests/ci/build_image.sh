@@ -45,11 +45,17 @@ fi
 
 echo "cd to PROJECT_ROOT"
 cd "${PROJECT_ROOT}"
+ENV_FILE="./scco/.env"
+cat ${ENV_FILE}
+set -o allexport
+source "${ENV_FILE}" set
+set +o allexport
+echo ${PDF_GENERATION_FOLDER}
 
 ################################################################################
 
 # Build images
-
+# shellcheck disable=SC2046
 if [ "${SERVICE_NAME}" = "data_preprocessing" ]; then
   docker build -t "${IMAGE_NAME}" "scco/data_preprocessing"
 elif [ "${SERVICE_NAME}" = "ml_generation" ]; then
