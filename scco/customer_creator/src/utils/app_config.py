@@ -22,7 +22,20 @@ CUSTOMER_CREATOR_ROUTING_KEY = pe.get_or_default(
     "not_presented"
 )
 # ----------------------------------------------------------
+# ----------------------------------------------------------
 
+DB_FUNCTIONAL_SERVICE_EXCHANGE = pe.get_or_default(
+    "DB_FUNCTIONAL_SERVICE_EXCHANGE",
+    "not_presented",
+)
+DB_FUNCTIONAL_SERVICE_QUEUE = pe.get_or_default(
+    "DB_FUNCTIONAL_SERVICE_QUEUE",
+    "not_presented"
+)
+DB_FUNCTIONAL_SERVICE_ROUTING_KEY = pe.get_or_default(
+    "DB_FUNCTIONAL_SERVICE_ROUTING_KEY",
+    "not_presented"
+)
 ################################################################################
 # Local setup.
 
