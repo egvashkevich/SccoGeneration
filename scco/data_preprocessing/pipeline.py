@@ -2,16 +2,15 @@ import numpy as np
 import pandas as pd
 import json
 import os
-import uuid
 import datetime
 from abc import ABC, abstractmethod
-from emoji import replace_emoji
 from io import StringIO
 
 import config
 from rabbit_rpc import FilterRpcClient, SaveCsvRpcClient, MatchingListsRpcClient, InsertToDbRpcClient
 from tools.dict_occurrence import DictOccurrenceManager
-# from tools.pattern_text_matching import Matcher
+from tools.pattern_text_matching import Matcher
+from tools.remove_stuff import remove_emoji, remove_hashtags, remove_hashtags_entirely, remove_at_mentions
 
 
 class Operation(ABC):
@@ -21,54 +20,116 @@ class Operation(ABC):
 
 
 class PreprocessingPipeline:
-    def __init__(self,
-                 customer_id,
-                 new_queries_csv_info,  # TODO lifecycle
-                 filter_rpc_client: FilterRpcClient,
-                 save_csv_rpc_client: SaveCsvRpcClient,
-                 matching_lists_rpc_client: MatchingListsRpcClient,
-                 insert_to_db_rpc_client: InsertToDbRpcClient):
+    def __init__(
+        self,
+        customer_id,
+        csv_name,
+        new_queries_csv_info,  # TODO lifecycle
+        filter_rpc_client: FilterRpcClient,
+        save_csv_rpc_client: SaveCsvRpcClient,
+        matching_lists_rpc_client: MatchingListsRpcClient,
+        insert_to_db_rpc_client: InsertToDbRpcClient,
+    ):
         self.pipeline = [
-            ColumnTransform('message', lambda s: replace_emoji(s, '')),
-            ColumnTransform('message', str.lower),
-
-            StableSortBy('message_date'),
-            GroupBy(['channel_id', 'client_id', 'message_date'], agg={'message': (lambda x: list(x)[-1])}),
-            FilterAlreadySeen(by=['channel_id', 'client_id', 'message_date'],
-                              customer_id=customer_id, on_nothing_left='all messages were already seen',
-                              rpc_client=filter_rpc_client),
-            SaveNewQueries(new_queries_csv_info, save_csv_rpc_client),
-
-            FilterByTextMatch(CommonMatchingList(), mode='blacklist', algorithm='word',
-                              on_nothing_left='all messages filtered out by common black list'),
-
-            FilterByTextMatch(CommonMatchingList('resources/trusted_strong_blacklist'), mode='blacklist',
-                              on_nothing_left='all messages filtered out by common strong black list'),
-            # FilterByTextMatch(CommonMatchingList('resources/trusted_strong_whitelist'), mode='whitelist',
-            #                   on_nothing_left='all messages filtered out by common strong white list'),
-
-            FilterByTextMatch(CommonMatchingList('resources/trusted_weak_whitelist'), mode='whitelist',
-                              on_nothing_left='all messages filtered out by common weak white list'),
-            FilterByTextMatch(CommonMatchingList('resources/trusted_weak_blacklist'), mode='blacklist',
-                              on_nothing_left='all messages filtered out by common weak black list'),
-
+            ('remove emoji', ColumnTransform('message', remove_emoji)),
+            ('to lowercase', ColumnTransform('message', str.lower)),
+            ('remove @smth', ColumnTransform('message', remove_at_mentions)),
+            ('sort by date', StableSortBy('message_date')),
+            (
+                'groupby 1',
+                GroupBy(['channel_id', 'client_id', 'message_date'], agg={'message': (lambda x: list(x)[-1])}),
+            ),
+            (
+                'filter already seen',
+                FilterAlreadySeen(
+                    by=['channel_id', 'client_id', 'message_date'],
+                    customer_id=customer_id,
+                    on_nothing_left='all messages were already seen',
+                    rpc_client=filter_rpc_client,
+                ),
+            ),
+            ('save new queries', SaveNewQueries(csv_name, new_queries_csv_info, save_csv_rpc_client)),
+            (
+                'black list of swear words',
+                FilterByTextMatch(
+                    CommonMatchingList(config.SWEAR_WORDS_BLACKLIST_PATH),
+                    mode='blacklist',
+                    algorithm='word',
+                    on_nothing_left='all messages filtered out by the black list of swear words',
+                ),
+            ),
+            (
+                'common strong black list',
+                FilterByTextMatch(
+                    CommonMatchingList(config.STRONG_BLACKLIST_PATH),
+                    mode='blacklist',
+                    on_nothing_left='all messages filtered out by common strong black list',
+                ),
+            ),
+            # (
+            #     'common white black list',
+            #     FilterByTextMatch(
+            #         CommonMatchingList(config.STRONG_WHITELIST_PATH),
+            #         mode='whitelist',
+            #         on_nothing_left='all messages filtered out by common strong white list',
+            #     ),
+            # ),
+            (
+                'common weak white list',
+                FilterByTextMatch(
+                    CommonMatchingList(config.WEAK_WHITELIST_PATH),
+                    mode='whitelist',
+                    on_nothing_left='all messages filtered out by common weak white list',
+                ),
+            ),
+            (
+                'common weak black list',
+                FilterByTextMatch(
+                    CommonMatchingList(config.WEAK_BLACKLIST_PATH),
+                    mode='blacklist',
+                    on_nothing_left='all messages filtered out by common weak black list',
+                ),
+            ),
             # order of these two matters, see MatchingListsRpcClient
-            FilterByTextMatch(CustomerBlackList(customer_id, matching_lists_rpc_client), mode='blacklist',
-                              on_nothing_left='all messages filtered out by customer\'s black list'),
-            FilterByTextMatch(CustomerWhiteList(customer_id, matching_lists_rpc_client), mode='whitelist',
-                              on_nothing_left='all messages filtered out by customer\'s white list'),
-
-            GroupBy(['client_id'], agg={'channel_id': list, 'message': list, 'message_date': list},
-                    rename={'channel_id': 'channel_ids', 'message': 'messages', 'message_date': 'message_dates'}),
-            InsertToDatabase(customer_id, insert_to_db_rpc_client, new_queries_csv_info)
+            (
+                'customer\'s black list',
+                FilterByTextMatch(
+                    CustomerBlackList(customer_id, matching_lists_rpc_client),
+                    mode='blacklist',
+                    on_nothing_left='all messages filtered out by customer\'s black list',
+                ),
+            ),
+            (
+                'customer\'s white list',
+                FilterByTextMatch(
+                    CustomerWhiteList(customer_id, matching_lists_rpc_client),
+                    mode='whitelist',
+                    on_nothing_left='all messages filtered out by customer\'s white list',
+                ),
+            ),
+            (
+                'remove hashtags',
+                ColumnTransform(
+                    'message', remove_hashtags_entirely if config.REMOVE_HASHTAGS_ENTIRELY else remove_hashtags
+                ),
+            ),
+            (
+                'groupby 2',
+                GroupBy(
+                    ['client_id'],
+                    agg={'channel_id': list, 'message': list, 'message_date': list},
+                    rename={'channel_id': 'channel_ids', 'message': 'messages', 'message_date': 'message_dates'},
+                ),
+            ),
+            ('insert result to database', InsertToDatabase(customer_id, insert_to_db_rpc_client, new_queries_csv_info)),
         ]
 
     def __call__(self, data):
         print(" [x] Data before pipeline:")
         print(data, flush=True)
-        for operation in self.pipeline:
+        for name, operation in self.pipeline:
             data = operation(data)
-            print(f" [x] Data after operation {type(operation)}:")
+            print(f' [x] Data after operation "{name}" ({type(operation)}):')
             print(data, flush=True)
             if data.empty:
                 if hasattr(operation, 'on_nothing_left'):
@@ -125,38 +186,73 @@ class FilterAlreadySeen(Operation):
                 item[col] = row[col]
             item['customer_id'] = self.customer_id
             request_data.append(item)
+
         response = self.rpc_client.call(request_data)  # json-like object -> json-like object
-        result = pd.read_json(StringIO(json.dumps(response)), orient='records')
+
+        if len(response) > 0:
+            result = pd.read_json(StringIO(json.dumps(response, ensure_ascii=False)), orient='records')
+        else:
+            result = pd.DataFrame(columns=['customer_id', 'client_id', 'channel_id', 'message_date'])
+
+        result['client_id'] = result['client_id'].astype(str)
         return data.merge(result, how='right', on=self.by)
 
 
 class SaveNewQueries:
-    def __init__(self, new_queries_csv_info, rpc_client: SaveCsvRpcClient):
+    def __init__(self, in_csv_name: str, new_queries_csv_info: dict, rpc_client: SaveCsvRpcClient):
+        self.in_csv_name = in_csv_name
         self.new_queries_csv_info = new_queries_csv_info
         self.rpc_client = rpc_client
 
+    def make_csv_name(self):
+        if self.in_csv_name.endswith('.csv'):
+            csv_name = self.in_csv_name[:-4]  # remove ".csv"
+        else:
+            csv_name = self.in_csv_name
+        now = datetime.datetime.now().isoformat(sep='_', timespec='seconds').replace('-', '_')
+        return csv_name + '_Only_New_' + now
+
+    def try_save_file(self, data, filename):
+        try:
+            file_path = os.path.join(config.NEW_QUERIES_CSV_FOLDER, filename)
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            data.to_csv(file_path, mode='x')
+            return True
+        except FileExistsError:
+            return False
+
     def __call__(self, data):
-        today = datetime.date.today().strftime('%y-%m-%y')  # yyyy-mm-dd
-        unique_id = uuid.uuid4().hex  # unique sting of hex symbols
-        new_queries_csv_name = f'new-queries-{today}-{unique_id}.csv'
-
+        new_queries_csv_name = self.make_csv_name()
         os.makedirs(config.NEW_QUERIES_CSV_FOLDER, exist_ok=True)
-        data.to_csv(os.path.join(config.NEW_QUERIES_CSV_FOLDER, new_queries_csv_name))
 
-        new_queries_csv_path = new_queries_csv_name
-        self.new_queries_csv_info['path'] = new_queries_csv_path
+        new_queries_csv_name_full = new_queries_csv_name + '.csv'
+        saved = self.try_save_file(data, new_queries_csv_name_full)
+        if not saved:
+            i = 0
+            while not saved and i < 100:
+                i += 1
+                new_queries_csv_name_full = f'{new_queries_csv_name}_{i}.csv'
+                saved = self.try_save_file(data, new_queries_csv_name_full)
+            if not saved:
+                raise FileExistsError(
+                    f'Could not save unprocessed queries to csv: file {new_queries_csv_name_full} already exists'
+                )
 
+        self.new_queries_csv_info['path'] = new_queries_csv_name_full
         _ = self.rpc_client.call()
-
         return data
 
 
 class FilterByTextMatch(Operation):
-    def __init__(self, matching_list, mode, on_nothing_left, algorithm='substring'):
+    def __init__(self, matching_list, mode, on_nothing_left, algorithm='substring', min_entries=1):
         self.matching_list = matching_list
         self.mode = mode
-        self.algorithm = algorithm
         self.on_nothing_left = on_nothing_left
+        self.algorithm = algorithm
+        if algorithm == 'substring':
+            self.min_entries = min_entries
+        elif min_entries != 1:
+            raise ValueError(f"min_entries can't be {min_entries} it must equal 1 unless algorithm is 'substring'")
 
     def __call__(self, data):
         matching_list = self.matching_list.load()
@@ -168,15 +264,19 @@ class FilterByTextMatch(Operation):
                 return occurrence_manager.check_exact_occurrence(s)
 
         elif self.algorithm == 'substring':
-            # matcher = Matcher()
+            matcher = Matcher()
 
             def any_match(s):
+                num_matches = 0
                 for pattern in matching_list:
-                    # print(f'Debug: search {pattern=} in {s=} with matcher:',
-                    #       matcher.count_matches(pattern, s), flush=True)
-                    # print(f'Debug: search {pattern=} in {s=} with in:', pattern in s, flush=True)
-                    if pattern in s:  # TODO: matcher.count_matches(pattern, s) > 0:
-                        return True
+                    print(
+                        f'Debug: search {pattern=} in {s=} with matcher:', matcher.count_matches(pattern, s), flush=True
+                    )
+                    print(f'Debug: search {pattern=} in {s=} with in:', pattern in s, flush=True)
+                    if matcher.count_matches(pattern, s) > 0:  # if pattern in s
+                        num_matches += 1
+                        if num_matches >= self.min_entries:
+                            return True
                 return False
 
         else:
@@ -204,7 +304,7 @@ class MatchingList(ABC):
 
 
 class CommonMatchingList(MatchingList):
-    def __init__(self, path='resources/common_blacklist.txt'):
+    def __init__(self, path):
         self.path = path
 
     def load(self):

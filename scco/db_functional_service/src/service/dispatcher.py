@@ -39,6 +39,9 @@ from service.request_cb.pdf_co_gen.insert_offers import InsertOffers
 # customer_creator
 from service.request_cb.customer_creator.insert_customer import InsertCustomer
 
+# manual
+from service.request_cb.manual.map_offers_to_messages import MapOffersToMessages
+
 ################################################################################
 
 
@@ -73,6 +76,9 @@ class Dispatcher:
 
             # customer_creator
             "insert_customer": InsertCustomer(),
+
+            # manual
+            "map_offers_to_messages": MapOffersToMessages(),
         }
 
     def callback(self, ch, method, props, body):

@@ -1,7 +1,9 @@
-from ml_models.gigachat_api_gate.api import GenerateGateWrapper
+import configparser
+from importlib.resources import files
 
+from ml_models.gigachat_api_gate.api import GenerateGateWrapper
 from ml_models.gigachat_api_gate.utils import UserMessageWrapper
-import configparser as configparser
+from ml_models.co_gen.user_message_heuristic import UserMessageHeuristics
 
 from overrides import override
 
@@ -42,25 +44,51 @@ def make_system_prompt(request, path_to_conf):
     return basic
 
 
-class SCCOGenerator(GenerateGateWrapper):
+class COGenerator(GenerateGateWrapper):
     def __init__(self):
+        print("Start constucting COGenerator", flush=True)
         cfg_path = 'co_gen/configs'
-        super().__init__(cfg_path)
+        params_config_path = str(
+            files("ml_models").joinpath(
+                cfg_path + "/params.ini"
+            )
+        )
+        system_prompt_config_path = str(
+            files("ml_models").joinpath(
+                cfg_path+'/prompts.ini'
+            )
+        )
+        print("Init basic model wrapper", flush=True)
+        super().__init__(params_config_path, system_prompt_config_path)
+
+        path_to_generate_cfg = str(
+            files('ml_models').joinpath(
+                cfg_path + '/prepare_params.ini'
+            )
+        )
+        self.user_message_handler_heur = UserMessageHeuristics(
+            path_to_generate_cfg)
+        print("Finish constucting COGenerator", flush=True)
+
+    def get_prepared_messages(self, request):
+        print("Start preparing messges", flush=True)
+        self._set_system_params(request, make_system_prompt)
+        self.user_message_handler_heur(request)
+        messages = self.system_prompts + \
+            UserMessageWrapper.handle_messages(request['messages'])
+        print("Finish preparing messages")
+        return messages
 
     @override
     def generate(self, request) -> dict:
-        self._set_system_params(request, make_system_prompt)
-        tags = ', '.join(request['tags'])
-        company_name = request['company_name']
-        request['messages'][0] = "Сообщение от потенциального клиента: " + \
-            request['messages'][0][:400] + f'. Мне важны только данные технологии: {tags}, которые ваша компания использует, а также расскажите про вас и услуги вашей компании {company_name}'
-        messages = self.system_prompts + \
-            UserMessageWrapper.handle_messages(request['messages'])
-        print(messages)
-        # TODO: for every message channel is separate (channel_ids)
+        print("Start Generate CO", flush=True)
+        messages = self.get_prepared_messages(request)
+        print("Get response from Gate", flush=True)
         response = self.gate.generate_request(messages)
+        if (response.status_code != 200):
+            Exception(f"GigaChat Gate returns response with status code: {response.status_code}")
         text_response = response.json()['choices'][0]['message']['content']
         result = {
-            "main_text": text_response,
+            "main_text": text_response,  # api
         }
         return result

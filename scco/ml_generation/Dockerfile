@@ -2,6 +2,7 @@ FROM python:3.10
 
 #ARG PROJECT_ROOT=project_root
 ENV SERVICE_DIR=/service_root
+ENV PYTHONUNBUFFERED="1"
 
 RUN mkdir ${SERVICE_DIR}
 COPY . ${SERVICE_DIR}

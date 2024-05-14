@@ -1,4 +1,5 @@
 import sys
+import inspect
 
 import crud.dbapi as dbapi
 from crud.models import Base
@@ -15,6 +16,8 @@ from testing.init_db import dummy_init_db
 # data_preprocessing
 from service.data.data_preproc.filter_new_queries import (
     request_simple as fnq_request,
+    request_custom_datetime as fnq_datetime_request,
+    request_cast_type as fnq_cast_request,
 )
 from service.data.data_preproc.insert_new_queries_csv import (
     request_simple as inq_csv_request,
@@ -39,6 +42,11 @@ from service.data.pdf_co_gen.insert_offers import (
 # customer_creator
 from service.data.customer_creator.insert_customer import (
     request_simple as ic_request
+)
+
+# manual
+from service.data.manual.map_offers_to_messages import (
+    request_simple as motom_request
 )
 
 
@@ -66,24 +74,41 @@ def main():
 
     disp_requests = {
         # data_preproc
-        "filter_new_queries": fnq_request,
-        "insert_new_queries_csv": inq_csv_request,
-        "get_customers_lists": gcl_request,
-        "insert_preprocessed_queries": ipq_request,
+        "filter_new_queries": [
+            # fnq_request,
+            # fnq_datetime_request,
+            fnq_cast_request,
+        ],
+        "insert_new_queries_csv": [inq_csv_request],
+        "get_customers_lists": [gcl_request],
+        "insert_preprocessed_queries": [ipq_request],
 
         # ml_co_gen
-        "get_info_for_co_generation": gifcg_request,
+        "get_info_for_co_generation": [gifcg_request],
 
         # pdf_co_gen
-        "insert_offers": io_request,
+        "insert_offers": [io_request],
 
         # customer_creator
-        "insert_customer": ic_request,
+        "insert_customer": [ic_request],
+
+        # manual
+        "map_offers_to_messages": [motom_request],
     }
 
-    name = "get_info_for_co_generation"  # CHANGE ME
+    name = "filter_new_queries"  # CHANGE ME
 
-    dispatcher.dispatch_function(disp_requests[name])
+    for i, req in enumerate(disp_requests[name]):
+        print(
+            inspect.cleandoc(
+                f"""
+                *****************
+                Request {i}
+                *****************
+                """
+            )
+        )
+        dispatcher.dispatch_function(req)
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@ import ml_models.white_list_generation.api as whitelist_gen_api
 
 # TODO: expected API as below
 
-co_gen = co_gen_api.SCCOGenerator()
+co_gen = co_gen_api.COGenerator()
 
 request = {
     "customer_id": "customer_1",
@@ -102,12 +102,3 @@ request = {
 
 main_response = co_gen.generate(request)
 print(main_response["main_text"])
-
-import json
-for num in range(3, 15+1):
-    with open('clients_messages/'+f'clients_messages_{num}.txt', 'r', encoding='utf-8') as f:
-       d = json.load(f)
-       request['messages'] = d['messages']
-    main_response = co_gen.generate(request)
-    with open(f'answers/ans{num}.txt', 'w') as f:
-        f.write(main_response['main_text'])

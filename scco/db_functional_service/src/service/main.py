@@ -5,9 +5,8 @@ from crud.models import Base
 
 from broker.rmq_broker import RmqBroker
 from service.dispatcher import Dispatcher
+from db_insert_on_first_startup import check_first_startup
 from db_insert_on_first_startup import db_insert_on_first_startup
-
-insert_dummy_values_on_first_startup = True
 
 
 def init_database():
@@ -20,11 +19,9 @@ def init_database():
     print("Creating tables", flush=True)
     Base.metadata.create_all(engine)
 
-    global insert_dummy_values_on_first_startup
-    if insert_dummy_values_on_first_startup:
+    if check_first_startup():
         print("Inserting customers on first startup", flush=True)
         db_insert_on_first_startup()
-        insert_dummy_values_on_first_startup = False
     else:
         print("Skip inserting customers on first startup"
               "(must be already inserted)", flush=True)

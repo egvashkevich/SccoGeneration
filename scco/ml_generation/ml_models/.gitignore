@@ -4,3 +4,5 @@ src/gigachat/configs/script.py
 configs/script.py
 __pycache__
 api_token.secret.env
+results
+clients_messages

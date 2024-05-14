@@ -2,11 +2,12 @@ from sqlalchemy import insert
 from sqlalchemy.orm import Session
 
 from crud.models import Offer
+from crud.base.SelectorBase import SelectorBase
 
 import crud.dbapi as dbapi
 
 
-class OfferCRUD:
+class OfferCRUD(SelectorBase):
     def __init__(self):
         pass
 
