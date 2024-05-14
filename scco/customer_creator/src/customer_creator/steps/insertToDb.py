@@ -1,4 +1,4 @@
-import util.app_config as app_cfg
+import utils.app_config as app_cfg
 
 from broker_for_creator.broker import Broker
 from broker_for_creator.broker import Publisher

@@ -5,10 +5,6 @@ from broker_for_creator.rmq_broker import RmqBroker
 
 from steps.insertToDb import InsertToDb
 
-from ml_models.co_gen.api import SCCOGenerator
-from ml_generation.dummy_ml_model import DummyMlModel
-
-
 def main():
     print("Customer creator:
 Creating RmqBroker...")
