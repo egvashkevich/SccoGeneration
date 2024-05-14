@@ -1,8 +1,8 @@
 import utils.app_config as app_cfg
 
-from src.broker_for_creator.Broker import Broker
-from src.broker_for_creator.Broker import Publisher
-from src.broker_for_creator.Broker import Consumer
+from broker_for_creator.Broker import Broker
+from broker_for_creator.Broker import Publisher
+from broker_for_creator.Broker import Consumer
 
 def get_callback_data(body: bytes):
     body = body.decode("utf-8")
