@@ -39,9 +39,7 @@ cd "${PROJECT_ROOT}"
 ################################################################################
 
 # Services
-ls ./scco
 ENV_FILE="./scco/.env"
-cat ${ENV_FILE}
 set -o allexport
 source "${ENV_FILE}" set
 set +o allexport
