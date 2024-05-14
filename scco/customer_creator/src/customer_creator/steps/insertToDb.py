@@ -72,11 +72,22 @@ class InsertToDb:
         print("InsertToDb callback finished")
 
     def callback_handle(self, passed_data) -> dict:
-        transformed_data = {
-    "request_name": "insert_customer",
-    "request_data": passed_data
+        # Создаем копию passed_data и добавляем white_list
+        request_data = passed_data.copy()
+        request_data["white_list"] = passed_data["tags"]
+    
+        # Формируем итоговый словарь, добавляя ключи в нужном порядке
+        answer = {
+            "request_name": "insert_customer",
+            "request_data": {
+                "customer_id": request_data["customer_id"],
+                "contact_info": request_data["contact_info"],
+                "company_name": request_data["company_name"],
+                "black_list": request_data["black_list"],
+                "tags": request_data["tags"],
+                "white_list": request_data["white_list"],
+                "specific_features": request_data["specific_features"],
+                "customer_services": request_data["customer_services"]
+            }
         }
-        transformed_data["request_data"]["white_list"] = passed_data["tags"]
-        answer = transformed_data
         return answer
-
