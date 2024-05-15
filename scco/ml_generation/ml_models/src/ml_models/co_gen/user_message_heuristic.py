@@ -1,6 +1,8 @@
 from typing import Any
-from ml_models.co_gen.matcher import Matcher
 import configparser
+
+from ml_models.co_gen.matcher import Matcher
+from ml_models.gigachat_api_gate.utils import Logger
 
 
 def parse_word(string, idx):
@@ -14,6 +16,8 @@ def parse_word(string, idx):
 
 class UserMessageCutHandler:
     def __init__(self, path_to_generate_cfg):
+        Logger.print('Construct UserMessageCatHandler')
+
         self.matcher = Matcher()
         self.DEFAULT_MESSAGE = "Добрый день. Нужно реализовать проект."
         config = configparser.ConfigParser()
@@ -30,6 +34,8 @@ class UserMessageCutHandler:
         self.direction = config['CUT_MESSAGE']['direction']
         assert self.direction in ['END', 'BEGIN']
 
+        Logger.print('Finish Construct UserMessageHandler')
+
         self.not_gen_flag = False
 
     def calc_new_len(self, length, matches):
@@ -41,6 +47,7 @@ class UserMessageCutHandler:
         return int(min(length, self.min_messages_size + delta_matched*size_delta_to_match))
 
     def __call__(self, request):
+
         messages = request['messages']
         matches = 0
         concated_messages = ''.join(messages)
@@ -71,13 +78,18 @@ class UserMessageCutHandler:
 
 class AddToLastMessageHandler:
     def __init__(self, path_to_generate_cfg):
+        Logger.print("Construct AddToLastMessageHandler")
+
         self.matcher = Matcher()
         config = configparser.ConfigParser()
         config.read(path_to_generate_cfg)
 
         self.keyword_message_pad = config['EDIT_USER_MESSAGE']['add_to_end']
 
+        Logger.print("Finish construct AddToLastMessageHandler")
+
     def __call__(self, request):
+        Logger.print("Call AddToLastMessageHandler")
         tags = ', '.join(request['tags'])
         pad_to_end = self.keyword_message_pad.replace('[TAGS]', tags)
         request['messages'][-1] += pad_to_end
@@ -85,10 +97,14 @@ class AddToLastMessageHandler:
 
 class UserMessageHeuristics:
     def __init__(self, path_to_generate_cfg):
+        Logger.print("Construct UserMessageHeuristics")
+
         self.cut_heur = UserMessageCutHandler(path_to_generate_cfg)
         self.add_heur = AddToLastMessageHandler(path_to_generate_cfg)
         self.matcher = Matcher()
         self.buff = dict
+
+        Logger.print("Finish Construct UserMessageHeuristics")
 
     def __call__(self, request):
         self.cut_heur(request)
