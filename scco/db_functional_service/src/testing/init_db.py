@@ -23,10 +23,10 @@ def parse_customer(json_path: str) -> (dict, list[dict]):
 
     # Customer
     customer = dict(customer_json)
-    del customer["customer_services"]
+    del customer["services"]
 
     # Customer services
-    customer_services = customer_json["customer_services"]
+    customer_services = customer_json["services"]
     for service in customer_services:
         service.update({"customer_id": customer["customer_id"]})
 

@@ -1,17 +1,30 @@
-# ML generation
+# ml_generation
 
-## Структура
+This service is responsible for text generation using ML models.
 
-## Тестирование
 
-* Очень хорошая документация по `pytest`: https://habr.com/ru/articles/426699/
+## Functionality
+* Generates text of a CO based on `client` messages.
+* Sends generated text to the `pdf_generation` service.
+
+
+## Files With Secrets
+See in [README.md](ml_models/README.md) in `ml_modules` folder.
+
+
+## Data
+Example of received data from `data_preprocessing` is located in `ml_generation/tests/ml_generation/steps/preproc/data/simple_input_data.json`.
+
+Example of sending data to `pdf_generation` is located in `ml_generation/tests/ml_generation/steps/co_gen/data/simple_pdf_gen_pub.json`.
+
 
 ## CI
-Нужно из папки микросервиса `ml_generation` выполнить:
+From `ml_generation` folder run:
 ```bash
 docker build -t scco_test_ml_generation .
 docker run --name scco_test_ml_generation scco_test_ml_generation pytest
 ```
 
-## Файлы с секретами
-Смотри ридми в папке `ml_modules`.
+
+## Handy
+* Great `pytest` docs: https://habr.com/ru/articles/426699/

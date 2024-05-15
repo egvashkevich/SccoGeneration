@@ -24,6 +24,6 @@ class Logger:
         if (flush is None):
             flush = True
         print(message, flush=flush)
-        print()
-        print('-'*100)
-        print(flush=flush)
+        # print()
+        # print('-'*100)
+        # print(flush=flush)
