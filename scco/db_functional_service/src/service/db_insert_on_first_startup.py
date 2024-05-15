@@ -8,7 +8,7 @@ from testing.init_db import insert_misc
 
 SERVICE_PKG_DIR = os.path.dirname(__file__)
 FIRST_STARTUP_LOCK_FILE_NAME = "first-startup.lock"
-INSERT_TO_DB_ON_FIRST_STARTUP = True  # one-hot disable
+INSERT_TO_DB_ON_FIRST_STARTUP = False  # one-hot disable
 
 
 def check_first_startup() -> bool:
