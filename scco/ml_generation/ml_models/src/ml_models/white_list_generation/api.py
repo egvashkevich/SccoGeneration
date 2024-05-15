@@ -1,9 +1,10 @@
-from ml_models.gigachat_api_gate.api import GenerateGateWrapper
-
-from ml_models.gigachat_api_gate.utils import UserMessageWrapper
 import configparser as configparser
-
 from overrides import override
+from importlib.resources import files
+
+from ml_models.gigachat_api_gate.api import GenerateGateWrapper
+from ml_models.gigachat_api_gate.utils import UserMessageWrapper
+from ml_models.gigachat_api_gate.utils import Logger
 
 
 def make_system_prompt(request, path_to_conf):
@@ -15,8 +16,25 @@ def make_system_prompt(request, path_to_conf):
 
 class KeyWordsGenerator(GenerateGateWrapper):
     def __init__(self):
+        Logger.print("Construct KeyWordsGenerator")
+
         cfg_path = 'white_list_generation/configs'
-        super().__init__(cfg_path)
+
+        system_prompt_config_path = str(
+            files("ml_models").joinpath(
+                cfg_path+'/prompts.ini'
+            )
+        )
+
+        params_config_path = str(
+            files("ml_models").joinpath(
+                cfg_path + "/params.ini"
+            )
+        )
+
+        super().__init__(params_config_path, system_prompt_config_path)
+
+        Logger.print("Finish Construct KeyWordsGenerator")
 
     def _make_key_word_prompt(self, request):
         whitelist_features = []
@@ -29,6 +47,8 @@ class KeyWordsGenerator(GenerateGateWrapper):
 
     @override
     def generate(self, request) -> dict:
+        Logger.print("Start Generating whitelist")
+
         self._set_system_params(request, make_system_prompt)
         features = self._make_key_word_prompt(request)
         messages = self.system_prompts + \
@@ -38,4 +58,6 @@ class KeyWordsGenerator(GenerateGateWrapper):
         result = {
             "whitelist": text_response,
         }
+
+        Logger.print("End Generationg whitelist")
         return result

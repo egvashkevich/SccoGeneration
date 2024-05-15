@@ -1,11 +1,11 @@
 from typing import List
-
 from importlib.resources import files
+import configparser as configparser
 
 import ml_models.gigachat_api_gate.utils as utils
 from ml_models.gigachat_api_gate.utils import UserMessageWrapper
-import configparser as configparser
 from ml_models.gigachat_api_gate.gigachat_gate import GigaChatAPIManager
+from ml_models.gigachat_api_gate.utils import Logger
 
 
 class GenerateGateWrapper:
@@ -15,7 +15,7 @@ class GenerateGateWrapper:
         self.gate = GigaChatAPIManager(self.params_config_path)
 
     def _set_system_params(self, request, make_system_prompt):
-        print("Start setting base_model params", flush=True)
+        Logger.print("Start setting base_model params", flush=True)
         system_content = make_system_prompt(
             request, self.system_prompt_config_path)
 
@@ -25,7 +25,7 @@ class GenerateGateWrapper:
                 'content': system_content
             }
         ]
-        print("Finish setting base_model params", flush=True)
+        Logger.print("Finish setting base_model params", flush=True)
 
     def generate(self, request) -> dict:
         """

@@ -5,6 +5,8 @@ from ml_models.gigachat_api_gate.api import GenerateGateWrapper
 from ml_models.gigachat_api_gate.utils import UserMessageWrapper
 from ml_models.co_gen.user_message_heuristic import UserMessageHeuristics
 
+from ml_models.gigachat_api_gate.utils import Logger
+
 from overrides import override
 
 pos_to_insert_in_system = {
@@ -46,7 +48,7 @@ def make_system_prompt(request, path_to_conf):
 
 class COGenerator(GenerateGateWrapper):
     def __init__(self):
-        print("Start constucting COGenerator", flush=True)
+        Logger.print("Start constucting COGenerator", flush=True)
         cfg_path = 'co_gen/configs'
         params_config_path = str(
             files("ml_models").joinpath(
@@ -58,7 +60,7 @@ class COGenerator(GenerateGateWrapper):
                 cfg_path+'/prompts.ini'
             )
         )
-        print("Init basic model wrapper", flush=True)
+        Logger.print("Init basic model wrapper", flush=True)
         super().__init__(params_config_path, system_prompt_config_path)
 
         path_to_generate_cfg = str(
@@ -68,27 +70,33 @@ class COGenerator(GenerateGateWrapper):
         )
         self.user_message_handler_heur = UserMessageHeuristics(
             path_to_generate_cfg)
-        print("Finish constucting COGenerator", flush=True)
+        Logger.print("Finish constucting COGenerator", flush=True)
 
     def get_prepared_messages(self, request):
-        print("Start preparing messges", flush=True)
+        Logger.print("Start preparing messges", flush=True)
+
         self._set_system_params(request, make_system_prompt)
         self.user_message_handler_heur(request)
         messages = self.system_prompts + \
             UserMessageWrapper.handle_messages(request['messages'])
-        print("Finish preparing messages")
+
+        Logger.print("Finish preparing messages")
         return messages
 
     @override
     def generate(self, request) -> dict:
-        print("Start Generate CO", flush=True)
+        Logger.print("Start Generate CO", flush=True)
+
         messages = self.get_prepared_messages(request)
-        print("Get response from Gate", flush=True)
+        Logger.print("Get response from Gate", flush=True)
         response = self.gate.generate_request(messages)
         if (response.status_code != 200):
-            Exception(f"GigaChat Gate returns response with status code: {response.status_code}")
+            Exception(
+                f"GigaChat Gate returns response with status code: {response.status_code}")
         text_response = response.json()['choices'][0]['message']['content']
         result = {
             "main_text": text_response,  # api
         }
+
+        Logger.print("Finish Generate CO")
         return result
