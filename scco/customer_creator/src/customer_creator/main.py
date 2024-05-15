@@ -1,22 +1,17 @@
 import sys
 
-from broker_for_creator.broker import Broker
-from broker_for_creator.rmq_broker import RmqBroker
+from broker_for_creator.Broker import Broker
+from broker_for_creator.RmqBroker import RmqBroker
 
 from steps.insertToDb import InsertToDb
 
-from ml_models.co_gen.api import SCCOGenerator
-from ml_generation.dummy_ml_model import DummyMlModel
-
-
 def main():
-    print("Customer creator:
-Creating RmqBroker...")
+    print("Customer creator:Creating RmqBroker...")
     broker: Broker = RmqBroker()
     print("RmqBroker created")
 
     print("Creating insertToDb...")
-    InsertToDb = InsertToDb(broker)
+    insertToDb = InsertToDb(broker)
     print("InsertToDb created")
 
     print("Start consuming...")
