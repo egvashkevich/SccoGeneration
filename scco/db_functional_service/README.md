@@ -1,7 +1,22 @@
 # db_functional_service
 
-## Description
+This service is responsible for managing database.
 
+
+## Functionality
+* Stores data about customers, clients, CO and messages.
+* Other services use that one as a database.
+
+
+## Files With Secrets
+See `Prerequisites` section in [README.md](../README.md) for all services.
+
+
+## API
+Examples of received (request) and sent (answer) data is located in `db_functional_service/src/service/data`.
+
+
+## Implementation Details
 * `PostrgeSQL` is used as a database.
 * `sqlalchemy` orm is used for interaction with database.
 * Database schema:
@@ -10,7 +25,7 @@
 
 ## Installation and run
 ```bash
-./run.sh --file main_test.py
+./run.sh --file src/main.py
 ```
 
 ## CI
@@ -21,7 +36,6 @@ docker run --name scco_test_db_functional_service scco_test_db_functional_servic
 ```
 
 ## Pgadmin
-
 * Go to `localhost:5050`
 * Choose `Servers` -> `Register` -> `Server`.
 * Enter a custom server name.
@@ -32,8 +46,8 @@ docker run --name scco_test_db_functional_service scco_test_db_functional_servic
 
 Some queries are located in [docs/sql_queries.md](docs/sql_queries.md).
 
-## Development
 
+## Development
 Run `postgresql` + `pgadmin` locally (from `tests` folder).
 ```bash
 docker-compose up --build -d
@@ -60,8 +74,8 @@ docker rm scco_debug_db_functional_service
 docker rmi scco_debug_db_functional_service
 ```
 
-## Handy
 
+## Handy
 * Postgres url:
   ```text
   postgresql://[user[:password]@][netloc][:port][/dbname][?param1=value1&...]

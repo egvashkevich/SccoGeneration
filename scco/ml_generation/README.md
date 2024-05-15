@@ -12,7 +12,7 @@ This service is responsible for text generation using ML models.
 See in [README.md](ml_models/README.md) in `ml_modules` folder.
 
 
-## Data
+## API
 Example of received data from `data_preprocessing` is located in `ml_generation/tests/ml_generation/steps/preproc/data/simple_input_data.json`.
 
 Example of sending data to `pdf_generation` is located in `ml_generation/tests/ml_generation/steps/co_gen/data/simple_pdf_gen_pub.json`.
