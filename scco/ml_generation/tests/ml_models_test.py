@@ -5,6 +5,7 @@ import ml_models.white_list_generation.api as whitelist_gen_api
 # TODO: expected API as below
 
 co_gen = co_gen_api.COGenerator()
+white_list_gen = whitelist_gen_api.KeyWordsGenerator()
 
 request = {
     "customer_id": "customer_1",
@@ -101,4 +102,7 @@ request = {
 
 
 main_response = co_gen.generate(request)
+white_list = white_list_gen.generate(request)
+
 print(main_response["main_text"])
+print(white_list)
