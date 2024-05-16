@@ -91,7 +91,7 @@ class COGenerator(GenerateGateWrapper):
         Logger.print("Get response from Gate", flush=True)
         response = self.gate.generate_request(messages)
         if (response.status_code != 200):
-            Exception(
+            raise Exception(
                 f"GigaChat Gate returns response with status code: {response.status_code}")
         text_response = response.json()['choices'][0]['message']['content']
         result = {
