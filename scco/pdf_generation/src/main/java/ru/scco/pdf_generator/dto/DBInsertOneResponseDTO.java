@@ -15,5 +15,4 @@ public class DBInsertOneResponseDTO implements Serializable {
     String filePath;
 
 
-
 }

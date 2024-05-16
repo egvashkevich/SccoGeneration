@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DBRequestDTO implements
-                              Serializable {
+                          Serializable {
     @JsonProperty("request_name")
     final String requestName = "insert_offers";
 

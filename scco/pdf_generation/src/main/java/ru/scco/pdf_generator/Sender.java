@@ -5,7 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
-import ru.scco.pdf_generator.dto.*;
+import ru.scco.pdf_generator.dto.DBInsertRequestData;
+import ru.scco.pdf_generator.dto.DBReplyDTO;
+import ru.scco.pdf_generator.dto.DBRequestDTO;
+import ru.scco.pdf_generator.dto.PDFResponseDTO;
 
 @Component
 @RequiredArgsConstructor
@@ -23,7 +26,7 @@ public class Sender {
 
     public void sendCPToDB(long messageID, String fileLink) {
         log.info("sendCPToDB" + messageID + " " + fileLink);
-        log.info("sendCPToDB" +  " dist exch: " + dbBinding.getExchange() +
+        log.info("sendCPToDB" + " dist exch: " + dbBinding.getExchange() +
                  " " + "dist routing " + dbBinding.getRoutingKey() + " answ "
                  + "exch: " + crudResponseBinding.getExchange() + " answ "
                  + "routing " + crudResponseBinding.getRoutingKey());
@@ -39,7 +42,8 @@ public class Sender {
 
     public void sendCPToOutput(String customerID, String clientID,
                                String fileLink) {
-        log.info("sendCPToOutput " + outerBinding.getExchange() + " " + outerBinding.getRoutingKey());
+        log.info("sendCPToOutput " + outerBinding.getExchange() + " "
+                 + outerBinding.getRoutingKey());
         template.convertAndSend(outerBinding.getExchange(),
                                 outerBinding.getRoutingKey(),
                                 new PDFResponseDTO(customerID, clientID,

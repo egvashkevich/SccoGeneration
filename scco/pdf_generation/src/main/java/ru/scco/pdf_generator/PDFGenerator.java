@@ -20,47 +20,18 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDTextField;
 
 import java.awt.geom.AffineTransform;
-import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Path;
-import java.util.ArrayDeque;
-import java.util.Arrays;
-import java.util.Deque;
-import java.util.Objects;
+import java.util.*;
 
+// This class is responsible for inserting text in pdf-template and saving at the server
 @Slf4j
 @RequiredArgsConstructor
 public class PDFGenerator {
     private final String templatePath;
     private final String fontPath;
     private final String destinationPath;
-    private final int fontSize;
-
-
-    private record Pair(String restText, float lineY) {
-    }
-
-
-    // Если указан размер и цвет шрифта поля - он применяется
-    // Иначе по умолчанию - черный
-    private int setAppearance(PDPageContentStream contentStream,
-                                     String appearance, PDFont font)
-            throws IOException {
-        int fontSize = this.fontSize;
-        if (appearance != null) {
-            String[] styleSettings = appearance.split(" ");
-            if (styleSettings.length == 7) {
-                fontSize = Integer.parseInt(styleSettings[1]);
-                contentStream.setNonStrokingColor(
-                        Float.parseFloat(styleSettings[3]),
-                        Float.parseFloat(styleSettings[4]),
-                        Float.parseFloat(styleSettings[5]));
-            }
-        }
-        contentStream.setFont(font, fontSize);
-        return fontSize;
-    }
+    private final int defaultFontSize;
 
     // Connection with page may not know about its page,
     // But page has to know about widgets
@@ -85,123 +56,172 @@ public class PDFGenerator {
         return page;
     }
 
-
-    // метод переноса строки в длинном тексте
-    // пытается переносить по пробелу
-    // Проблема pdf, что разные символы имеют разный размер, поэтому приходится
-    // на каждом пробеле проверять, нужен ли перенос
-    // TODO: указывать приблизительную позицию через averageFontSize, потом
-    // добирать / убирать символы.
-    private static Pair showLongLine(String text,
-                                     PDPageContentStream contentStream,
-                                     PDFont font, int fontSize,
-                                     PDRectangle rectangle, float y)
+    // This method is responsible for wrapping long lines
+    // If text does not fit rectangle's size, method returns rest of the text
+    // This method reads text char by char, tries to wrap text by space
+    private static String showLongLine(String text,
+                                       PDPageContentStream contentStream,
+                                       PDFont font, int fontSize,
+                                       PDRectangle rectangle)
             throws IOException {
-        float maxCharWidth = fontSize * font.getWidth('ж') / 1000;
         float deltaY = -fontSize * (font.getBoundingBox()
                                         .getHeight()) / 1000;
-        y += deltaY;
         contentStream.newLineAtOffset(0, deltaY);
-        int lastSpace = -1;
-        while (!text.isEmpty()) {
-            if (y < rectangle.getLowerLeftY()) {
-                return new Pair(text, y);
+        rectangle.setUpperRightY(rectangle.getUpperRightY() + deltaY);
+
+        // Text that definitely will be shown
+        StringBuilder lineBuilder = new StringBuilder();
+        // One word. Will be merged with lineBuilder when separate will be found
+        // If length of wordBuilder passes width of rectangle, it word be shown
+        StringBuilder wordBuilder = new StringBuilder();
+        float lineOffset = 0; // size of lineBuilder in pdf
+        float wordOffset = 0; // size of wordBuilder in pdf
+
+        for (int i = 0; i < text.length(); i++) {
+            if (rectangle.getHeight() <= 0) {
+                return wordBuilder.append(text.substring(i)).toString();
             }
-            int spaceIndex = text.indexOf(' ', lastSpace + 1);
-            if (spaceIndex < 0) {
-                spaceIndex = text.length();
-            }
-            String subString = text.substring(0, spaceIndex);
-            float size = fontSize * font.getStringWidth(subString) / 1000;
-            if (size > rectangle.getUpperRightX() - rectangle.getLowerLeftX()) {
-                if (lastSpace < 0) {
-                    System.out.println(maxCharWidth);
-                    lastSpace = (int) (rectangle.getWidth() / maxCharWidth);
+            float charLength =
+                    font.getStringWidth("" + text.charAt(i)) * fontSize / 1000;
+            if (lineOffset + wordOffset + charLength
+                > rectangle.getUpperRightX() - rectangle.getLowerLeftX()) {
+                if (!lineBuilder.isEmpty()) {
+                    contentStream.showText(lineBuilder.toString());
+                    lineBuilder = new StringBuilder();
+                    lineOffset = 0;
+                } else {
+                    contentStream.showText(wordBuilder.toString());
+                    wordBuilder = new StringBuilder();
+                    wordOffset = 0;
                 }
-                contentStream.showText(subString.substring(0, lastSpace));
                 contentStream.newLineAtOffset(0, deltaY);
-                y += deltaY;
-                text = text.substring(lastSpace).trim();
-                lastSpace = -1;
-            } else if (spaceIndex == text.length()) {
-                contentStream.showText(text);
-                contentStream.newLineAtOffset(0, deltaY);
-                y += deltaY;
-                text = "";
-            } else {
-                lastSpace = spaceIndex;
+                rectangle.setUpperRightY(rectangle.getUpperRightY() + deltaY);
+            }
+            wordBuilder.append(text.charAt(i));
+            wordOffset += charLength;
+            if (text.charAt(i) == ' ') {
+                lineOffset += wordOffset;
+                wordOffset = 0;
+                lineBuilder.append(wordBuilder);
+                wordBuilder = new StringBuilder();
             }
         }
-        return new Pair("", y);
+        contentStream.showText(lineBuilder.append(wordBuilder).toString());
+        contentStream.newLineAtOffset(0, deltaY);
+        rectangle.setUpperRightY(rectangle.getUpperRightY() + deltaY);
+        return "";
     }
+
+
+    // create stream on the particular page by field.
+    // Content stream does not return information about its settings,
+    // such as font or fontsize, so fontSize is also return from the method
+    private Map.Entry<PDPageContentStream, Integer> initContentStream(
+            PDDocument document,
+            PDPage page,
+            PDTextField field,
+            PDFont font)
+            throws IOException {
+        PDPageContentStream contentStream =
+                new PDPageContentStream(document, page,
+                                        PDPageContentStream.AppendMode.APPEND,
+                                        false, true);
+        int fontSize = setAppearance(contentStream,
+                                     field.getDefaultAppearance(), font);
+        contentStream.beginText();
+        contentStream.newLineAtOffset(
+                field.getWidgets().get(0).getRectangle().getLowerLeftX(),
+                field.getWidgets().get(0).getRectangle().getUpperRightY());
+        return Map.entry(contentStream, fontSize);
+    }
+
+    // parse appearance to customize contentStream
+    private int setAppearance(PDPageContentStream contentStream,
+                              String appearance, PDFont font)
+            throws IOException {
+        int fontSize = this.defaultFontSize;
+        if (appearance != null) {
+            String[] styleSettings = appearance.split(" ");
+            if (styleSettings.length == 7) {
+                fontSize = Integer.parseInt(styleSettings[1]);
+                contentStream.setNonStrokingColor(
+                        Float.parseFloat(styleSettings[3]),
+                        Float.parseFloat(styleSettings[4]),
+                        Float.parseFloat(styleSettings[5]));
+            }
+        }
+        contentStream.setFont(font, fontSize);
+        return fontSize;
+    }
+
 
     private String fillMultiPageTemplate(long messageID,
                                          String mainText) {
         try (PDDocument doc =
                      Loader.loadPDF(IOUtils.toByteArray(Objects.requireNonNull(
-                             PDFGenerator.class.getResourceAsStream(templatePath)))
+                             PDFGenerator.class.getResourceAsStream(
+                                     templatePath)))
                      )) {
-            PDFont font = PDType0Font.load(doc,
-                                           PDFGenerator.class.getResourceAsStream(
-                                                   fontPath), false);
+            // Load font that supports non-ascii symbols
+            PDFont font = PDType0Font.load(
+                    doc, PDFGenerator.class.getResourceAsStream(fontPath),
+                    false);
 
+            // Load form and its rectangle (coordinates)
             PDAcroForm acroForm = doc.getDocumentCatalog().getAcroForm();
-            PDTextField template = (PDTextField) acroForm.getField("main_text");
+            PDTextField inputField =
+                    (PDTextField) acroForm.getField("main_text");
+            PDRectangle inputRectange =
+                    inputField.getWidgets().get(0).getRectangle();
 
-            PDRectangle rectangle = template.getWidgets().get(0).getRectangle();
             PDPage page = doc.getPage(0);
+
+            // Init layer utility and load page as form in order to
+            // match its template when creating new pages
             LayerUtility layerUtility = new LayerUtility(doc);
-            PDFormXObject firstForm =
+            PDFormXObject pageTemplate =
                     layerUtility.importPageAsForm(doc, 0);
             AffineTransform affineTransform = new AffineTransform();
 
-            PDPageContentStream contentStream =
-                    new PDPageContentStream(doc, page,
-                                            PDPageContentStream.AppendMode.APPEND,
-                                            false, true);
-            int fontSize = setAppearance(contentStream,
-                                         template.getDefaultAppearance(), font);
-            contentStream.beginText();
-            contentStream.setFont(font, fontSize);
+            Map.Entry<PDPageContentStream, Integer> streamInfo =
+                    initContentStream(doc, page, inputField, font);
+            PDPageContentStream contentStream = streamInfo.getKey();
+            int fontSize = streamInfo.getValue();
 
-            contentStream.newLineAtOffset(rectangle.getLowerLeftX(),
-                                          rectangle.getUpperRightY());
-            float y = rectangle.getUpperRightY();
-            int cnt = 0;
+            int pageIndex = 0;
             Deque<String> lines =
                     new ArrayDeque<>(Arrays.asList(mainText.split("\n")));
+            // write line by line. If text does not fit form size,
+            // new page and content stream are created
             while (!lines.isEmpty()) {
-                Pair positionAndRest =
-                        showLongLine(lines.removeFirst(), contentStream, font,
+                String restText =
+                        showLongLine(lines.removeFirst(),
+                                     contentStream, font,
                                      fontSize,
-                                     rectangle,
-                                     y);
-                y = positionAndRest.lineY();
-                if (y < rectangle.getLowerLeftY()) {
+                                     inputRectange);
+                if (inputRectange.getHeight() <= 0) {
                     contentStream.endText();
                     contentStream.close();
                     page = new PDPage(page.getMediaBox());
                     doc.addPage(page);
-                    layerUtility.appendFormAsLayer(page, firstForm,
+                    layerUtility.appendFormAsLayer(page, pageTemplate,
                                                    affineTransform,
-                                                   "page" + cnt);
-                    cnt++;
-                    contentStream = new PDPageContentStream(doc, page,
-                                                            PDPageContentStream.AppendMode.APPEND,
-                                                            false, true);
-                    contentStream.beginText();
-                    contentStream.setFont(font, fontSize);
-
-                    contentStream.newLineAtOffset(rectangle.getLowerLeftX(),
-                                                  rectangle.getUpperRightY());
-                    y = rectangle.getUpperRightY();
-                    lines.addFirst(positionAndRest.restText);
+                                                   "page" + pageIndex);
+                    pageIndex++;
+                    streamInfo = initContentStream(doc, page, inputField, font);
+                    contentStream = streamInfo.getKey();
+                    fontSize = streamInfo.getValue();
+                    inputRectange =
+                            inputField.getWidgets().get(0).getRectangle();
+                    lines.addFirst(restText);
                 }
             }
 
             contentStream.endText();
             contentStream.close();
 
+            // Close template's form. It will become a regular widget at the
+            // behind the text.
             acroForm.flatten();
             Path filePath = Path.of(destinationPath, messageID + ".pdf");
             doc.save(filePath.toAbsolutePath().toString());
