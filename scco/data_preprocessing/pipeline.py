@@ -272,10 +272,6 @@ class FilterByTextMatch(Operation):
             def any_match(s):
                 num_matches = 0
                 for pattern in matching_list:
-                    print(
-                        f'Debug: search {pattern=} in {s=} with matcher:', matcher.count_matches(pattern, s), flush=True
-                    )
-                    print(f'Debug: search {pattern=} in {s=} with in:', pattern in s, flush=True)
                     if matcher.count_matches(pattern, s) > 0:  # if pattern in s
                         num_matches += 1
                         if num_matches >= self.min_entries:
