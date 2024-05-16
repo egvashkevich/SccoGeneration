@@ -55,15 +55,15 @@ class Preprocessor:
             customer_id = str(json_in['customer_id'])
             csv_name = json_in['parsed_csv']
             data = pd.read_csv(os.path.join(config.PARSER_BOT_CSV_FOLDER, csv_name), dtype=str)
-
-            assert ','.join(data.columns).lower() == "channel_name,sender_id,message,message_date"
-            data.columns = ['channel_id', 'client_id', 'message', 'message_date']
         except Exception as e:
             print(" [x] Caught the following exception when parsing input:")
             print(e)
             print(" [x] Sending ack, continue listening", flush=True)
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
+
+        assert ','.join(data.columns).lower() == "channel_name,sender_id,message,message_date"
+        data.columns = ['channel_id', 'client_id', 'message', 'message_date']
 
         pipeline = PreprocessingPipeline(
             customer_id,

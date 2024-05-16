@@ -67,7 +67,7 @@ class PreprocessingPipeline:
                 ),
             ),
             # (
-            #     'common white black list',
+            #     'common strong white list',
             #     FilterByTextMatch(
             #         CommonMatchingList(config.STRONG_WHITELIST_PATH),
             #         mode='whitelist',
@@ -308,7 +308,7 @@ class CommonMatchingList(MatchingList):
 
     def load(self):
         with open(self.path, 'r') as f:
-            common_matching_list = {s.strip() for s in f.readlines()}
+            common_matching_list = {s.strip().lower() for s in f.readlines()}
         if '' in common_matching_list:
             common_matching_list.remove('')
         return common_matching_list
@@ -320,7 +320,7 @@ class CustomerBlackList(MatchingList):
         self.rpc_client = rpc_client
 
     def load(self):
-        return set(self.rpc_client.get_black_list(self.customer_id))
+        return {s.lower() for s in self.rpc_client.get_black_list(self.customer_id)}
 
 
 class CustomerWhiteList(MatchingList):
