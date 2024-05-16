@@ -8,12 +8,14 @@ SWEAR_WORDS_BLACKLIST_PATH = 'resources/swear_words_blacklist.txt'
 
 REMOVE_HASHTAGS_ENTIRELY = False
 
+DEBUG_ISOLATED = False
 
-def from_env(var_name):
+
+def from_env(var_name, default=''):
     if var_name in os.environ:
         return os.environ[var_name]
-    print(f"Warning: environment variable {var_name} not found, setting to None")
-    return None
+    print(f"Warning: environment variable {var_name} not found, setting to {repr(default)}")
+    return default
 
 
 RABBIT_ADDRESS = from_env('RMQ_NET_ALIAS')
@@ -30,8 +32,8 @@ ML_GENERATION_EXCHANGE = from_env('ML_GENERATION_EXCHANGE')
 ML_GENERATION_QUEUE = from_env('ML_GENERATION_QUEUE')
 ML_GENERATION_ROUTING_KEY = from_env('ML_GENERATION_ROUTING_KEY')
 
-PARSER_BOT_CSV_FOLDER = from_env('PARSER_BOT_CSV_VOLUME_PATH')
-NEW_QUERIES_CSV_FOLDER = from_env('UNPROCESSED_PARSER_BOT_CSV_VOLUME_PATH')
+PARSER_BOT_CSV_FOLDER = from_env('PARSER_BOT_CSV_VOLUME_PATH', '../../volumes/parser_bot_csv')
+NEW_QUERIES_CSV_FOLDER = from_env('UNPROCESSED_PARSER_BOT_CSV_VOLUME_PATH', 'temp')
 
 CONTAINS_REQUEST_EXCHANGE = IN_EXCHANGE
 CONTAINS_REQUEST_QUEUE = IN_QUEUE + '_contains'

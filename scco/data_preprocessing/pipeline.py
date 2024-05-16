@@ -67,7 +67,7 @@ class PreprocessingPipeline:
                 ),
             ),
             # (
-            #     'common white black list',
+            #     'common strong white list',
             #     FilterByTextMatch(
             #         CommonMatchingList(config.STRONG_WHITELIST_PATH),
             #         mode='whitelist',
@@ -190,11 +190,14 @@ class FilterAlreadySeen(Operation):
         response = self.rpc_client.call(request_data)  # json-like object -> json-like object
 
         if len(response) > 0:
-            result = pd.read_json(StringIO(json.dumps(response, ensure_ascii=False)), orient='records')
+            result = pd.read_json(
+                StringIO(json.dumps(response, ensure_ascii=False)),
+                orient='records',
+                dtype={'customer_id': str, 'client_id': str, 'channel_id': str, 'message_date': str},
+            )
         else:
-            result = pd.DataFrame(columns=['customer_id', 'client_id', 'channel_id', 'message_date'])
+            result = pd.DataFrame(columns=['customer_id', 'client_id', 'channel_id', 'message_date'], dtype=str)
 
-        result['client_id'] = result['client_id'].astype(str)
         return data.merge(result, how='right', on=self.by)
 
 
@@ -269,10 +272,6 @@ class FilterByTextMatch(Operation):
             def any_match(s):
                 num_matches = 0
                 for pattern in matching_list:
-                    print(
-                        f'Debug: search {pattern=} in {s=} with matcher:', matcher.count_matches(pattern, s), flush=True
-                    )
-                    print(f'Debug: search {pattern=} in {s=} with in:', pattern in s, flush=True)
                     if matcher.count_matches(pattern, s) > 0:  # if pattern in s
                         num_matches += 1
                         if num_matches >= self.min_entries:
@@ -309,7 +308,7 @@ class CommonMatchingList(MatchingList):
 
     def load(self):
         with open(self.path, 'r') as f:
-            common_matching_list = {s.strip() for s in f.readlines()}
+            common_matching_list = {s.strip().lower() for s in f.readlines()}
         if '' in common_matching_list:
             common_matching_list.remove('')
         return common_matching_list
@@ -321,7 +320,7 @@ class CustomerBlackList(MatchingList):
         self.rpc_client = rpc_client
 
     def load(self):
-        return set(self.rpc_client.get_black_list(self.customer_id))
+        return {s.lower() for s in self.rpc_client.get_black_list(self.customer_id)}
 
 
 class CustomerWhiteList(MatchingList):
