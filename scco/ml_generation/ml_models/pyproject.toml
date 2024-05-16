@@ -38,7 +38,7 @@ dependencies = {file = ["requirements.txt"]}
 include-package-data = true
 
 [tool.setuptools.package-data]
-"*" = ["*.env"]
-co_gen_model = ["*.ini"]
+"*" = ["*.env", "*.ini"]
+#co_gen_model = ["*.ini"]
 
 ################################################################################
