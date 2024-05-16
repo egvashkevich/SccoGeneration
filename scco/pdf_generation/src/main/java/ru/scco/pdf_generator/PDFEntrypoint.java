@@ -8,5 +8,4 @@ public class PDFEntrypoint {
     public static void main(String[] args) {
         SpringApplication.run(PDFEntrypoint.class, args);
     }
-
 }

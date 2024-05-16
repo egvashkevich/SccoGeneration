@@ -19,6 +19,7 @@ public class ProcessingChain implements ProcessNode {
     List<ProcessNode> processNodeList = new ArrayList<>();
 
     public ProcessingChain() {
+        processNodeList.add(new DeleteName());
         processNodeList.add(new DeleteInPart(
                 0.7f, 1,
                 endOfPreviousSentence +

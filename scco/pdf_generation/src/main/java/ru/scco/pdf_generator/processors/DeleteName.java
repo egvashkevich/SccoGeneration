@@ -1,7 +1,5 @@
 package ru.scco.pdf_generator.processors;
 
-import ru.scco.pdf_generator.InvalidCPException;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,7 +37,8 @@ public class DeleteName implements ProcessNode {
                         newCpBuilder.append('Ё');
                     } else {
                         newCpBuilder.append(
-                                (char)(cp.charAt(continueTextIndex) - 'а' + 'А'));
+                                (char) (cp.charAt(continueTextIndex) - 'а'
+                                        + 'А'));
                     }
                 } else {
                     newCpBuilder.append(cp.charAt(continueTextIndex));

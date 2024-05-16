@@ -8,7 +8,7 @@ import java.util.List;
 
 @Data
 public class DBInsertAllResponseDTO implements
-                              Serializable {
+                                    Serializable {
     @JsonProperty("array_data")
     List<DBInsertOneResponseDTO> responses;
 

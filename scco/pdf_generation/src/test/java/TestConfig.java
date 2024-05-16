@@ -75,7 +75,7 @@ public class TestConfig {
 
     @Bean
     PDFGenerator pdfGenerator() {
-        return new PDFGenerator( "/templates/cp1.pdf",
+        return new PDFGenerator( "/templates/cp_template.pdf",
                 "/fonts/LiberationSansRegular.ttf",
                                  "src/test/pdf_data/", 18);
     }

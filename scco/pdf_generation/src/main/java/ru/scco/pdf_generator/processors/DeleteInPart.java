@@ -1,7 +1,5 @@
 package ru.scco.pdf_generator.processors;
 
-import ru.scco.pdf_generator.InvalidCPException;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
