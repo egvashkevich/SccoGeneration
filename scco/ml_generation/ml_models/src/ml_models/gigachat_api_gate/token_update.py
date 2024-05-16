@@ -64,6 +64,8 @@ class ChatAccessManager:
         try:
             response = requests.post(
                 url, headers=headers, data=payload, verify=False)
+            if (response.status_code != 200):
+                raise Exception(f"Can't update access token, response with code: {response.status_code}")
             self.access_token = response.json()['access_token']
             return response
         except requests.RequestException as e:
