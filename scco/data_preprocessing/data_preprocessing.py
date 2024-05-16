@@ -17,9 +17,7 @@ class Preprocessor:
 
         # TODO: heartbeat=0 is bad (https://www.rabbitmq.com/docs/heartbeats#disabling)
         # this is a temporary solution to ensure rabbit doesn't close connection
-        rpc_connection = pika.BlockingConnection(
-            pika.ConnectionParameters(config.RABBIT_ADDRESS, heartbeat=0)
-        )
+        rpc_connection = pika.BlockingConnection(pika.ConnectionParameters(config.RABBIT_ADDRESS, heartbeat=0))
         rpc_channel = rpc_connection.channel()
 
         self.channel.exchange_declare(exchange=config.IN_EXCHANGE, exchange_type='topic', durable=True)
@@ -55,14 +53,11 @@ class Preprocessor:
             json_in = json.loads(body.decode())
 
             customer_id = str(json_in['customer_id'])
-
             csv_name = json_in['parsed_csv']
-            data = pd.read_csv(os.path.join(config.PARSER_BOT_CSV_FOLDER, csv_name))
+            data = pd.read_csv(os.path.join(config.PARSER_BOT_CSV_FOLDER, csv_name), dtype=str)
+
+            assert ','.join(data.columns).lower() == "channel_name,sender_id,message,message_date"
             data.columns = ['channel_id', 'client_id', 'message', 'message_date']
-            data['channel_id'] = data['channel_id'].astype(str)
-            data['client_id'] = data['client_id'].astype(str)
-            data['message'] = data['message'].astype(str)
-            data['message_date'] = data['message_date'].astype(str)
         except Exception as e:
             print(" [x] Caught the following exception when parsing input:")
             print(e)

@@ -8,18 +8,16 @@ class TestExactOccurrenceSimple(unittest.TestCase):
         self.occurrence_manager = DictOccurrenceManager(dictionary)
 
     def check_message(self, message, answer):
-        self.assertEqual(
-            self.occurrence_manager.check_exact_occurrence(message), answer)
+        self.assertEqual(self.occurrence_manager.check_exact_occurrence(message), answer)
 
     def test_small(self):
         self.check_message('Вакансия', True)
 
     def test_medium(self):
-        self.check_message('Моя Вакансия и еще какие-то слова и ! ' +
-                           'знаки , припи.нания', True)
+        self.check_message('Моя Вакансия и еще какие-то слова и ! знаки , припи.нания', True)
 
     def test_big(self):
-        word_list = ['слово']*42
+        word_list = ['слово'] * 42
         self.check_message(' '.join(word_list), False)
 
 
@@ -30,10 +28,7 @@ class TestOccurrenceWithErrorsSimple(unittest.TestCase):
         self.errors_num = 2
 
     def check_message(self, message, answer):
-        self.assertEqual(
-            self.occurrence_manager
-            .check_occurrence_with_errors(message, self.errors_num),
-            answer)
+        self.assertEqual(self.occurrence_manager.check_occurrence_with_errors(message, self.errors_num), answer)
 
     # small tests
     def test_equal_1(self):

@@ -190,11 +190,14 @@ class FilterAlreadySeen(Operation):
         response = self.rpc_client.call(request_data)  # json-like object -> json-like object
 
         if len(response) > 0:
-            result = pd.read_json(StringIO(json.dumps(response, ensure_ascii=False)), orient='records')
+            result = pd.read_json(
+                StringIO(json.dumps(response, ensure_ascii=False)),
+                orient='records',
+                dtype={'customer_id': str, 'client_id': str, 'channel_id': str, 'message_date': str},
+            )
         else:
-            result = pd.DataFrame(columns=['customer_id', 'client_id', 'channel_id', 'message_date'])
+            result = pd.DataFrame(columns=['customer_id', 'client_id', 'channel_id', 'message_date'], dtype=str)
 
-        result['client_id'] = result['client_id'].astype(str)
         return data.merge(result, how='right', on=self.by)
 
 
