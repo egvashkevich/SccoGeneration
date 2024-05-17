@@ -9,7 +9,7 @@ import ru.scco.pdf_generator.processors.ProcessingChain;
 
 
 @SpringBootTest(classes = {TestConfig.class, Receiver.class, ProcessingChain.class})
-public class SpeedTest {
+public class CreationExampleTest {
     @Autowired
     private TestRabbitTemplate testRabbitTemplate;
 
@@ -18,7 +18,7 @@ public class SpeedTest {
 
     @Test
     public void speedTest() {
-        for (int i = 0; i < 1000; ++i) {
+        for (int i = 0; i < 1; ++i) {
             testRabbitTemplate.convertAndSend(
                     inputQueue.getName(),
                     new PDFGeneratorRequestDTO(
