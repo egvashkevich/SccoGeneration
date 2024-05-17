@@ -18,6 +18,8 @@ def declare_rabbit_db_service(ch):
 
 class FilterRpcClient:
     def __init__(self, connection: BlockingConnection, channel: BlockingChannel):
+        if config.DEBUG_ISOLATED:
+            return
 
         self.connection = connection
         self.channel = channel
@@ -58,9 +60,12 @@ class FilterRpcClient:
                 "reply_ctx": self.reply_ctx,
                 "request_data": request_data,
             },
-            ensure_ascii=False
+            ensure_ascii=False,
         )
         print(" [X] Sending request", request, flush=True)
+
+        if config.DEBUG_ISOLATED:
+            return request_data  # as if all messages were new
 
         self.channel.basic_publish(
             exchange=config.DB_FUNCTIONAL_SERVICE_EXCHANGE,
@@ -77,6 +82,11 @@ class FilterRpcClient:
 
 class SaveCsvRpcClient:
     def __init__(self, connection: BlockingConnection, channel: BlockingChannel, new_queries_csv_info: dict):
+        self.new_queries_csv_info = new_queries_csv_info
+
+        if config.DEBUG_ISOLATED:
+            return
+
         self.connection = connection
         self.channel = channel
         declare_rabbit_db_service(self.channel)
@@ -117,9 +127,12 @@ class SaveCsvRpcClient:
                     "csv_path": self.new_queries_csv_info['path'],
                 },
             },
-            ensure_ascii=False
+            ensure_ascii=False,
         )
         print(" [X] Sending request", request, flush=True)
+
+        if config.DEBUG_ISOLATED:
+            return self.new_queries_csv_info['path']
 
         self.channel.basic_publish(
             exchange=config.DB_FUNCTIONAL_SERVICE_EXCHANGE,
@@ -135,6 +148,11 @@ class SaveCsvRpcClient:
 
 class MatchingListsRpcClient:
     def __init__(self, connection: BlockingConnection, channel: BlockingChannel, new_queries_csv_info: dict):
+        self.saved = dict()
+
+        if config.DEBUG_ISOLATED:
+            return
+
         self.connection = connection
         self.channel = channel
         declare_rabbit_db_service(self.channel)
@@ -155,7 +173,6 @@ class MatchingListsRpcClient:
 
         self.reply_ctx = None
         self.response = None
-        self.saved = dict()
 
     def load_default_lists(self):
         with open('resources/sample_data/user_blacklist') as f:
@@ -195,9 +212,12 @@ class MatchingListsRpcClient:
                     }
                 ],
             },
-            ensure_ascii=False
+            ensure_ascii=False,
         )
         print(" [X] Sending request", request, flush=True)
+
+        if config.DEBUG_ISOLATED:
+            return self.load_default_lists()
 
         self.channel.basic_publish(
             exchange=config.DB_FUNCTIONAL_SERVICE_EXCHANGE,
@@ -224,6 +244,11 @@ class MatchingListsRpcClient:
 
 class InsertToDbRpcClient:
     def __init__(self, connection: BlockingConnection, channel: BlockingChannel, new_queries_csv_info: dict):
+        self.new_queries_csv_info = new_queries_csv_info
+
+        if config.DEBUG_ISOLATED:
+            return
+
         self.connection = connection
         self.channel = channel
         declare_rabbit_db_service(self.channel)
@@ -242,7 +267,6 @@ class InsertToDbRpcClient:
             queue=config.INSERT_RESULT_REQUEST_QUEUE, on_message_callback=self.on_response, auto_ack=False
         )
 
-        self.new_queries_csv_info = new_queries_csv_info
         self.response = None
 
     def on_response(self, ch, method, props, body):
@@ -263,9 +287,12 @@ class InsertToDbRpcClient:
                 },
                 "request_data": {"csv_path": self.new_queries_csv_info['path'], "array_data": items},
             },
-            ensure_ascii=False
+            ensure_ascii=False,
         )
         print(" [X] Sending request", request, flush=True)
+
+        if config.DEBUG_ISOLATED:
+            return [3, 4, 5]
 
         self.channel.basic_publish(
             exchange=config.DB_FUNCTIONAL_SERVICE_EXCHANGE,

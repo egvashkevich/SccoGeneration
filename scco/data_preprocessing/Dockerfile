@@ -11,5 +11,5 @@ RUN pip3 install -r requirements.txt
 
 COPY . ${SERVICE_DIR}
 
-#CMD python3 data_preprocessing.py
-CMD python3 data_preprocessing.py > /dev/null
+CMD python3 data_preprocessing.py
+# CMD python3 data_preprocessing.py > /dev/null

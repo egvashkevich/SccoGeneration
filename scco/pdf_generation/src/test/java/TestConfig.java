@@ -17,6 +17,9 @@ import ru.scco.pdf_generator.ErrorsResponseMessages;
 import ru.scco.pdf_generator.PDFGenerator;
 import ru.scco.pdf_generator.Sender;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -74,10 +77,14 @@ public class TestConfig {
     }
 
     @Bean
-    PDFGenerator pdfGenerator() {
+    PDFGenerator pdfGenerator() throws IOException {
+        String generatedOffersDit = "src/test/pdf_data/";
+        if (!Files.exists(Path.of(generatedOffersDit))) {
+            Files.createDirectory(Path.of(generatedOffersDit));
+        }
         return new PDFGenerator( "/templates/cp_template.pdf",
                 "/fonts/LiberationSansRegular.ttf",
-                                 "src/test/pdf_data/", 18);
+                                 generatedOffersDit, 18);
     }
 
     @Bean
@@ -95,48 +102,11 @@ public class TestConfig {
         return Executors.newFixedThreadPool(6);
     }
 
-//    @Bean
-
-//
-//    @Primary
-//    @Bean
-////    public RabbitTemplate testRabbitTemplate(final ConnectionFactory connectionFactory, MessageConverter amqpJackson2MessageConverter, MessagePostProcessor amqpMessageWrapper) {
-//    public RabbitTemplate testRabbitTemplate(final ConnectionFactory connectionFactory) {
-//        TestRabbitTemplate rabbitTemplate = new TestRabbitTemplate(connectionFactory);
-////        rabbitTemplate.setMessageConverter(amqpJackson2MessageConverter);
-////        rabbitTemplate.setBeforePublishPostProcessors(amqpMessageWrapper);
-//        return rabbitTemplate;
-//    }
-//
-//    @Bean
-//    public ConnectionFactory mockConnectionFactory() {
-//        ConnectionFactory factory = mock(ConnectionFactory.class);
-//        Connection connection = mock(Connection.class);
-//        Channel channel = mock(Channel.class);
-//        willReturn(connection).given(factory).createConnection();
-//        willReturn(channel).given(connection).createChannel(anyBoolean());
-//        given(channel.isOpen()).willReturn(true);
-//        return factory;
-//    }
-//
     @Bean
     public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(ConnectionFactory mockConnectionFactory) {
-//    public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(ConnectionFactory mockConnectionFactory, MessageConverter converter) {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
         factory.setConnectionFactory(mockConnectionFactory);
         factory.setMessageConverter(messageConverter());
         return factory;
     }
-//
-//    @Bean
-//    public Listener listener() {
-//        return new Listener();
-//    }
-//
-////    @Bean
-////    Queue queue() {
-////        return new Queue("pdf_generator", true);
-////    }
-//
-//
 }
