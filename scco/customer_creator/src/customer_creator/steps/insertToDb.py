@@ -79,9 +79,12 @@ class InsertToDb:
 
     def callback_handle(self, passed_data) -> dict:
         required_keys = ["customer_id", "contact_info", "company_name", "black_list", "tags", "specific_features", "services"]
+	missed_keyes = []
         for key in required_keys:
             if key not in passed_data:
-                raise ValueError(f"Missing key: {key}")
+	        missed_keyes.append(key)
+        if len(missed_keyes):    
+	    raise ValueError(missed_keyes)
 
         # Создаем копию passed_data и добавляем white_list
         request_data = passed_data.copy()
