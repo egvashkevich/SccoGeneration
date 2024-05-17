@@ -1,17 +1,14 @@
-customer_creator/
-├── Dockerfile
-├── pyproject.toml
-├── requirements.txt
-├── .env
-├── src/
-│   ├── broker_for_creator/
-│   │   ├── Broker.py
-│   │   ├── RmqBroker.py
-│   ├── customer_creator/
-│   │   ├── main.py
-│   │   |
-│   │   └── steps/
-│   │       └── insertToDb.py
-│   ├── utils/
-│   │   ├── app_config.py
-│   │   └── parse_env.py
+customer_creator
+
+this microservice is responsible for receiving a client from an external service, generating a white_list and sending an insert request to the database.
+
+API
+
+Examples of received (request) and sent (no answer) data is located in customer_creator/src/service/data.
+
+Functionality
+
+Obtaining customer data
+Generating a white list and inserting into data
+Sending to database
+
