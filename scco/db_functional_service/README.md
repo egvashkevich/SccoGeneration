@@ -20,7 +20,6 @@ Examples of received (request) and sent (answer) data is located in `db_function
 * `PostrgeSQL` is used as a database.
 * `sqlalchemy` orm is used for interaction with database.
 * Database schema:
-* [Entity Relationship Diagram](https://miro.com/app/board/uXjVKZsS6Io=/)
 ![models_schema](./docs/models_schema.jpg)
 
 ## Installation and run
