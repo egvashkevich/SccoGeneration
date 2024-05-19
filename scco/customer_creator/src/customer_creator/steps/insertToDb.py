@@ -2,6 +2,7 @@ import utils.app_config as app_cfg
 
 import inspect
 import json
+import logging
 
 from broker_for_creator.Broker import Broker
 from broker_for_creator.Broker import Publisher
@@ -21,9 +22,9 @@ def publish_answer(
 ) -> None:
     # Send query to rabbitmq.
     answer = json.dumps(answer, indent=2, ensure_ascii=False)
-    print(f"Answer:\n{answer}")
+    logging.info(f"Answer:\n{answer}")
 
-    print("sending answer")
+    logging.info("sending answer")
     broker.basic_publish(
         publisher_name,
         answer.encode("utf-8"),
@@ -65,20 +66,30 @@ class InsertToDb:
         )
 
     def callback(self, ch, method, props, body):
-        print("InsertToDb callback started")
+        logging.info("InsertToDb callback started")
         passed_data = get_callback_data(body)
-
-        answer = self.callback_handle(passed_data)
-
-        publish_answer(answer, self.customer_creator_pub, self.broker)
+        try:
+            answer = self.callback_handle(passed_data)
+            publish_answer(answer, self.customer_creator_pub, self.broker)
+        except ValueError as missed_key:
+            logging.error(f'Missed keyes in input data query: {missed_key.args}')
+            
         ch.basic_ack(delivery_tag=method.delivery_tag)
-        print("InsertToDb callback finished")
+        logging.info("InsertToDb callback finished")
 
     def callback_handle(self, passed_data) -> dict:
+        required_keys = ["customer_id", "contact_info", "company_name", "black_list", "tags", "specific_features", "services"]
+        missed_keyes = []
+        for key in required_keys:
+            if key not in passed_data:
+                missed_keyes.append(key)
+        if len(missed_keyes):    
+            raise ValueError(missed_keyes)
+
         # Создаем копию passed_data и добавляем white_list
         request_data = passed_data.copy()
         request_data["white_list"] = passed_data["tags"]
-    
+
         # Формируем итоговый словарь, добавляя ключи в нужном порядке
         answer = {
             "request_name": "insert_customer",
@@ -94,3 +105,5 @@ class InsertToDb:
             }
         }
         return answer
+
+
