@@ -13,6 +13,8 @@ This project is a system that consists of several microservices. It is intended 
 
 ## Accessible microservices
 
+![Datagram](docs/images/services_structure.png)
+
 * `data_preprocessing`
   * Receives `csv` file with `clietns` messages from telegram parser bot.
   * Saves `csv` file with new messages (can be used in the future to train ML model).
