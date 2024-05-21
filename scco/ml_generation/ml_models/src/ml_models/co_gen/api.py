@@ -30,7 +30,7 @@ def make_system_prompt(request, path_to_conf):
     config = configparser.ConfigParser()
     config.read(path_to_conf)
 
-    basic = config['PROMPTS']['experimental_system']
+    basic = config['PROMPTS']['main_system']
 
     basic = basic.replace(
         pos_to_insert_in_system['company_name'], request['company_name'])
