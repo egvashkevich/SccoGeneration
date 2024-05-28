@@ -4,7 +4,7 @@ This microservice is responsible for receiving a client from an external service
 
 ## API
 
-Examples of received (request) and sent (no answer) data are located in `customer_creator/src/service/data`.
+Examples of received (request) and sent (no answer) data are located in `customer_creator/src/service/data.py`.
 
 ## Functionality
 
